@@ -461,6 +461,9 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 </style>
 <style>
 body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }
+.posable { position: relative; }
+.posable .posnow { position: absolute; z-index: 3; left: 50%; bottom: 10px; transform: translateX(-50%); opacity: .92; }
+.wbanner.posable .posnow { left: auto; right: 12px; bottom: 12px; transform: none; }
 .castgroup + .castgroup { margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--line, #E6D3DA); }
 .castgroup h5 { margin: 0 0 10px; }
 .castgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; }
@@ -1124,7 +1127,7 @@ function viewBody(type, x) {
     const ws = worldsOf(x);
     const sc = sorted(S.scenes.filter(s => (s.characterIds || []).includes(x.id)));
     return `${coverBlock('char:' + x.id, 'mc')}${pageTabs(1)}<div class="pg ${sheet.flip ? 'flip-' + sheet.flip : ''}"><div class="win c-pink">${winbar(`CHARA · MEMBER CARD`)}<div class="wbody" style="padding:18px">
-      <div class="idhero">${idFrame(x, true)}
+      <div class="idhero"><div class="posable">${idFrame(x, true)}${canWrite && x.avatar ? `<button class="btn sm posnow" data-posnow="characters:${x.id}:avatar:avatar">✥ 위치 조정</button>` : ''}</div>
       <div class="facts"><div class="row" style="justify-content:flex-start"><span class="lbl-box fill">${kindLabel(x)}</span>${exPill(x)}</div>
         <span class="lbl-box" style="justify-self:start">NAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.nick ? `<p class="v" style="color:var(--muted);margin:-2px 0 0"><span class="lbl-box" style="margin-right:6px">NICK</span>${esc(x.nick)}</p>` : ''}
         ${x.tagline ? `<p class="v" style="color:var(--muted)">${esc(x.tagline)}</p>` : ''}
@@ -1153,7 +1156,7 @@ function viewBody(type, x) {
   if (type === 'worlds') {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
     const colors = ['blue', 'pink', 'mint', 'yellow'];
-    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner"><button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
+    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner posable">${canWrite ? `<button class="btn sm posnow" data-posnow="worlds:${x.id}:cover:wcover">✥ 위치 조정</button>` : ''}<button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
       ${castWin(x, cs)}
@@ -1642,6 +1645,14 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld || null; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
   if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
+  if (t.dataset.posnow) {
+    const [ty, id, k, tabs] = t.dataset.posnow.split(':'), x = byId(ty, id);
+    openPosTool(x[k], tabs, async p => {
+      try { await db.collection(ty).doc(id).update({ [k]: { ...x[k], ...p }, updatedAt: Date.now() }); toast('위치를 저장했어요'); }
+      catch (er) { toast(errMsg(er)); }
+    });
+    return;
+  }
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
   if (t.dataset.castedit && sheet) { openCastEdit(sheet.id, +t.dataset.castedit); return; }
   if (t.dataset.aidx && sheet) { turnAlbum((sheet.albumIdx || 0) + +t.dataset.aidx); return; }
@@ -1693,8 +1704,8 @@ document.addEventListener('click', async e => {
       d.kind = v; rerenderEdit(); return;
     }
     if (t.dataset.pick) { const s = new Set(d.characterIds || []); s.has(t.dataset.pick) ? s.delete(t.dataset.pick) : s.add(t.dataset.pick); d.characterIds = [...s]; rerenderEdit(); return; }
-    if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.tabs, p => { d[k] = { ...d[k], ...p }; rerenderEdit(); }); return; }
-    if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.tabs, p => { d[k][+i] = { ...d[k][+i], ...p }; rerenderEdit(); }); return; }
+    if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.tabs, p => { d[k] = { ...d[k], ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
+    if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.tabs, p => { d[k][+i] = { ...d[k][+i], ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.unimg) { if (d[t.dataset.unimg]) sheet.removed.push(d[t.dataset.unimg].id); d[t.dataset.unimg] = null; rerenderEdit(); return; }
     if (t.dataset.ungal) { const [k, i] = t.dataset.ungal.split(':'); const [g] = d[k].splice(+i, 1); if (g) sheet.removed.push(g.id); rerenderEdit(); return; }
     if (t.dataset.addsec) { (d.sections = d.sections || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('sec_t_' + (d.sections.length - 1))?.focus(); return; }
