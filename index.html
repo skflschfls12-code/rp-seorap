@@ -289,6 +289,7 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .gal-edit { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .gal-edit .it { display: flex; flex-direction: column; gap: 4px; }
 .gal-edit .th { aspect-ratio: 1; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; position: relative; background: var(--checker); }
+.gal-edit .nmore { position: absolute; left: 5px; bottom: 5px; background: rgba(40, 30, 36, .6); color: #fff; font-size: 11.5px; font-weight: 700; padding: 0 7px; border-radius: 999px; }
 .gal-edit .th img { width: 100%; height: 100%; object-fit: cover; }
 .gal-edit .th button { position: absolute; top: 4px; right: 4px; border: 1.2px solid var(--ink); border-radius: 6px; background: var(--win); padding: 0 6px; font-size: 12px; }
 .gal-edit input { padding: 4px 8px; font-size: 12.5px; border-radius: 6px; border: 1.3px solid var(--ink); background: var(--win); width: 100%; }
@@ -329,17 +330,6 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ap-empty { min-height: 40vh; display: grid; place-items: center; text-align: center; color: var(--muted); gap: 8px; align-content: center; }
 .ap-empty .spark { width: 40px; height: 40px; }
 .ap-tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
-/* Photo book: a two-page spread; the right page turns over on the centre spine */
-.binder { position: relative; z-index: 0; width: min(100% - 56px, 940px); margin: 0 auto; padding: 24px; border: 1.5px solid #EDB4C6; border-radius: 28px; background-color: #FCE7EE; background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .6) 0 12px, transparent 12px 24px), repeating-linear-gradient(90deg, rgba(255, 255, 255, .6) 0 12px, transparent 12px 24px); box-shadow: 0 14px 34px -14px rgba(217, 124, 156, .5); }
-.binder::before { content: ""; position: absolute; inset: 9px; border: 1.5px dashed #fff; border-radius: 21px; pointer-events: none; }
-.book { position: relative; aspect-ratio: 3 / 2; touch-action: pan-y; }
-.bp { position: absolute; top: 0; bottom: 0; width: 50%; background: #fff; overflow: hidden; border: 1.5px solid #F1C9D6; }
-.bp.l { left: 0; border-radius: 16px 4px 4px 16px; background-image: linear-gradient(270deg, rgba(236, 143, 173, .16), rgba(236, 143, 173, 0) 10%); }
-.bp.r { left: 50%; border-radius: 4px 16px 16px 4px; background-image: linear-gradient(90deg, rgba(236, 143, 173, .16), rgba(236, 143, 173, 0) 10%); }
-.rings { position: absolute; z-index: 5; top: 22px; bottom: 22px; left: 50%; width: 56px; margin-left: -28px; display: flex; flex-direction: column; justify-content: space-evenly; pointer-events: none; }
-.rings i { display: block; height: 16px; border: 3px solid #E9A3BA; border-radius: 10px; background: linear-gradient(180deg, #fff, #FBE3EB); box-shadow: 0 2px 0 rgba(217, 124, 156, .3), inset 0 1px 0 #fff; }
-.bookmark { position: absolute; z-index: 6; top: 10px; right: calc(24px + 12%); width: 14px; height: 58px; background: linear-gradient(90deg, #F09DB8, #F7BFD0 50%, #F09DB8); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 10px), 0 100%); filter: drop-shadow(1px 1px 0 rgba(217, 124, 156, .35)); pointer-events: none; }
-.face .phead { text-align: center; font-family: var(--f-pixel); font-size: 10.5px; letter-spacing: .25em; color: #E48FAB; margin-top: -4%; }
 .factrow > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .factrow .v { margin: 0; min-height: 30px; display: flex; align-items: center; }
 .relgroup { display: flex; flex-direction: column; gap: 8px; }
@@ -360,64 +350,104 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 @media (max-width: 760px) { .relrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; } .relrow input { grid-column: 1 / 3; grid-row: 2; } .rellines { margin-left: 0; text-align: left; width: 100%; } }
 .apick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
 .apick .link-chip[aria-pressed="true"] { background: var(--pink); border-color: var(--pink-d); }
-.bk-ctrl .bk-nav { width: 40px; height: 40px; border: 1.5px solid #EDB4C6; background: #fff; color: var(--pink-d); font-size: 15px; box-shadow: 0 3px 0 var(--pink-s); }
-.bk-tabs { position: absolute; right: -40px; top: 14%; display: flex; flex-direction: column; gap: 6px; z-index: -1; }
-.bk-tabs .lab { writing-mode: vertical-rl; font-family: var(--f-pixel); font-size: 11px; letter-spacing: .2em; color: #fff; background: #EC9AB5; border-radius: 0 10px 10px 0; padding: 10px 6px; text-align: center; }
-.bk-tabs button { width: 34px; padding: 8px 0 8px 8px; border: 1.5px solid #EDB4C6; border-left: 0; border-radius: 0 10px 10px 0; background: #FAD3DF; font-family: var(--f-pixel); font-size: 13px; color: #fff; text-shadow: 0 1px 0 rgba(217, 124, 156, .5); }
-.bk-tabs button[aria-current="true"] { background: #fff; color: var(--pink-d); text-shadow: none; width: 40px; }
-.face { position: absolute; inset: 0; margin: 0; container-type: size; padding: 7% 8% 9%; display: flex; flex-direction: column; gap: 10px; }
-.face .ph { flex: 1; min-height: 0; padding: 0; border: 0; background: var(--checker); border-radius: 2px; overflow: hidden; cursor: zoom-in; }
-.face .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.face figcaption { font-size: 13px; color: var(--fg); text-align: center; min-height: 1.3em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.face .pno { position: absolute; bottom: 3%; font-size: 10.5px; color: #D98AA5; font-family: var(--f-pixel); letter-spacing: .1em; background: #FDEEF3; border-radius: 999px; padding: 1px 9px; }
-.bp.l .face .pno, .turn .back .pno { left: 8%; }
-.bp.r .face .pno, .turn .front .pno { right: 8%; }
-.face.blank { align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
-.turn { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 3; transform-style: preserve-3d; }
-.turn.fwd { left: 50%; transform-origin: left center; animation: turnFwd .8s cubic-bezier(.4,.1,.25,1) forwards; }
-.turn.back { left: 0; transform-origin: right center; animation: turnBack .8s cubic-bezier(.4,.1,.25,1) forwards; }
-.turn > div { position: absolute; inset: 0; background: #FFFDFC; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
-.turn > div { border: 1.5px solid #F1C9D6; background-color: #fff; }
-.turn.fwd > .front, .turn.back > .back { border-radius: 4px 16px 16px 4px; background-image: linear-gradient(90deg, rgba(236, 143, 173, .16), rgba(236, 143, 173, 0) 10%); }
-.turn.fwd > .back, .turn.back > .front { border-radius: 16px 4px 4px 16px; background-image: linear-gradient(270deg, rgba(236, 143, 173, .16), rgba(236, 143, 173, 0) 10%); }
-.turn.fwd > .back, .turn.back > .back { transform: rotateY(180deg); }
-.turn > div::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: rgba(90, 60, 75, .14); opacity: 0; animation: shade .8s ease forwards; }
-/* perspective lives in the transform so .book stays out of its own stacking context (stickers must sit above rings and ribbon) */
-@keyframes turnFwd { from { transform: perspective(2600px) rotateY(0deg); } to { transform: perspective(2600px) rotateY(-180deg); } }
-@keyframes turnBack { from { transform: perspective(2600px) rotateY(0deg); } to { transform: perspective(2600px) rotateY(180deg); } }
-@keyframes shade { 50% { opacity: 1; } to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .turn { display: none; } }
-.bk-ctrl { display: flex; align-items: center; justify-content: center; gap: 18px; }
-.bk-nav { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--win); box-shadow: 0 2px 8px rgba(90, 60, 75, .18); color: var(--fg); font-size: 20px; line-height: 1; display: grid; place-items: center; padding: 0; }
-.bk-nav:hover { background: var(--pink); }
-.bk-nav:disabled { opacity: .3; cursor: default; background: var(--win); }
-.bk-ctrl .cnt { font-family: var(--f-pixel); font-size: 12px; color: var(--muted); letter-spacing: .1em; min-width: 72px; text-align: center; }
-.bk-thumbs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 4px 6px; justify-content: safe center; }
-.bk-thumbs button { flex: none; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: var(--checker); opacity: .45; transition: opacity .2s; }
-.bk-thumbs button[aria-current="true"] { opacity: 1; box-shadow: 0 0 0 2px var(--pink-d); }
-.bk-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Scrapbook touches: taped, slightly tilted photos */
-.face .ph { transform: rotate(-1.2deg); box-shadow: 0 0 0 5px #fff, 0 3px 10px rgba(90, 60, 75, .18); }
-.bp.r .face .ph, .turn.fwd .front .ph, .turn.back .back .ph { transform: rotate(1.4deg); }
-/* Stickers */
-.stk-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; transition: opacity .2s; }
-.stk { position: absolute; width: 64px; height: 64px; pointer-events: none; user-select: none; touch-action: none; }
-.stk svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 1.5px rgba(90, 60, 75, .25)); }
-.book.decoing .stk { pointer-events: auto; cursor: grab; }
-.book.decoing .stk.sel { outline: 1.5px dashed var(--pink-d); outline-offset: 4px; border-radius: 6px; }
-.book.decoing { outline: 2px dashed var(--pink-s); outline-offset: 8px; }
-.deco-bar { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.tray { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: var(--win); border: 1.5px solid var(--ink); border-radius: 12px; padding: 8px; max-width: 100%; }
-.tray button { width: 44px; height: 44px; padding: 4px; border: 0; border-radius: 8px; background: none; }
-.tray button:hover { background: var(--pink); }
-.tray svg, .tray img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.stk img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 1px 1.5px rgba(90, 60, 75, .25)); -webkit-user-drag: none; }
-.tray.mine { align-items: center; }
-.trayl { font-size: 12px; color: var(--muted); padding: 0 6px; }
-.mystk { position: relative; }
-.mystk .x { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; padding: 0; border: 1.2px solid var(--ink); border-radius: 50%; background: #fff; font-size: 10px; line-height: 1; display: none; }
-.mystk:hover .x, .mystk:focus-within .x { display: grid; place-items: center; }
-.selbar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+/* Album: Instagram-style profile, highlights and 3-column grid */
+.ig { display: flex; flex-direction: column; padding: 30px 4px 8px; max-width: 900px; margin: 0 auto; width: 100%; }
+.ig-back { align-self: flex-start; border: 0; background: none; padding: 0; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.ig-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(18px, 5vw, 56px); align-items: center; max-width: 700px; margin: 0 auto; width: 100%; }
+.ig-ava { width: clamp(86px, 17vw, 150px); aspect-ratio: 1; border-radius: 50%; padding: 4px; background: conic-gradient(from 200deg, var(--pink-d), #E8B4C8, #B9A6E0, var(--pink-d)); }
+.ig-ava > *, .ig-mini > * { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--win); object-fit: cover; display: grid; place-items: center; background: linear-gradient(135deg, #F9D7E2, #E7DDF6); }
+.ig-ava .ini { font-family: var(--f-display); font-weight: var(--dw); font-size: clamp(28px, 6vw, 50px); color: var(--pink-d); }
+.ig-nm { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ig-nm h2 { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: clamp(21px, 3.4vw, 27px); }
+.ig-nm span { font-size: 13px; color: var(--muted); }
+.ig-stats { display: flex; gap: clamp(16px, 4vw, 34px); margin: 10px 0; font-size: 14px; }
+.ig-stats b { margin-right: 4px; }
+.ig-bio { margin: 0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.ig-bio small { display: block; color: var(--muted); font-size: 12.5px; }
+.ig-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.ig-btns .btn { background: var(--checker); border-color: transparent; font-weight: 600; }
+.ig-hl { display: flex; gap: clamp(12px, 3vw, 26px); overflow-x: auto; padding: 24px 4px 4px; max-width: 700px; margin: 0 auto; width: 100%; scrollbar-width: none; }
+.ig-hl button { flex: none; width: 76px; display: flex; flex-direction: column; align-items: center; gap: 7px; border: 0; background: none; padding: 0; }
+.ig-hl .r { width: 68px; height: 68px; border-radius: 50%; padding: 3px; border: 1.5px solid var(--line, #E6D3DA); display: block; }
+.ig-hl .r > span { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-size: 22px; background: var(--checker); }
+.ig-hl .r img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-hl .l { font-size: 12px; max-width: 76px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ig-hl button[aria-pressed="true"] .r { border: 2px solid var(--pink-d); }
+.ig-hl button[aria-pressed="true"] .l { font-weight: 700; }
+.ig-tabs { display: flex; justify-content: center; gap: clamp(30px, 8vw, 60px); border-top: 1px solid var(--line, #E6D3DA); margin-top: 18px; }
+.ig-tabs button { border: 0; border-top: 1.5px solid transparent; margin-top: -1px; background: none; padding: 13px 2px; font-family: "Orbit", var(--f-body); font-size: 12px; letter-spacing: .12em; color: var(--muted); }
+.ig-tabs button[aria-selected="true"] { color: var(--fg); border-top-color: var(--fg); }
+.ig-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.ig-tile { position: relative; aspect-ratio: 1; padding: 0; border: 0; border-radius: 0; overflow: hidden; background: var(--checker); }
+.ig-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-tile .pin { position: absolute; top: 6px; left: 7px; font-size: 13px; }
+.ig-tile .multi, .ig-teaser .multi { position: absolute; top: 5px; right: 7px; font-size: 14px; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
+.ig-tile .ov { position: absolute; inset: 0; background: rgba(77, 63, 71, .38); color: #fff; display: grid; place-items: center; font-weight: 700; opacity: 0; transition: opacity .15s; }
+.ig-tile:hover .ov, .ig-tile:focus-visible .ov { opacity: 1; }
+.ig .ap-empty { min-height: 26vh; }
+.ig .ap-tools { margin-top: 14px; }
+.ig-mini { width: 34px; height: 34px; flex: none; border-radius: 50%; padding: 2px; background: conic-gradient(from 200deg, var(--pink-d), #E8B4C8, #B9A6E0, var(--pink-d)); display: inline-block; }
+.ig-mini > * { border-width: 2px; }
+.ig-mini .ini { font-family: var(--f-display); font-weight: var(--dw); color: var(--pink-d); font-size: 14px; }
+.ig-mini.big { width: 60px; height: 60px; }
+.ig-teaser { display: grid; gap: 12px; }
+.ig-teaser .top { display: flex; align-items: center; gap: 10px; }
+.ig-teaser .top b { font-family: "Orbit", var(--f-body); font-weight: 400; }
+.ig-teaser .top small { display: block; color: var(--muted); font-size: 12px; }
+.ig-teaser .top .btn { margin-left: auto; }
+.ig-teaser .ig-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; border-radius: 8px; overflow: hidden; }
+.ig-teaser .ig-strip button { position: relative; aspect-ratio: 1; padding: 0; border: 0; border-radius: 0; overflow: hidden; background: var(--checker); }
+.ig-teaser .ig-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-teaser .ig-strip button:hover img { filter: brightness(.93); }
+.ig-teaser .ig-strip .more { font-weight: 700; color: var(--ink); }
+/* post viewer */
+.igpost { position: fixed; inset: 0; z-index: 55; background: rgba(40, 30, 36, .6); display: grid; place-items: center; padding: 16px; }
+.ig-post { background: var(--win); border-radius: 12px; overflow: hidden; display: flex; height: min(calc(100dvh - 32px), 700px); max-width: 100%; }
+.ig-post .pic { position: relative; flex: none; height: 100%; aspect-ratio: 4 / 5; max-width: calc(100vw - 32px - 300px); background: #1d171b; touch-action: pan-y; }
+.ig-post .side { width: 340px; max-width: 40vw; flex: none; }
+.ig-post .pic .ph { width: 100%; height: 100%; padding: 0; border: 0; border-radius: 0; background: none; display: block; cursor: zoom-in; overflow: hidden; }
+.ig-post .pic .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-post .nav { position: absolute; top: 50%; margin-top: -16px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .88); color: #4D3F47; font-size: 20px; line-height: 1; display: grid; place-items: center; }
+.ig-post .nav.prev { left: 10px; } .ig-post .nav.next { right: 10px; }
+.ig-post .dots2 { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px; pointer-events: none; }
+.ig-post .dots2 i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .5); }
+.ig-post .dots2 i.on { background: #fff; }
+.ig-post .cnt { position: absolute; top: 10px; right: 10px; background: rgba(40, 30, 36, .55); color: #fff; font-size: 12px; padding: 1px 9px; border-radius: 999px; }
+.ig-post .side { display: flex; flex-direction: column; min-height: 0; }
+.ig-post .side .top { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line, #E6D3DA); }
+.ig-post .side .top b { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 14px; }
+.ig-post .side .top small { display: block; color: var(--muted); font-size: 11.5px; }
+.ig-post .side .x { margin-left: auto; border: 0; background: none; padding: 4px; font-size: 18px; color: var(--muted); }
+.ig-post .cap { flex: 1; overflow: auto; padding: 14px; font-size: 14px; line-height: 1.7; }
+.ig-post .cap p { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.ig-post .cap .none { color: var(--muted); }
+.ig-post .cap .tg { color: var(--blue-d); }
+.ig-post .cap textarea { width: 100%; font: inherit; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--win); color: var(--fg); resize: vertical; }
+.ig-post .cap .row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.ig-post .act { border-top: 1px solid var(--line, #E6D3DA); padding: 10px 14px 14px; }
+.ig-post .ic { display: flex; align-items: center; gap: 12px; font-size: 21px; }
+.ig-post .ic button, .ig-post .ic .addm { border: 0; background: none; padding: 0; font-size: 21px; line-height: 1; color: var(--fg); cursor: pointer; }
+.ig-post .ic .heart.on { color: #E0607E; }
+.ig-post .ic [data-pop="pin"] { filter: grayscale(1); opacity: .45; font-size: 18px; }
+.ig-post .ic [data-pop="pin"].on { filter: none; opacity: 1; }
+.ig-post .ic .addm input { display: none; }
+.ig-post .ic .grow { flex: 1; }
+.ig-post .ic .del { font-size: 17px; }
+.ig-post .ic .del.armed { font-size: 12px; color: #fff; background: #D9667E; border-radius: 999px; padding: 4px 10px; }
+.ig-post .like { font-size: 13px; font-weight: 700; margin: 8px 0 2px; min-height: 1em; }
+.ig-post time { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.ig-hedit { width: min(440px, 100%) !important; }
+.ig-hedit .fld { display: grid; gap: 5px; }
+.ig-hedit input:not([type=checkbox]), .ig-hedit textarea { width: 100%; font: inherit; font-size: 14px; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--win); color: var(--fg); }
+.ig-hedit .chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+@media (max-width: 680px) {
+  .ig-post { flex-direction: column; height: auto; max-height: calc(100dvh - 32px); width: 100%; overflow: auto; }
+  .ig-post .pic { height: auto; width: 100%; max-width: none; aspect-ratio: 4 / 5; max-height: 62dvh; }
+  .ig-post .side { width: 100%; max-width: none; }
+  .ig-post .cap { overflow: visible; }
+  .ig-teaser .ig-strip { grid-template-columns: repeat(4, 1fr); }
+  .ig-teaser .ig-strip:has(.more) button:nth-child(n+4):not(.more), .ig-teaser .ig-strip:not(:has(.more)) button:nth-child(n+5) { display: none; }
+}
 .teaser { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tthumb { width: 64px; height: 64px; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; background: var(--checker); }
 .tthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -639,7 +669,7 @@ async function flushUrls() {
   if (!uid || !urlWant.size) return;
   const ids = [...urlWant]; urlWant.clear();
   await ensureUrls(ids);
-  if (ids.some(id => urlCache.has(id))) { if (sheet?.mode === 'edit') rerenderEdit(); else if (!turning && !stkDrag && !coverDrag) render(); }
+  if (ids.some(id => urlCache.has(id))) { if (sheet?.mode === 'edit') rerenderEdit(); else if (!coverDrag) render(); }
 }
 const byId = (t, id) => S[t].find(x => x.id === id);
 // characters: favourites first, then oldest-created first; everything else: favourites, then most recently edited
@@ -688,7 +718,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x), ...(x.cast || []).map(c => c.avatar)].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).map(c => c.avatar)].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -998,129 +1028,236 @@ function pageTabs(page, l1 = '프로필', l2 = '앨범') {
 // Which album the open sheet shows: a character's own album (wid null), or that character's album inside one world
 function albumCtx() {
   if (!sheet) return null;
-  if (sheet.type === 'characters') return { cid: sheet.id, wid: sheet.albumWorld || null };
+  if (sheet.type === 'characters') return { cid: sheet.id, wid: sheet.albumWorld && sheet.albumWorld !== '*' ? sheet.albumWorld : null };
   if (sheet.type === 'worlds') return { cid: sheet.albumChar, wid: sheet.id };
   return null;
 }
 const ctxChar = () => { const c = albumCtx(); return c && byId('characters', c.cid); };
 const photosOf = (x, wid) => (wid ? x.worldAlbums?.[wid] : x.album) || [];
-const decoMapOf = (x, wid) => (wid ? x.worldDeco?.[wid] : x.deco) || {};
-const allWorldPhotos = x => Object.values(x.worldAlbums || {}).flat();
-function faceHtml(list, i) {
-  const g = list[i];
-  if (!g) return `<div class="face blank">♡</div>`;
-  return `<figure class="face"><span class="phead" aria-hidden="true">♡ MEMORIES ♡</span><button class="ph" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(g)}" style="${pos(g)}" alt="${esc(g.caption || '')}"></button><figcaption>${esc(g.caption || '')}</figcaption><span class="pno">♡ ${String(i + 1).padStart(2, '0')}</span></figure>`;
+const allWorldPhotos = x => Object.values(x.worldAlbums || {}).flat().flatMap(postImgs);
+/* ---------- Album: Instagram-style grid ---------- */
+// A post is one album entry; extra photos of the same post live in its `more` list.
+// sheet.albumWorld: '*' every album, '' the character's own album, or a world id.
+const postImgs = g => [g, ...(g.more || [])];
+const albumKey = () => sheet?.type === 'worlds' ? sheet.id : (sheet?.albumWorld ?? '*');
+const albumChar = () => sheet && byId('characters', sheet.type === 'worlds' ? sheet.albumChar : sheet.id);
+function albumEntries(x, key) {
+  const own = (x.album || []).map((g, i) => ({ g, wid: '', i }));
+  const inWorlds = worldsOf(x).flatMap(w => photosOf(x, w.id).map((g, i) => ({ g, wid: w.id, i })));
+  const list = key === '*' ? [...own, ...inWorlds] : key ? inWorlds.filter(e => e.wid === key) : own;
+  // newest first, pinned posts on top
+  return list.reverse().sort((a, b) => (b.g.pin ? 1 : 0) - (a.g.pin ? 1 : 0));
 }
-const spreadCount = list => Math.ceil(list.length / 2);
-const TAPE = (a, b) => `<svg viewBox="0 0 120 34"><path d="M4 3h112l-3 5 3 5-3 5 3 5-3 5 3 4H4l3-4-3-5 3-5-3-5 3-5-3-5z" fill="${a}" opacity=".97"/><path d="M14 3l-8 28M34 3l-8 28M54 3l-8 28M74 3l-8 28M94 3l-8 28M114 3l-8 28" stroke="${b}" stroke-width="5" opacity=".55"/></svg>`;
-const STICKERS = {
-  heart: '<svg viewBox="0 0 64 64"><path d="M32 55S7 40 7 22c0-8 6-14 13-14 5 0 9 3 12 7 3-4 7-7 12-7 7 0 13 6 13 14 0 18-25 33-25 33z" fill="#F2A7BE" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/><path d="M17 20c1-4 4-6 7-6" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none"/></svg>',
-  star: '<svg viewBox="0 0 64 64"><path d="M32 6l7.6 16.4 17.9 2-13.3 12.2 3.7 17.7L32 45.2l-15.9 9.1 3.7-17.7L6.5 24.4l17.9-2z" fill="#F7D774" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/></svg>',
-  sparkle: '<svg viewBox="0 0 64 64"><path d="M32 4c2 15 8 22 26 28-18 6-24 13-26 28-2-15-8-22-26-28 18-6 24-13 26-28z" fill="#fff" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/><path d="M52 6c.7 4 2.3 6 6 7.5-3.7 1.5-5.3 3.5-6 7.5-.7-4-2.3-6-6-7.5 3.7-1.5 5.3-3.5 6-7.5z" fill="#F7D774" stroke="#8C7782" stroke-width="1.6"/></svg>',
-  ribbon: '<svg viewBox="0 0 64 64"><path d="M32 30C22 16 8 14 8 24s14 14 24 6zM32 30c10-14 24-16 24-6S42 38 32 30z" fill="#F2A7BE" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/><path d="M29 32l-9 22 7-4 4 7 3-24M35 32l9 22-7-4-4 7-3-24" fill="#F2A7BE" stroke="#8C7782" stroke-width="2.2" stroke-linejoin="round"/><circle cx="32" cy="30" r="5" fill="#EC8FAD" stroke="#8C7782" stroke-width="2.2"/></svg>',
-  flower: '<svg viewBox="0 0 64 64"><g fill="#fff" stroke="#8C7782" stroke-width="2.3"><circle cx="32" cy="15" r="10"/><circle cx="48" cy="27" r="10"/><circle cx="42" cy="46" r="10"/><circle cx="22" cy="46" r="10"/><circle cx="16" cy="27" r="10"/></g><circle cx="32" cy="32" r="8" fill="#F7D774" stroke="#8C7782" stroke-width="2.3"/></svg>',
-  cherry: '<svg viewBox="0 0 64 64"><path d="M22 42c4-14 10-26 22-34M42 44c-2-14 0-26 2-36" stroke="#6F9E7E" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44 8c6-4 14-2 16 4-6 3-12 2-16-4z" fill="#A8D5B9" stroke="#8C7782" stroke-width="2"/><circle cx="20" cy="46" r="11" fill="#E9798F" stroke="#8C7782" stroke-width="2.5"/><circle cx="42" cy="48" r="11" fill="#E9798F" stroke="#8C7782" stroke-width="2.5"/><circle cx="16" cy="42" r="3" fill="#fff" opacity=".8"/><circle cx="38" cy="44" r="3" fill="#fff" opacity=".8"/></svg>',
-  cloud: '<svg viewBox="0 0 64 64"><path d="M16 48a10 10 0 0 1-1-20 14 14 0 0 1 27-6 11 11 0 0 1 9 20 7 7 0 0 1-5 6z" fill="#fff" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/><circle cx="25" cy="38" r="1.8" fill="#8C7782"/><circle cx="37" cy="38" r="1.8" fill="#8C7782"/><path d="M28 42c2 2 4 2 6 0" stroke="#8C7782" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="21" cy="42" r="2.5" fill="#F2A7BE" opacity=".7"/><circle cx="41" cy="42" r="2.5" fill="#F2A7BE" opacity=".7"/></svg>',
-  moon: '<svg viewBox="0 0 64 64"><path d="M40 6a26 26 0 1 0 18 40A22 22 0 0 1 40 6z" fill="#F7D774" stroke="#8C7782" stroke-width="2.5" stroke-linejoin="round"/></svg>',
-  love: '<svg viewBox="0 0 96 40"><rect x="3" y="4" width="90" height="32" rx="16" fill="#fff" stroke="#8C7782" stroke-width="2.5"/><text x="48" y="27" text-anchor="middle" font-family="Orbit, sans-serif" font-size="17" fill="#D97C9C" letter-spacing="3">LOVE ♡</text></svg>',
-  tapeP: TAPE('#F4C9D6', '#fff'),
-  tapeM: TAPE('#C6E6D8', '#fff'),
-  tapeY: TAPE('#F6E3A6', '#fff'),
-};
-const STK_W = { love: 1.5, tapeP: 1.9, tapeM: 1.9, tapeY: 1.9 };
-// built-in stickers by name; uploaded ones are "u:<asset id>"
-const stkHtml = k => k.startsWith('u:') ? `<img src="${img({ id: k.slice(2) })}" alt="" draggable="false">` : (STICKERS[k] || '');
-const myStickers = () => (site.stickers || []).map(id => 'u:' + id);
-function renderStickers() {
-  const c = albumCtx(), x = ctxChar(), el = $('#stk');
-  if (!x || !el) return;
-  el.innerHTML = (decoMapOf(x, c.wid)[sheet.albumIdx || 0] || []).map((d, i) => `<div class="stk ${sheet.deco && sheet.sel === i ? 'sel' : ''}" data-si="${i}" style="left:${d.x}%;top:${d.y}%;width:${d.k.startsWith('u:') ? 90 : 64 * (STK_W[d.k] || 1)}px;height:${d.k.startsWith('u:') ? 90 : STK_W[d.k] ? 64 * STK_W[d.k] * .3 : 64}px;transform:translate(-50%,-50%) rotate(${d.r}deg) scale(${d.s})">${stkHtml(d.k)}</div>`).join('');
+const albumList = (x, key) => { const l = albumEntries(x, key); return sheet?.igTab === 'fav' ? l.filter(e => e.g.fav) : l; };
+const fmtDate = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}`; };
+const capHtml = s => esc(s || '').replace(/(^|\s)(#[^\s#]+)/g, '$1<span class="tg">$2</span>');
+function headAva(x) {
+  const h = x.albumHead || {}, r = h.avatar || x.avatar;
+  return r ? `<img src="${imgS(r)}" style="${posT(r)}" alt="">` : `<span class="ini">${esc(initial(x.name))}</span>`;
 }
-function decoBar() {
-  if (!sheet.deco) return canWrite ? '<button class="btn sm" data-act="deco">✎ 다꾸하기</button>' : '';
-  const sel = sheet.sel != null;
-  return `<div class="tray" aria-label="스티커">${Object.keys(STICKERS).map(k => `<button data-addstk="${k}" aria-label="스티커 붙이기">${STICKERS[k]}</button>`).join('')}</div>
-    <div class="tray mine" aria-label="내 스티커"><span class="trayl">내 스티커</span>${myStickers().map(k => `<span class="mystk"><button data-addstk="${esc(k)}" aria-label="내 스티커 붙이기">${stkHtml(k)}</button><button class="x" data-unstk="${esc(k.slice(2))}" aria-label="서랍에서 빼기">✕</button></span>`).join('')}
-      ${assets ? `<label class="btn sm filebtn">＋ 스티커 올리기<input type="file" accept="image/png,image/webp,image/gif,image/svg+xml,image/jpeg" multiple data-stkup="1"></label>` : ''}</div>
-    <div class="selbar">${sel ? `<button class="btn sm" data-stkop="rl" aria-label="왼쪽으로 돌리기">⟲</button><button class="btn sm" data-stkop="rr" aria-label="오른쪽으로 돌리기">⟳</button><button class="btn sm" data-stkop="up">크게</button><button class="btn sm" data-stkop="down">작게</button><button class="btn sm danger" data-stkop="del">떼기</button>` : '<span style="color:var(--muted);font-size:13px">스티커를 눌러 붙이고, 끌어서 옮기세요. 붙인 스티커를 누르면 돌리거나 크기를 바꿀 수 있어요.</span>'}<button class="btn sm primary" data-act="deco-done">다 꾸몄어요</button></div>`;
+function igHead(x, key) {
+  const h = x.albumHead || {}, ws = worldsOf(x);
+  const info = [x.gender, x.birthday].filter(Boolean).map(esc).join(' · ');
+  const n = albumEntries(x, '*').reduce((s, e) => s + postImgs(e.g).length, 0);
+  const up = key === '*' || !key ? `characters:${x.id}:album` : `characters:${x.id}:wa:${key}`;
+  return `<div class="ig-head"><div class="ig-ava">${headAva(x)}</div><div class="ig-meta">
+    <div class="ig-nm"><h2>${esc(h.name || x.name)}</h2><span>${[h.handle && '@' + esc(h.handle), x.nick && '별명 ' + esc(x.nick)].filter(Boolean).join(' · ')}</span></div>
+    ${h.stats === false ? '' : `<div class="ig-stats"><span><b>${n}</b>사진</span><span><b>${ws.length}</b>세계관</span><span><b>${(x.rels || []).length}</b>관계</span></div>`}
+    <p class="ig-bio">${esc(h.bio || x.tagline || '')}${h.info !== false && info ? `<small>${info}</small>` : ''}</p>
+    ${canWrite ? `<div class="ig-btns"><button class="btn sm" data-ighead="${x.id}">앨범 헤더 편집</button>${assets ? `<label class="btn sm filebtn">＋ 사진 올리기<input type="file" accept="image/*" multiple data-igup="${up}"></label>` : ''}</div>` : ''}</div></div>`;
 }
-let decoTimer = null;
-function saveDeco(x, wid) {
-  clearTimeout(decoTimer);
-  decoTimer = setTimeout(async () => {
-    const patch = wid ? { worldDeco: { [wid]: x.worldDeco[wid] } } : { deco: x.deco };
-    try { await db.collection('characters').doc(x.id).update({ ...patch, updatedAt: Date.now() }); } catch (e) { toast(errMsg(e)); }
-  }, 500);
+function igCircle(attr, v, label, inner, on) {
+  return `<button ${attr}="${esc(v)}" aria-pressed="${on}"><span class="r"><span>${inner}</span></span><span class="l">${esc(label)}</span></button>`;
 }
-function editDeco(fn) {
-  const { wid } = albumCtx(), x = ctxChar();
-  let map;
-  if (wid) { x.worldDeco = JSON.parse(JSON.stringify(x.worldDeco || {})); map = x.worldDeco[wid] = x.worldDeco[wid] || {}; }
-  else { x.deco = JSON.parse(JSON.stringify(x.deco || {})); map = x.deco; }
-  const sp = sheet.albumIdx || 0;
-  map[sp] = map[sp] || [];
-  fn(map[sp]);
-  renderStickers(); $('#decoBar').innerHTML = decoBar();
-  saveDeco(x, wid);
+const circleImg = r => r ? `<img src="${imgS(r)}" style="${posT(r)}" alt="">` : '';
+function igGrid(x, key) {
+  const l = albumList(x, key);
+  if (!l.length) return `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>${sheet.igTab === 'fav' ? '♡ 누른 사진이 여기 모여요.' : `아직 사진이 없어요.<br>${canWrite && assets ? '위의 「＋ 사진 올리기」로 올려 보세요.' : ''}`}</p></div>`;
+  return `<div class="ig-grid">${l.map(e => `<button class="ig-tile" data-igpost="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}">
+    <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.pin ? '<span class="pin" aria-label="고정">📌</span>' : ''}${e.g.more?.length ? '<span class="multi" aria-label="여러 장">❐</span>' : ''}
+    <span class="ov">${e.g.fav ? '♥' : '♡'}${e.g.more?.length ? ` · ${e.g.more.length + 1}장` : ''}</span></button>`).join('')}</div>`;
 }
-function albumPage(x, wid = null) {
-  const al = photosOf(x, wid), n = spreadCount(al), w = wid && byId('worlds', wid);
-  const sp = Math.min(sheet.albumIdx || 0, Math.max(0, n - 1));
-  sheet.albumIdx = sp;
-  return `<div class="albumpage">
-    <div class="ap-head"><div><span class="px" style="color:var(--muted);font-size:12px">PHOTO BOOK</span><h2>${esc(x.name)}의 앨범${w ? `<span style="font-size:.6em;color:var(--muted)"> · ${esc(w.name)}</span>` : ''}</h2></div><span class="lbl-box">${al.length} PHOTOS</span></div>
-    ${al.length ? `<div class="binder"><div class="book ${sheet.deco ? 'decoing' : ''}" id="book"><div class="bp l" id="bpL">${faceHtml(al, sp * 2)}</div><div class="bp r" id="bpR">${faceHtml(al, sp * 2 + 1)}</div><div class="stk-layer" id="stk"></div></div>
-        <div class="rings" aria-hidden="true">${'<i></i>'.repeat(5)}</div><span class="bookmark" aria-hidden="true"></span>
-        <div class="bk-tabs"><span class="lab">ALBUM</span>${Array.from({ length: n }, (_, j) => `<button data-ato="${j}" aria-current="${j === sp}" aria-label="${j + 1}장">${j + 1}</button>`).join('')}</div></div>
-      <div class="bk-ctrl"><button class="bk-nav prev" data-aidx="-1" aria-label="이전 장" ${sp === 0 ? 'disabled' : ''}>◀</button><span class="cnt" id="bkCnt">${sp + 1} / ${n}</span><button class="bk-nav next" data-aidx="1" aria-label="다음 장" ${sp === n - 1 ? 'disabled' : ''}>▶</button></div>
-      <div class="deco-bar" id="decoBar">${decoBar()}</div>
-      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${imgS(g)}" style="${posT(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
-      : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>아직 사진이 없어요.<br>${w ? `${esc(w.name)}에서의 ${esc(x.name)} 사진을 모아보세요.` : '이 캐릭터의 그림, 짤, 레퍼런스를 모아보세요.'}</p></div>`}
-    ${canWrite && assets ? `<div class="ap-tools"><label class="btn sm primary filebtn">＋ 사진 추가 (여러 장 가능)<input type="file" accept="image/*" multiple data-quickgal="${wid ? `characters:${x.id}:wa:${wid}` : `characters:${x.id}:album`}"></label>${al.length ? `<button class="btn sm" data-act="${wid ? 'album-edit' : 'edit'}">설명 달기 · 빼기</button>` : ''}</div>` : ''}
-  </div>`;
+// opts.circles: [[value, label, innerHtml]] with opts.attr; the character page uses albums, the world page uses characters
+function instaAlbum(x, key, opts) {
+  const tab = sheet.igTab || 'grid';
+  return `<div class="ig">${opts.back ? '<button class="ig-back" data-page="1">← 프로필로</button>' : ''}${igHead(x, key)}
+    ${opts.circles.length > 1 ? `<div class="ig-hl">${opts.circles.map(([v, l, inner]) => igCircle(opts.attr, v, l, inner, v === opts.cur)).join('')}</div>` : ''}
+    <div class="ig-tabs" role="tablist"><button role="tab" data-igtab="grid" aria-selected="${tab === 'grid'}">▦ 게시물</button><button role="tab" data-igtab="fav" aria-selected="${tab === 'fav'}">♡ 좋아요</button></div>
+    ${igGrid(x, key)}
+    ${canWrite && key !== '*' && (key ? photosOf(x, key) : x.album || []).length ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
 }
-let turning = false;
-function turnAlbum(to) {
-  const c = albumCtx(), x = ctxChar();
-  if (!x) return;
-  const al = photosOf(x, c.wid), n = spreadCount(al), from = sheet.albumIdx || 0;
-  if (turning || !n || to < 0 || to >= n || to === from) return;
-  const book = $('#book'), L = $('#bpL'), R = $('#bpR');
-  if (!book) return;
-  sheet.albumIdx = to;
-  const fwd = to > from;
-  const t = document.createElement('div');
-  t.className = 'turn ' + (fwd ? 'fwd' : 'back');
-  // forward: the right page lifts and lands on the left; back: the left page lifts and lands on the right
-  if (fwd) { t.innerHTML = `<div class="front">${R.innerHTML}</div><div class="back">${faceHtml(al, to * 2)}</div>`; R.innerHTML = faceHtml(al, to * 2 + 1); }
-  else { t.innerHTML = `<div class="front">${L.innerHTML}</div><div class="back">${faceHtml(al, to * 2 + 1)}</div>`; L.innerHTML = faceHtml(al, to * 2); }
-  book.appendChild(t);
-  turning = true;
-  sheet.sel = null; $('#stk').style.opacity = 0;
-  const done = () => { if (fwd) L.innerHTML = faceHtml(al, to * 2); else R.innerHTML = faceHtml(al, to * 2 + 1); t.remove(); turning = false; renderStickers(); $('#stk').style.opacity = 1; if ($('#decoBar')) $('#decoBar').innerHTML = decoBar(); };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) done(); else t.addEventListener('animationend', e => { if (e.target === t) done(); });
-  document.querySelectorAll('#bkThumbs [data-ato], .bk-tabs [data-ato]').forEach(b => b.setAttribute('aria-current', String(+b.dataset.ato === to)));
-  $('#bkThumbs [aria-current="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-  $('#bkCnt').textContent = `${to + 1} / ${n}`;
-  $('.bk-ctrl .bk-nav.prev').disabled = to === 0; $('.bk-ctrl .bk-nav.next').disabled = to === n - 1;
+function charAlbumCircles(x) {
+  const all = albumEntries(x, '*'), own = albumEntries(x, '');
+  return [['*', '전체', all[0] ? circleImg(all[0].g) : '✦'], ['', '기본 앨범', own[0] ? circleImg(own[0].g) : '🎀'],
+    ...worldsOf(x).map(w => { const f = albumEntries(x, w.id)[0]; return [w.id, w.name, w.cover ? circleImg(w.cover) : f ? circleImg(f.g) : '🌍']; })];
 }
-function albumPicker(items, attr, cur) {
-  return `<div class="apick">${items.map(([v, label, av]) => `<button class="link-chip ${av === undefined ? 'plain' : ''}" ${attr}="${esc(v)}" aria-pressed="${v === cur}">${av !== undefined ? `<span class="av">${av}</span>` : ''}${esc(label)}</button>`).join('')}</div>`;
+// the album strip on the profile page
+function igTeaser(x) {
+  const l = albumEntries(x, '*'), shown = l.slice(0, 5), rest = l.length - shown.length;
+  return `<div class="ig-teaser"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>게시물 ${l.length} · 앨범 ${1 + worldsOf(x).length}개</small></div><button class="btn sm primary" data-page="2">앨범 보기 →</button></div>
+    ${l.length ? `<div class="ig-strip">${shown.map(e => `<button data-igopen="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}"><img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}</button>`).join('')}${rest > 0 ? `<button class="more" data-page="2">+${rest}</button>` : ''}</div>` : '<p style="color:var(--muted);margin:0">아직 사진이 없어요.</p>'}</div>`;
 }
+
+/* Post viewer */
+let igPost = null; // { wid, id, n: photo index inside the post, edit, armed }
+function igFind() {
+  const x = albumChar(); if (!x || !igPost) return null;
+  const list = photosOf(x, igPost.wid), i = list.findIndex(g => g.id === igPost.id);
+  return i < 0 ? null : { x, list, i, g: list[i] };
+}
+function openPost(wid, id) { igPost = { wid, id, n: 0 }; renderPost(); }
+function closePost() { igPost = null; $('#igpost')?.remove(); }
+function stepPost(d) {
+  const f = igFind(); if (!f) return;
+  const imgs = postImgs(f.g);
+  if (imgs.length > 1 && igPost.n + d >= 0 && igPost.n + d < imgs.length) { igPost.n += d; renderPost(); return; }
+  // past the first/last photo of a post: go to the neighbouring post
+  const l = albumList(f.x, albumKey()), k = l.findIndex(e => e.wid === igPost.wid && e.g.id === igPost.id), nx = l[k + d];
+  if (!nx) return;
+  igPost = { wid: nx.wid, id: nx.g.id, n: d < 0 ? postImgs(nx.g).length - 1 : 0 };
+  renderPost();
+}
+function renderPost() {
+  const f = igFind();
+  if (!f) { closePost(); return; }
+  const { x, g } = f, imgs = postImgs(g), n = Math.min(igPost.n, imgs.length - 1), r = imgs[n], w = igPost.wid && byId('worlds', igPost.wid);
+  igPost.n = n;
+  let el = $('#igpost');
+  if (!el) { el = document.createElement('div'); el.id = 'igpost'; el.className = 'igpost'; document.body.appendChild(el); }
+  const l = albumList(x, albumKey()), k = l.findIndex(e => e.wid === igPost.wid && e.g.id === igPost.id);
+  const canPrev = n > 0 || k > 0, canNext = n < imgs.length - 1 || (k >= 0 && k < l.length - 1);
+  el.innerHTML = `<div class="ig-post" role="dialog" aria-modal="true" aria-label="게시물">
+    <div class="pic"><button class="ph" data-lightbox="${img(r)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(r)}" style="${pos(r)}" alt="${esc(g.caption || '')}"></button>
+      ${canPrev ? '<button class="nav prev" data-pstep="-1" aria-label="이전">‹</button>' : ''}${canNext ? '<button class="nav next" data-pstep="1" aria-label="다음">›</button>' : ''}
+      ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>` : ''}</div>
+    <div class="side"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>${w ? esc(w.name) : '기본 앨범'}</small></div><button class="x" data-pclose aria-label="닫기">✕</button></div>
+      <div class="cap">${igPost.edit ? `<textarea id="pcap" rows="5" placeholder="설명을 적어 주세요. #태그도 쓸 수 있어요.">${esc(g.caption || '')}</textarea><div class="row"><button class="btn sm ghost" data-pop="capcancel">취소</button><button class="btn sm primary" data-pop="capsave">저장</button></div>`
+        : g.caption ? `<p>${capHtml(g.caption)}</p>` : `<p class="none">${canWrite ? '✎를 눌러 설명을 달 수 있어요.' : '설명이 없어요.'}</p>`}</div>
+      <div class="act"><div class="ic"><button class="heart ${g.fav ? 'on' : ''}" ${canWrite ? 'data-pop="fav"' : 'disabled'} aria-label="좋아요">${g.fav ? '♥' : '♡'}</button>
+        ${canWrite ? `<button data-pop="pos" title="위치 조정" aria-label="위치 조정">✥</button><button data-pop="cap" title="설명 고치기" aria-label="설명 고치기">✎</button>
+        <button data-pop="pin" class="${g.pin ? 'on' : ''}" title="${g.pin ? '고정 풀기' : '맨 앞에 고정'}" aria-label="고정">📌</button><span class="grow"></span>
+        ${assets ? `<label class="addm" title="이 게시물에 사진 추가">＋<input type="file" accept="image/*" multiple data-igmore="1"></label>` : ''}
+        <button data-pop="del" class="del ${igPost.armed ? 'armed' : ''}" title="${imgs.length > 1 ? '이 사진 빼기' : '게시물 삭제'}">${igPost.armed ? (imgs.length > 1 ? '한 번 더 누르면 이 사진을 빼요' : '한 번 더 누르면 삭제') : '🗑'}</button>` : ''}</div>
+        <div class="like">${g.fav ? '좋아요 표시함' : ''}</div>${g.at ? `<time>${fmtDate(g.at)}</time>` : ''}</div></div></div>`;
+  if (igPost.edit) setTimeout(() => $('#pcap')?.focus(), 0);
+}
+// edits one post of the open character's album and saves the whole album list
+async function patchPost(fn) {
+  const f = igFind(); if (!f) return;
+  const list = JSON.parse(JSON.stringify(f.list));
+  const res = fn(list, f.i);
+  const patch = igPost.wid ? { worldAlbums: { [igPost.wid]: list } } : { album: list };
+  try {
+    await db.collection('characters').doc(f.x.id).update({ ...patch, updatedAt: Date.now() });
+    if (igPost.wid) f.x.worldAlbums = { ...(f.x.worldAlbums || {}), [igPost.wid]: list }; else f.x.album = list;
+  } catch (e) { toast(errMsg(e)); return; }
+  return res;
+}
+async function postOp(op) {
+  const f = igFind(); if (!f) return;
+  if (op !== 'del') igPost.armed = false;
+  if (op === 'fav' || op === 'pin') { await patchPost((l, i) => { l[i][op] = !l[i][op]; }); renderPost(); return; }
+  if (op === 'cap') { igPost.edit = true; renderPost(); return; }
+  if (op === 'capcancel') { igPost.edit = false; renderPost(); return; }
+  if (op === 'capsave') { const v = $('#pcap').value; await patchPost((l, i) => { l[i].caption = v; }); igPost.edit = false; renderPost(); toast('저장했어요'); return; }
+  if (op === 'pos') {
+    const n = igPost.n, r = postImgs(f.g)[n];
+    openPosTool(r, 'album', async p => {
+      await patchPost((l, i) => { if (n === 0) Object.assign(l[i], p); else Object.assign(l[i].more[n - 1], p); });
+      toast('위치를 저장했어요'); renderPost();
+    });
+    return;
+  }
+  if (op === 'del') {
+    if (!igPost.armed) { igPost.armed = true; renderPost(); return; }
+    igPost.armed = false;
+    const imgs = postImgs(f.g), n = igPost.n;
+    let gone;
+    if (imgs.length > 1) {
+      // dropping one photo of a multi-photo post; when it is the first, the next photo takes over the post
+      gone = await patchPost((l, i) => {
+        const g = l[i];
+        if (n > 0) return g.more.splice(n - 1, 1)[0].id;
+        const [nx, ...rest] = g.more, { more, ...meta } = g;
+        l[i] = { ...meta, ...nx, id: nx.id, more: rest };
+        return g.id;
+      });
+      if (n === 0 && gone) igPost.id = postImgs(f.g)[1].id;
+      igPost.n = Math.max(0, n - 1);
+    } else {
+      gone = await patchPost((l, i) => l.splice(i, 1)[0].id);
+      closePost();
+    }
+    if (gone && !assetInUse(gone)) { try { await assets.delete(gone); } catch {} }
+    toast('뺐어요'); if (igPost) renderPost(); renderSheet();
+  }
+}
+// header editor
+function openHeadEdit(cid) {
+  const x = byId('characters', cid), h = { ...(x.albumHead || {}) };
+  const o = document.createElement('div'); o.className = 'postool';
+  const draw = () => {
+    o.innerHTML = `<div class="win c-pink ig-hedit"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">앨범 헤더 편집</span></div><div class="pt-body">
+      <div class="fld"><span class="lbl">헤더 사진</span><span class="hint">비워두면 프로필 사진이 나와요.</span>
+        <div class="row" style="justify-content:flex-start;gap:10px"><span class="ig-mini big">${(h.avatar || x.avatar) ? `<img src="${imgS(h.avatar || x.avatar)}" style="${posT(h.avatar || x.avatar)}" alt="">` : `<span class="ini">${esc(initial(x.name))}</span>`}</span>
+        ${assets ? `<label class="btn sm filebtn">사진 고르기<input type="file" accept="image/*" data-hav="1"></label>` : ''}${h.avatar ? '<button type="button" class="btn sm" data-hop="pos">✥ 위치</button><button type="button" class="btn sm ghost" data-hop="clear">프로필 사진 쓰기</button>' : ''}</div></div>
+      <label class="fld"><span class="lbl">보여줄 이름</span><input id="h_name" value="${esc(h.name || '')}" placeholder="${esc(x.name)} (프로필 이름)"></label>
+      <label class="fld"><span class="lbl">@아이디</span><input id="h_handle" value="${esc(h.handle || '')}" placeholder="비워두면 안 보여요"></label>
+      <label class="fld"><span class="lbl">앨범 소개글</span><textarea id="h_bio" rows="3" placeholder="${esc(x.tagline || '비워두면 프로필 한 줄 소개가 나와요')}">${esc(h.bio || '')}</textarea></label>
+      <label class="chk"><input type="checkbox" id="h_info" ${h.info !== false ? 'checked' : ''}> 성별 · 생일 보이기</label>
+      <label class="chk"><input type="checkbox" id="h_stats" ${h.stats !== false ? 'checked' : ''}> 사진 · 세계관 · 관계 숫자 보이기</label>
+      <div class="pt-btns"><span style="flex:1"></span><button type="button" class="btn sm" data-hop="cancel">취소</button><button type="button" class="btn sm primary" data-hop="ok">저장</button></div></div></div>`;
+  };
+  const keep = () => { h.name = $('#h_name', o).value.trim(); h.handle = $('#h_handle', o).value.trim().replace(/^@/, ''); h.bio = $('#h_bio', o).value.trim(); h.info = $('#h_info', o).checked; h.stats = $('#h_stats', o).checked; };
+  const old = x.albumHead?.avatar?.id;
+  draw(); document.body.appendChild(o);
+  o.addEventListener('change', async e => {
+    if (!e.target.dataset.hav || !e.target.files.length) return;
+    keep(); toast('사진 올리는 중…');
+    try { const [r] = await uploadFiles([e.target.files[0]]); h.avatar = r; draw(); } catch (er) { toast(errMsg(er)); }
+  });
+  o.addEventListener('click', async e => {
+    const b = e.target.closest('[data-hop]'); if (!b) { if (e.target === o) o.remove(); return; }
+    const op = b.dataset.hop; keep();
+    if (op === 'cancel') { if (h.avatar && h.avatar.id !== old) { try { await assets.delete(h.avatar.id); } catch {} } o.remove(); return; }
+    if (op === 'clear') { h.avatar = null; draw(); return; }
+    if (op === 'pos') { openPosTool(h.avatar, 'ighead', p => { h.avatar = { ...h.avatar, ...p }; draw(); }); return; }
+    if (op === 'ok') {
+      try {
+        await db.collection('characters').doc(x.id).update({ albumHead: h, updatedAt: Date.now() });
+        x.albumHead = h;
+        if (old && old !== h.avatar?.id && !assetInUse(old)) { try { await assets.delete(old); } catch {} }
+        o.remove(); toast('헤더를 저장했어요'); renderSheet();
+      } catch (er) { toast(errMsg(er)); }
+    }
+  });
+}
+// several photos picked at once: one post, or one post each
+function askGroup(n) {
+  if (n < 2) return Promise.resolve(false);
+  return new Promise(res => {
+    const o = document.createElement('div'); o.className = 'postool';
+    o.innerHTML = `<div class="win c-pink" style="width:min(360px,100%)"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">사진 ${n}장</span></div><div class="pt-body">
+      <p style="margin:0">어떻게 올릴까요?</p><div class="pt-btns" style="flex-direction:column;align-items:stretch"><button class="btn primary" data-g="1">❐ 한 게시물로 묶기</button><button class="btn" data-g="0">▦ 한 장씩 따로 올리기</button><button class="btn ghost" data-g="x">취소</button></div></div></div>`;
+    o.addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (!b && e.target !== o) return; o.remove(); res(b ? (b.dataset.g === 'x' ? null : b.dataset.g === '1') : null); });
+    document.body.appendChild(o);
+  });
+}
+
 function viewBody(type, x) {
   const flipCls = `pg ${sheet.flip ? 'flip-' + sheet.flip : ''}`;
   if (type === 'characters' && sheet.page === 2) {
     const ws = worldsOf(x);
-    if (sheet.albumWorld && !ws.some(w => w.id === sheet.albumWorld)) sheet.albumWorld = null;
-    const pick = ws.length ? albumPicker([['', '기본 앨범'], ...ws.map(w => [w.id, w.name])], 'data-aworld', sheet.albumWorld || '') : '';
-    return `${pageTabs(2)}<div class="${flipCls}">${pick}${albumPage(x, sheet.albumWorld || null)}</div>`;
+    if (sheet.albumWorld && sheet.albumWorld !== '*' && !ws.some(w => w.id === sheet.albumWorld)) sheet.albumWorld = '*';
+    const key = sheet.albumWorld ?? '*';
+    return `${pageTabs(2)}<div class="${flipCls}">${instaAlbum(x, key, { circles: charAlbumCircles(x), attr: 'data-aworld', cur: key, back: true })}</div>`;
   }
   if (type === 'worlds' && sheet.page === 2) {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
     if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
     const ch = byId('characters', sheet.albumChar);
     return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${cs.length
-      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${imgS(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
+      ? instaAlbum(ch, x.id, { circles: cs.map(c => [c.id, c.name, c.avatar ? circleImg(c.avatar) : esc(initial(c.name))]), attr: 'data-achar', cur: ch.id })
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>이 세계관에 연결된 캐릭터가 없어요.<br>캐릭터 편집에서 세계관을 고르면 여기에 캐릭터별 앨범이 생겨요.</p></div>`}</div>`;
   }
   if (type === 'characters') {
@@ -1140,7 +1277,7 @@ function viewBody(type, x) {
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
-      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${imgS(g)}" style="${posT(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
+      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}</div>`;
   }
@@ -1262,7 +1399,7 @@ function fieldHtml(f, d) {
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
     case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${imgS(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
         ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? 'wcover' : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
-    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
+    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt="">${g.more?.length ? `<span class="nmore">+${g.more.length}</span>` : ''}<button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
@@ -1339,7 +1476,7 @@ function renderSheet() {
     <div class="sheet"><div class="sheet-in">${mode === 'kinds' ? kindsBody() : mode === 'view' ? viewBody(type, x) : editBody()}</div></div></div></div>`;
   if (keepScroll) $('.sheet', L).scrollTop = keepScroll;
   sheet.flip = null;
-  renderStickers();
+  if (igPost) renderPost();
 }
 function openView(type, id) { sheet = { mode: 'view', type, id, page: 1 }; renderSheet(); }
 function kindsBody() {
@@ -1441,7 +1578,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x), ...(x.cast || []).map(c => c.avatar)].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).map(c => c.avatar)].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -1557,7 +1694,8 @@ const POS_TABS = {
   avatar: [['', '프로필', '4/5', false, '캐릭터를 열었을 때 크게 보이는 사진이에요.'], ['c', '목록 카드', '4/5', false, '캐릭터 목록 카드에 보이는 사진이에요.'], ['t', '동그란 칩', '1/1', true, '이름 옆 동그란 사진, 관계 칩에 보이는 사진이에요.']],
   cast: [['', '카드', '4/5', false, '등장인물 카드에 보이는 사진이에요.'], ['t', '동그란 칩', '1/1', true, '관계 칩에 보이는 동그란 사진이에요.']],
   wcover: [['', '세계관 페이지', '21/8', false, '세계관을 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '16/9', false, '세계관 목록 카드에 보이는 사진이에요.']],
-  album: [['', '앨범 페이지', '3/4', false, '앨범을 펼쳤을 때 보이는 사진이에요.'], ['t', '작은 미리보기', '1/1', false, '앨범 아래 사진 목록과 미리보기에 보이는 사진이에요.']],
+  album: [['', '게시물', '4/5', false, '사진을 눌러 열었을 때 보이는 모습이에요.'], ['t', '격자', '1/1', false, '앨범 격자와 프로필 미리보기에 보이는 모습이에요.']],
+  ighead: [['t', '앨범 헤더', '1/1', true, '앨범 맨 위 동그란 사진이에요.']],
   gallery: [['t', '갤러리', '1/1', false, '세계관 갤러리에 보이는 사진이에요.']],
 };
 function openPosTool(ref, tabsKey, done) {
@@ -1621,8 +1759,16 @@ document.addEventListener('click', async e => {
   const dock = $('#dock');
   if (dock.classList.contains('open') && !e.target.closest('#dock, [data-act="menu"]')) dock.classList.remove('open');
   if (e.target.closest('#strip')) { dock.classList.toggle('open'); return; }
+  if (e.target.id === 'igpost') { closePost(); return; }
   const t = e.target.closest('button, [data-open], [data-scrim]');
   if (!t) return;
+  if (t.dataset.igpost !== undefined) { const [w, id] = t.dataset.igpost.split(':'); openPost(w, id); return; }
+  if (t.dataset.igopen) { const [w, id] = t.dataset.igopen.split(':'); sheet.page = 2; sheet.albumWorld = '*'; sheet.flip = 'next'; renderSheet(); openPost(w, id); return; }
+  if (t.dataset.igtab) { sheet.igTab = t.dataset.igtab; renderSheet(); return; }
+  if (t.dataset.ighead) { openHeadEdit(t.dataset.ighead); return; }
+  if (t.dataset.pstep) { stepPost(+t.dataset.pstep); return; }
+  if (t.dataset.pclose !== undefined) { closePost(); return; }
+  if (t.dataset.pop) { postOp(t.dataset.pop); return; }
   if (t.dataset.scrim && e.target === t) { if (sheet?.mode === 'view') { sheet = null; renderSheet(); } return; }
   if (t.dataset.nav) { dock.classList.remove('open'); t.blur(); if (coverEdit?.key.startsWith('site:')) coverEdit = null; view = t.dataset.nav; query = ''; filter = { tag: null, sub: 'all' }; try { history.replaceState(null, '', '#' + view); } catch {} render(); return; }
   if (t.dataset.sub) { filter.sub = t.dataset.sub; render(); return; }
@@ -1633,18 +1779,8 @@ document.addEventListener('click', async e => {
     if (canWrite && db) { try { await saveSite({ font: t.dataset.font }); } catch (er) { toast(errMsg(er)); } }
     return;
   }
-  if (t.dataset.addstk && sheet) { const k = t.dataset.addstk; editDeco(list => { list.push({ k, x: 50 + (Math.random() * 30 - 15), y: 45 + (Math.random() * 20 - 10), r: Math.round(Math.random() * 30 - 15), s: 1 }); sheet.sel = list.length - 1; }); return; }
-  if (t.dataset.unstk) { const id = t.dataset.unstk; try { await saveSite({ stickers: (site.stickers || []).filter(v => v !== id) }); } catch (er) { toast(errMsg(er)); } $('#decoBar').innerHTML = decoBar(); return; }
-  if (t.dataset.stkop && sheet?.sel != null) {
-    const op = t.dataset.stkop, i = sheet.sel;
-    editDeco(list => { const d = list[i]; if (!d) return;
-      if (op === 'rl') d.r -= 15; else if (op === 'rr') d.r += 15;
-      else if (op === 'up') d.s = Math.min(3, +(d.s * 1.2).toFixed(2)); else if (op === 'down') d.s = Math.max(.4, +(d.s / 1.2).toFixed(2));
-      else if (op === 'del') { list.splice(i, 1); sheet.sel = null; } });
-    return;
-  }
-  if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld || null; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
-  if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
+  if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld; renderSheet(); return; }
+  if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; renderSheet(); return; }
   if (t.dataset.posnow) {
     const [ty, id, k, tabs] = t.dataset.posnow.split(':'), x = byId(ty, id);
     openPosTool(x[k], tabs, async p => {
@@ -1655,8 +1791,6 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
   if (t.dataset.castedit && sheet) { openCastEdit(sheet.id, +t.dataset.castedit); return; }
-  if (t.dataset.aidx && sheet) { turnAlbum((sheet.albumIdx || 0) + +t.dataset.aidx); return; }
-  if (t.dataset.ato && sheet) { turnAlbum(+t.dataset.ato); return; }
   if (t.dataset.page && sheet) { const n = +t.dataset.page; if (n !== sheet.page) { sheet.flip = n > (sheet.page || 1) ? 'next' : 'prev'; sheet.page = n; renderSheet(); } return; }
   if (sheet?.mode === 'kinds') {
     const ks = allKinds(), base = site.kinds || DEFAULT_KINDS;
@@ -1683,7 +1817,6 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.copyprompt) { copy(byId('prompts', t.dataset.copyprompt)?.body || ''); return; }
   if (t.dataset.lightbox && suppressClick) { suppressClick = false; return; }
-  if (t.dataset.lightbox && sheet?.deco) { sheet.sel = null; renderStickers(); $('#decoBar').innerHTML = decoBar(); return; }
   if (t.dataset.lightbox) {
     const items = t.dataset.group ? [...document.querySelectorAll(`[data-group="${t.dataset.group}"]`)] : [t];
     openLightbox(items.map(b => ({ src: b.dataset.lightbox, cap: b.dataset.cap || '' })), Math.max(0, items.indexOf(t)));
@@ -1707,7 +1840,7 @@ document.addEventListener('click', async e => {
     if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.tabs, p => { d[k] = { ...d[k], ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.tabs, p => { d[k][+i] = { ...d[k][+i], ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.unimg) { if (d[t.dataset.unimg]) sheet.removed.push(d[t.dataset.unimg].id); d[t.dataset.unimg] = null; rerenderEdit(); return; }
-    if (t.dataset.ungal) { const [k, i] = t.dataset.ungal.split(':'); const [g] = d[k].splice(+i, 1); if (g) sheet.removed.push(g.id); rerenderEdit(); return; }
+    if (t.dataset.ungal) { const [k, i] = t.dataset.ungal.split(':'); const [g] = d[k].splice(+i, 1); if (g) sheet.removed.push(...postImgs(g).map(r => r.id)); rerenderEdit(); return; }
     if (t.dataset.addsec) { (d.sections = d.sections || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('sec_t_' + (d.sections.length - 1))?.focus(); return; }
     if (t.dataset.unsec) { d.sections.splice(+t.dataset.unsec, 1); rerenderEdit(); return; }
   }
@@ -1718,8 +1851,6 @@ document.addEventListener('click', async e => {
   else if (act === 'backup') backup();
   else if (act === 'logout') { await sb.auth.signOut(); location.reload(); }
   else if (act === 'album-edit') { const c = albumCtx(), x = ctxChar(); sheet = { mode: 'edit', type: 'characters', id: x.id, draft: { list: JSON.parse(JSON.stringify(photosOf(x, c.wid))) }, removed: [], albumEdit: { ...c, back: { type: sheet.type, id: sheet.id, albumChar: sheet.albumChar, albumWorld: sheet.albumWorld } }, busy: '' }; renderSheet(); }
-  else if (act === 'deco') { sheet.deco = true; sheet.sel = null; $('#book').classList.add('decoing'); $('#decoBar').innerHTML = decoBar(); }
-  else if (act === 'deco-done') { sheet.deco = false; sheet.sel = null; $('#book').classList.remove('decoing'); $('#decoBar').innerHTML = decoBar(); renderStickers(); toast('꾸민 걸 저장했어요'); }
   else if (act === 'kinds') { sheet = { mode: 'kinds', type: 'characters' }; renderSheet(); }
   else if (act === 'cover-move') { coverEdit = { key: t.dataset.ckey, y: coverOf(t.dataset.ckey)?.y ?? 50 }; renderCovers(); }
   else if (act === 'cover-cancel') { coverEdit = null; renderCovers(); }
@@ -1764,14 +1895,27 @@ document.addEventListener('change', async e => {
   if (el.dataset.restore && el.files?.length) { const f = el.files[0]; el.value = ''; restore(f); return; }
   if (!el.files || !el.files.length || !assets) return;
   const files = [...el.files];
-  if (el.dataset.stkup) {
-    toast(`스티커 ${files.length}개 올리는 중…`);
+  if (el.dataset.igup) {
+    const grp = await askGroup(files.length);
+    if (grp === null) return;
+    const [ty, did, k, wid] = el.dataset.igup.split(':'); toast(`사진 ${files.length}장 올리는 중…`);
+    try {
+      const rs = await uploadFiles(files), x = byId(ty, did), at = Date.now();
+      // oldest first in storage, so the first picked photo ends up in front when shown newest-first
+      const add = grp ? [{ ...rs[0], caption: '', at, more: rs.slice(1) }] : rs.map((r, i) => ({ ...r, caption: '', at: at + i }));
+      if (k === 'wa') await db.collection(ty).doc(did).update({ worldAlbums: { [wid]: [...photosOf(x, wid), ...add] }, updatedAt: Date.now() });
+      else await db.collection(ty).doc(did).update({ album: [...(x.album || []), ...add], updatedAt: Date.now() });
+      toast('앨범에 올렸어요');
+    } catch (er) { toast(errMsg(er)); }
+    return;
+  }
+  if (el.dataset.igmore) {
+    toast(`사진 ${files.length}장 붙이는 중…`);
     try {
       const rs = await uploadFiles(files);
-      await saveSite({ stickers: [...(site.stickers || []), ...rs.map(r => r.id)] });
-      toast('내 스티커에 넣었어요');
+      await patchPost((l, i) => { l[i].more = [...(l[i].more || []), ...rs]; });
+      igPost.n = postImgs(igFind().g).length - rs.length; renderPost(); toast('게시물에 붙였어요');
     } catch (er) { toast(errMsg(er)); }
-    if ($('#decoBar')) $('#decoBar').innerHTML = decoBar();
     return;
   }
   if (el.dataset.cover) {
@@ -1796,13 +1940,13 @@ document.addEventListener('change', async e => {
     await withBusy(`이미지 ${files.length}장 올리는 중…`, async () => {
       const rs = await uploadFiles(files);
       const k = el.dataset.gal;
-      sheet.draft[k] = [...(sheet.draft[k] || []), ...rs.map(r => ({ ...r, caption: '' }))];
+      sheet.draft[k] = [...(sheet.draft[k] || []), ...rs.map((r, i) => ({ ...r, caption: '', ...(k === 'gallery' ? {} : { at: Date.now() + i }) }))];
     });
   } else if (el.dataset.quickgal) {
     const [ty, did, k, wid] = el.dataset.quickgal.split(':'); toast(`이미지 ${files.length}장 올리는 중…`);
     try {
       const rs = await uploadFiles(files);
-      const x = byId(ty, did), add = rs.map(r => ({ ...r, caption: '' }));
+      const x = byId(ty, did), add = rs.map((r, i) => ({ ...r, caption: '', ...(k === 'gallery' ? {} : { at: Date.now() + i }) }));
       if (k === 'wa') await db.collection(ty).doc(did).update({ worldAlbums: { [wid]: [...photosOf(x, wid), ...add] }, updatedAt: Date.now() });
       else await db.collection(ty).doc(did).update({ [k]: [...(x[k] || []), ...add], updatedAt: Date.now() });
       toast(k === 'gallery' ? '갤러리에 추가했어요' : '앨범에 추가했어요');
@@ -1812,10 +1956,12 @@ document.addEventListener('change', async e => {
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('div[data-open]')) { e.preventDefault(); const [ty, id] = e.target.dataset.open.split(':'); openView(ty, id); return; }
   if (lbStep && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { lbStep(e.key === 'ArrowLeft' ? -1 : 1); return; }
-  if ($('#book') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|TEXTAREA/.test(e.target.tagName)) { turnAlbum((sheet.albumIdx || 0) + (e.key === 'ArrowLeft' ? -1 : 1)); return; }
+  if (igPost && !$('.postool') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|TEXTAREA/.test(e.target.tagName)) { stepPost(e.key === 'ArrowLeft' ? -1 : 1); return; }
   if (e.key !== 'Escape') return;
   if ($('#dock').classList.contains('open')) { $('#dock').classList.remove('open'); return; }
   const lb = $('.lightbox'); if (lb) { lb.remove(); lbStep = null; return; }
+  const pt = $('.postool'); if (pt) { pt.remove(); return; }
+  if (igPost) { closePost(); return; }
   if (sheet?.mode === 'view') { sheet = null; renderSheet(); }
 });
 
@@ -1830,35 +1976,13 @@ document.addEventListener('pointermove', e => {
   coverEdit.y = Math.max(0, Math.min(100, coverDrag.start - (e.clientY - coverDrag.y0) / coverDrag.h * 100));
   coverDrag.im.style.objectPosition = `50% ${coverEdit.y}%`;
 });
-let stkDrag = null;
-document.addEventListener('pointerdown', e => {
-  const st = sheet?.deco && e.target.closest('.stk');
-  if (!st) return;
-  e.preventDefault();
-  sheet.sel = +st.dataset.si;
-  document.querySelectorAll('.stk').forEach(n => n.classList.toggle('sel', n === st));
-  $('#decoBar').innerHTML = decoBar();
-  const r = $('#book').getBoundingClientRect();
-  stkDrag = { el: st, i: sheet.sel, r, moved: false };
-});
-document.addEventListener('pointermove', e => {
-  if (!stkDrag) return;
-  const { r, el } = stkDrag;
-  const nx = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)), ny = Math.max(0, Math.min(100, (e.clientY - r.top) / r.height * 100));
-  el.style.left = nx + '%'; el.style.top = ny + '%'; stkDrag.nx = nx; stkDrag.ny = ny; stkDrag.moved = true;
-});
-document.addEventListener('pointerup', () => {
-  if (!stkDrag) return;
-  const { i, nx, ny, moved } = stkDrag; stkDrag = null;
-  if (moved) editDeco(list => { if (list[i]) { list[i].x = +nx.toFixed(1); list[i].y = +ny.toFixed(1); } });
-});
 let swipe = null;
-document.addEventListener('pointerdown', e => { if (e.target.closest('#book') && !sheet?.deco) swipe = { x: e.clientX, y: e.clientY }; });
+document.addEventListener('pointerdown', e => { if (e.target.closest('.ig-post .pic')) swipe = { x: e.clientX, y: e.clientY }; });
 document.addEventListener('pointerup', e => {
   coverDrag = null;
   if (!swipe) return;
   const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y; swipe = null;
-  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 400); turnAlbum((sheet.albumIdx || 0) + (dx < 0 ? 1 : -1)); }
+  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 400); stepPost(dx < 0 ? 1 : -1); }
 });
 let suppressClick = false;
 document.addEventListener('pointercancel', () => { coverDrag = null; });
@@ -1978,7 +2102,7 @@ async function start(sessionUser) {
     db.collection(t).onSnapshot(snap => {
       S[t] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       loaded[t] = true;
-      if (sheet?.mode === 'edit' || sheet?.mode === 'kinds' || sheet?.deco) renderNav(); else render();
+      if (sheet?.mode === 'edit' || sheet?.mode === 'kinds') renderNav(); else render();
     });
   }
   try { await db._load(); status = 'ok'; } catch (e) { status = 'offline'; loadError = e?.message || String(e); console.error(e); }
@@ -1987,7 +2111,7 @@ async function start(sessionUser) {
   // pick up changes made on another device when this tab comes back
   let lastSync = Date.now();
   document.addEventListener('visibilitychange', async () => {
-    if (document.hidden || Date.now() - lastSync < 20000 || sheet?.mode === 'edit' || sheet?.deco) return;
+    if (document.hidden || Date.now() - lastSync < 20000 || sheet?.mode === 'edit') return;
     lastSync = Date.now();
     try { await db._load(); } catch {}
   });
