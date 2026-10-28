@@ -475,7 +475,8 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .cedit { margin-left: auto; padding: 0 8px; box-shadow: none !important; border-color: transparent !important; }
 .ctag { margin: 0; font-size: 13.5px; color: var(--muted); }
 .cdesc summary { cursor: pointer; font-size: 12.5px; color: var(--pink-d); }
-.cdesc p { margin: 6px 0 0; font-size: 13.5px; white-space: pre-wrap; }
+.cdesc h6 { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--pink-d); letter-spacing: .04em; }
+.cdesc p { margin: 2px 0 0; font-size: 13.5px; white-space: pre-wrap; }
 .crels { display: flex; flex-wrap: wrap; gap: 6px; }
 .crels .crl { color: var(--pink-d); margin-left: 2px; }
 .relrow.crel { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
@@ -829,7 +830,7 @@ function emptyFor(t) {
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline])].filter(Boolean).join(' ').toLowerCase();
+    ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -895,15 +896,27 @@ function relationsOfChar(x) {
 }
 // World-only characters (main characters and NPCs) live on the world: cast = [{ id, name, role, avatar, tagline, desc, rels: [{ to, label }] }]
 const ROLE = { main: '메인 캐릭터', npc: 'NPC' };
+function castTarget(w, to) {
+  if (to?.startsWith('cast:')) { const m = (w.cast || []).find(c => c.id === to.slice(5)); return m && { name: m.name, avatar: m.avatar, open: '' }; }
+  const c = to && byId('characters', to);
+  return c && { name: c.name, avatar: c.avatar, open: `data-open="characters:${c.id}"` };
+}
+function relChip(t, label, incoming) {
+  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${img(t.avatar)}" style="${pos(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
+}
 function castCard(w, m, i) {
-  const rels = (m.rels || []).filter(r => r.to && byId('characters', r.to));
+  const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
+  // other cast members who wrote a relation pointing at this one
+  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [{ name: o.name, avatar: o.avatar, open: '' }, r.label]));
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
     <div class="cphoto">${m.avatar ? `<button data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}"></button>` : `<span class="ph">${esc(initial(m.name))}</span>`}</div>
     <div class="cinfo">
       <div class="row" style="justify-content:flex-start;gap:6px"><b class="cname">${esc(m.name)}</b><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
       ${m.tagline ? `<p class="ctag">${esc(m.tagline)}</p>` : ''}
-      ${m.desc ? `<details class="cdesc"><summary>자세히</summary><p>${esc(m.desc)}</p></details>` : ''}
-      ${rels.length ? `<div class="crels">${rels.map(r => { const c = byId('characters', r.to); return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}<span class="crl">· ${esc(r.label || '관계 미정')}</span></button>`; }).join('')}</div>` : ''}
+      ${m.birthday || m.gender ? `<div class="row" style="justify-content:flex-start;gap:10px;font-size:13px">${m.birthday ? `<span><span class="lbl-box">BIRTH</span> ${esc(m.birthday)}</span>` : ''}${m.gender ? `<span><span class="lbl-box">GENDER</span> ${esc(m.gender)}</span>` : ''}</div>` : ''}
+      ${(() => { const parts = [['외모', m.appearance], ['성격', m.personality], ['말투', m.speech], ['배경', m.backstory], ['기타 설정', m.desc]].filter(([, v]) => v);
+        return parts.length ? `<details class="cdesc"><summary>자세히</summary>${parts.map(([l, v]) => `<h6>${l}</h6><p>${esc(v)}</p>`).join('')}</details>` : ''; })()}
+      ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => relChip(t, l, false)).join('')}${inc.map(([t, l]) => relChip(t, l, true)).join('')}</div>` : ''}
     </div></div>`;
 }
 function castWin(w) {
@@ -1177,10 +1190,11 @@ function fieldHtml(f, d) {
     case 'castrels': {
       const w = byId('worlds', sheet.id), resIds = new Set(S.characters.filter(c => worldIdsOf(c).includes(w?.id)).map(c => c.id));
       const mine = sorted(S.characters, 'characters').sort((a, b) => (resIds.has(b.id) ? 1 : 0) - (resIds.has(a.id) ? 1 : 0));
-      if (!mine.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">캐릭터 서랍에 내 캐릭터를 먼저 추가하면 관계를 이어줄 수 있어요.</span></div>`;
-      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">이 인물이 내 캐릭터와 어떤 사이인지 적어요. 이 세계관 페이지에서만 보여요.</span>
+      const others = (w?.cast || []).filter(c => c.id !== d.id);
+      if (!mine.length && !others.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">내 캐릭터나 다른 등장인물이 있으면 관계를 이어줄 수 있어요.</span></div>`;
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">이 인물이 내 캐릭터나 다른 등장인물과 어떤 사이인지 적어요. 이 세계관 페이지에서만 보여요.</span>
         <div class="relrows">${(v || []).map((r, i) => `<div class="relrow crel">
-          <select id="crel_to_${i}" data-crelk="${i}:to" aria-label="내 캐릭터">${mine.map(c => `<option value="${c.id}" ${r.to === c.id ? 'selected' : ''}>${esc(c.name)}${resIds.has(c.id) ? '' : ' (이 세계관 밖)'}</option>`).join('')}</select>
+          <select id="crel_to_${i}" data-crelk="${i}:to" aria-label="관계 상대">${mine.length ? `<optgroup label="내 캐릭터">${mine.map(c => `<option value="${c.id}" ${r.to === c.id ? 'selected' : ''}>${esc(c.name)}${resIds.has(c.id) ? '' : ' (이 세계관 밖)'}</option>`).join('')}</optgroup>` : ''}${others.length ? `<optgroup label="이 세계의 등장인물">${others.map(c => `<option value="cast:${c.id}" ${r.to === 'cast:' + c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>` : ''}</select>
           <input type="text" id="crel_l_${i}" data-crelk="${i}:label" value="${esc(r.label || '')}" placeholder="관계 (예: 소꿉친구, 스승, 라이벌)">
           <button type="button" class="btn sm ghost" data-uncrel="${i}" aria-label="관계 빼기">✕</button></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addcrel="1">＋ 관계 추가</button></div></div>`;
@@ -1212,9 +1226,14 @@ function fieldHtml(f, d) {
 const CAST_FIELDS = [
   { k: 'avatar', t: 'image', l: '사진' },
   { row: [{ k: 'name', t: 'text', l: '이름', req: 1 }, { k: 'role', t: 'select', l: '구분', opts: [['main', '메인 캐릭터'], ['npc', 'NPC']] }] },
+  { row: [{ k: 'birthday', t: 'text', l: '생일', ph: '예: 3월 14일' }, { k: 'gender', t: 'text', l: '성별', ph: '예: 여성, 남성, 비공개' }] },
   { k: 'tagline', t: 'text', l: '한 줄 소개', ph: '예: 등대를 지키는 무뚝뚝한 청년' },
-  { k: 'desc', t: 'area', l: '설명', ph: '성격, 외모, 이 세계에서 맡은 역할 등' },
-  { k: 'rels', t: 'castrels', l: '내 캐릭터와의 관계' },
+  { k: 'appearance', t: 'area', l: '외모' },
+  { k: 'personality', t: 'area', l: '성격' },
+  { k: 'speech', t: 'area', l: '말투 · 대사 예시' },
+  { k: 'backstory', t: 'area', l: '배경 이야기' },
+  { k: 'desc', t: 'area', l: '기타 설정', ph: '이 세계에서 맡은 역할, 좋아하는 것 등' },
+  { k: 'rels', t: 'castrels', l: '관계 (내 캐릭터 · 다른 등장인물)' },
 ];
 function openCastEdit(wid, idx) {
   const w = byId('worlds', wid);
@@ -1584,7 +1603,7 @@ document.addEventListener('click', async e => {
   }
   if (sheet?.mode === 'edit') {
     const d = sheet.draft;
-    if (t.dataset.addcrel) { (d.rels = d.rels || []).push({ to: S.characters[0]?.id || '', label: '' }); rerenderEdit(); document.getElementById('crel_l_' + (d.rels.length - 1))?.focus(); return; }
+    if (t.dataset.addcrel) { const w = byId('worlds', sheet.id), oc = (w?.cast || []).find(c => c.id !== d.id); (d.rels = d.rels || []).push({ to: S.characters[0]?.id || (oc ? 'cast:' + oc.id : ''), label: '' }); rerenderEdit(); document.getElementById('crel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.uncrel) { d.rels.splice(+t.dataset.uncrel, 1); rerenderEdit(); return; }
     if (t.dataset.addrel) { const o = S.characters.find(c => c.id !== sheet.id); (d.rels = d.rels || []).push({ to: o?.id || '', label: '', wid: '' }); rerenderEdit(); document.getElementById('rel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.unrel) { d.rels.splice(+t.dataset.unrel, 1); rerenderEdit(); return; }
