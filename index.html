@@ -484,6 +484,10 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .postool .win { width: min(420px, 100%); }
 .pt-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
 .pt-body p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.pt-tabs { display: flex; gap: 6px; }
+.pt-tabs button { flex: 1; padding: 6px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: var(--win); font-size: 13.5px; }
+.pt-tabs button[aria-selected="true"] { background: var(--pink); font-weight: 600; }
+.pt-frame.round { width: min(240px, 100%); border-radius: 50%; }
 .pt-frame { width: 100%; max-height: 60vh; margin: 0 auto; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); cursor: grab; touch-action: none; }
 .pt-frame:active { cursor: grabbing; }
 .pt-frame img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; pointer-events: none; }
@@ -576,6 +580,8 @@ let urlTimer = null;
 const img = ref => ref && ref.id ? urlFor(ref.id) : '';
 // where a cropped photo is anchored (percent of the image), set with the 위치 조정 tool
 const pos = ref => ref && (ref.x != null || ref.y != null) ? `object-position:${ref.x ?? 50}% ${ref.y ?? 50}%` : '';
+// small square/round thumbnails can have their own anchor (tx, ty); without one they follow the big photo
+const posT = ref => ref && (ref.tx != null || ref.ty != null) ? `object-position:${ref.tx ?? 50}% ${ref.ty ?? 50}%` : pos(ref);
 function urlFor(id) {
   if (urlCache.has(id)) return urlCache.get(id);
   urlWant.add(id);
@@ -872,7 +878,7 @@ function allRels() {
   return S.characters.flatMap(c => (c.rels || []).filter(r => r.to && byId('characters', r.to)).map(r => ({ from: c.id, to: r.to, label: r.label || '', wid: r.wid || '' })));
 }
 function relAv(c) {
-  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
+  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
 }
 function relPairsHtml(rels, focusId) {
   // one row per pair of characters; show both directions when both were written
@@ -902,7 +908,7 @@ function castTarget(w, to) {
   return c && { name: c.name, avatar: c.avatar, open: `data-open="characters:${c.id}"` };
 }
 function relChip(t, label, incoming) {
-  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${img(t.avatar)}" style="${pos(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
+  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${img(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
 }
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
@@ -934,7 +940,7 @@ function relationsOfWorld(x, residents) {
   return subWin('RELATIONS · 이 세계의 관계', 'blue', `${here.length ? `<div class="relgroup">${relPairsHtml(here)}</div>` : ''}${common.length ? `<div class="relgroup"><h5><span class="lbl-box">ALL WORLDS · 공통</span></h5>${relPairsHtml(common)}</div>` : ''}`);
 }
 function charChip(c) {
-  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
+  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
 }
 function subWin(title, color, body) {
   return `<div class="win sub-win c-${color}">${winbar(title)}<div class="wbody">${body}</div></div>`;
@@ -1029,7 +1035,7 @@ function albumPage(x, wid = null) {
         <div class="bk-tabs"><span class="lab">ALBUM</span>${Array.from({ length: n }, (_, j) => `<button data-ato="${j}" aria-current="${j === sp}" aria-label="${j + 1}장">${j + 1}</button>`).join('')}</div></div>
       <div class="bk-ctrl"><button class="bk-nav prev" data-aidx="-1" aria-label="이전 장" ${sp === 0 ? 'disabled' : ''}>◀</button><span class="cnt" id="bkCnt">${sp + 1} / ${n}</span><button class="bk-nav next" data-aidx="1" aria-label="다음 장" ${sp === n - 1 ? 'disabled' : ''}>▶</button></div>
       <div class="deco-bar" id="decoBar">${decoBar()}</div>
-      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${img(g)}" style="${pos(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
+      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${img(g)}" style="${posT(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>아직 사진이 없어요.<br>${w ? `${esc(w.name)}에서의 ${esc(x.name)} 사진을 모아보세요.` : '이 캐릭터의 그림, 짤, 레퍼런스를 모아보세요.'}</p></div>`}
     ${canWrite && assets ? `<div class="ap-tools"><label class="btn sm primary filebtn">＋ 사진 추가 (여러 장 가능)<input type="file" accept="image/*" multiple data-quickgal="${wid ? `characters:${x.id}:wa:${wid}` : `characters:${x.id}:album`}"></label>${al.length ? `<button class="btn sm" data-act="${wid ? 'album-edit' : 'edit'}">설명 달기 · 빼기</button>` : ''}</div>` : ''}
   </div>`;
@@ -1075,7 +1081,7 @@ function viewBody(type, x) {
     if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
     const ch = byId('characters', sheet.albumChar);
     return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${cs.length
-      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
+      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>이 세계관에 연결된 캐릭터가 없어요.<br>캐릭터 편집에서 세계관을 고르면 여기에 캐릭터별 앨범이 생겨요.</p></div>`}</div>`;
   }
   if (type === 'characters') {
@@ -1095,7 +1101,7 @@ function viewBody(type, x) {
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
-      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${img(g)}" style="${pos(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
+      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${img(g)}" style="${posT(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}</div>`;
   }
@@ -1117,7 +1123,7 @@ function viewBody(type, x) {
       ${castWin(x, cs)}
       ${relationsOfWorld(x, cs)}
       ${cs.length ? subWin('RESIDENTS · 이 세계의 캐릭터', 'pink', `<div class="links">${cs.map(charChip).join('')}<button class="btn sm primary" data-page="2" style="margin-left:auto">캐릭터 앨범</button></div>`) : ''}
-      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" style="${pos(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
+      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" style="${posT(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
         ${canWrite && assets ? `<div style="margin-top:14px"><label class="btn sm filebtn">＋ 이미지 추가<input type="file" accept="image/*" multiple data-quickgal="worlds:${x.id}:gallery"></label></div>` : ''}`)}
       ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}</div>`;
   }
@@ -1217,7 +1223,7 @@ function fieldHtml(f, d) {
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
     case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${img(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
         ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-ratio="${f.wide ? '16/9' : '4/5'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
-    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${img(g)}" style="${pos(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-ratio="${f.k === 'gallery' ? '1/1' : '3/4'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
+    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${img(g)}" style="${posT(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-ratio="${f.k === 'gallery' ? '1/1' : '3/4'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
@@ -1508,31 +1514,46 @@ async function restore(file) {
 
 /* ---------- 위치 조정: drag a photo inside its frame to choose which part shows ---------- */
 function openPosTool(ref, ratio, done) {
-  let x = ref.x ?? 50, y = ref.y ?? 50, drag = null;
+  // two anchors: the big photo (its own frame shape) and the small thumbnails (square / round)
+  const P = { big: { x: ref.x ?? 50, y: ref.y ?? 50, ratio }, thumb: { x: ref.tx ?? ref.x ?? 50, y: ref.ty ?? ref.y ?? 50, ratio: '1/1' } };
+  let mode = 'big', drag = null;
   const o = document.createElement('div');
   o.className = 'postool';
   o.innerHTML = `<div class="win c-pink"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">위치 조정</span></div>
-    <div class="pt-body"><p>사진을 끌어서 보일 부분을 맞춰 주세요.</p>
-      <div class="pt-frame" style="aspect-ratio:${ratio}"><img src="${img(ref)}" alt="" draggable="false" style="object-position:${x}% ${y}%"></div>
+    <div class="pt-body">
+      <div class="pt-tabs" role="tablist"><button type="button" role="tab" data-pt="big" aria-selected="true">큰 사진</button><button type="button" role="tab" data-pt="thumb" aria-selected="false">섬네일</button></div>
+      <p class="pt-hint">사진을 끌어서 보일 부분을 맞춰 주세요.</p>
+      <div class="pt-frame"><img src="${img(ref)}" alt="" draggable="false"></div>
       <div class="pt-btns"><button type="button" class="btn sm ghost" data-pt="reset">가운데로</button><span style="flex:1"></span><button type="button" class="btn sm" data-pt="cancel">취소</button><button type="button" class="btn sm primary" data-pt="ok">완료</button></div></div></div>`;
   document.body.appendChild(o);
-  const frame = o.querySelector('.pt-frame'), im = frame.querySelector('img');
-  const paint = () => { im.style.objectPosition = `${x}% ${y}%`; };
-  frame.addEventListener('pointerdown', e => { e.preventDefault(); frame.setPointerCapture(e.pointerId); drag = { px: e.clientX, py: e.clientY, x, y, w: frame.clientWidth, h: frame.clientHeight }; });
+  const frame = o.querySelector('.pt-frame'), im = frame.querySelector('img'), hint = o.querySelector('.pt-hint');
+  const paint = () => {
+    const c = P[mode];
+    frame.style.aspectRatio = c.ratio;
+    frame.classList.toggle('round', mode === 'thumb');
+    im.style.objectPosition = `${c.x}% ${c.y}%`;
+    o.querySelectorAll('[role=tab]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.pt === mode)));
+    hint.textContent = mode === 'big' ? '카드나 앨범 페이지처럼 크게 보일 때의 위치예요.' : '동그란 프로필 칩, 작은 미리보기처럼 작게 보일 때의 위치예요.';
+  };
+  paint();
+  frame.addEventListener('pointerdown', e => { e.preventDefault(); frame.setPointerCapture(e.pointerId); const c = P[mode]; drag = { px: e.clientX, py: e.clientY, x: c.x, y: c.y, w: frame.clientWidth, h: frame.clientHeight }; });
   frame.addEventListener('pointermove', e => {
     if (!drag) return;
+    const c = P[mode];
     // dragging the photo right reveals more of its left side, so the anchor moves the other way
-    x = Math.max(0, Math.min(100, drag.x - (e.clientX - drag.px) / drag.w * 100));
-    y = Math.max(0, Math.min(100, drag.y - (e.clientY - drag.py) / drag.h * 100));
+    c.x = Math.max(0, Math.min(100, drag.x - (e.clientX - drag.px) / drag.w * 100));
+    c.y = Math.max(0, Math.min(100, drag.y - (e.clientY - drag.py) / drag.h * 100));
     paint();
   });
   frame.addEventListener('pointerup', () => { drag = null; });
   o.addEventListener('click', e => {
     const b = e.target.closest('[data-pt]'); if (!b) return;
     e.stopPropagation();
-    if (b.dataset.pt === 'reset') { x = 50; y = 50; paint(); return; }
+    const k = b.dataset.pt;
+    if (k === 'big' || k === 'thumb') { mode = k; paint(); return; }
+    if (k === 'reset') { P[mode].x = 50; P[mode].y = 50; paint(); return; }
     o.remove();
-    if (b.dataset.pt === 'ok') done(Math.round(x), Math.round(y));
+    if (k === 'ok') done({ x: Math.round(P.big.x), y: Math.round(P.big.y), tx: Math.round(P.thumb.x), ty: Math.round(P.thumb.y) });
   });
 }
 
@@ -1616,8 +1637,8 @@ document.addEventListener('click', async e => {
       d.kind = v; rerenderEdit(); return;
     }
     if (t.dataset.pick) { const s = new Set(d.characterIds || []); s.has(t.dataset.pick) ? s.delete(t.dataset.pick) : s.add(t.dataset.pick); d.characterIds = [...s]; rerenderEdit(); return; }
-    if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.ratio, (x, y) => { d[k] = { ...d[k], x, y }; rerenderEdit(); }); return; }
-    if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.ratio, (x, y) => { d[k][+i] = { ...d[k][+i], x, y }; rerenderEdit(); }); return; }
+    if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.ratio, p => { d[k] = { ...d[k], ...p }; rerenderEdit(); }); return; }
+    if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.ratio, p => { d[k][+i] = { ...d[k][+i], ...p }; rerenderEdit(); }); return; }
     if (t.dataset.unimg) { if (d[t.dataset.unimg]) sheet.removed.push(d[t.dataset.unimg].id); d[t.dataset.unimg] = null; rerenderEdit(); return; }
     if (t.dataset.ungal) { const [k, i] = t.dataset.ungal.split(':'); const [g] = d[k].splice(+i, 1); if (g) sheet.removed.push(g.id); rerenderEdit(); return; }
     if (t.dataset.addsec) { (d.sections = d.sections || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('sec_t_' + (d.sections.length - 1))?.focus(); return; }
