@@ -355,7 +355,8 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-back { align-self: flex-start; border: 0; background: none; padding: 0; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .ig-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(18px, 5vw, 56px); align-items: center; max-width: 700px; margin: 0 auto; width: 100%; }
 .ig-ava { width: clamp(86px, 17vw, 150px); aspect-ratio: 1; border-radius: 50%; padding: 4px; background: conic-gradient(from 200deg, var(--pink-d), #E8B4C8, #B9A6E0, var(--pink-d)); }
-.ig-ava > *, .ig-mini > * { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--win); object-fit: cover; display: grid; place-items: center; background: linear-gradient(135deg, #F9D7E2, #E7DDF6); }
+.ig-ava > *, .ig-mini > * { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--win); overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, #F9D7E2, #E7DDF6); }
+.ig-ava .clip img, .ig-mini .clip img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ig-ava .ini { font-family: var(--f-display); font-weight: var(--dw); font-size: clamp(28px, 6vw, 50px); color: var(--pink-d); }
 .ig-nm { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .ig-nm h2 { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: clamp(21px, 3.4vw, 27px); }
@@ -1065,7 +1066,7 @@ const fmtDate = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.ge
 const capHtml = s => esc(s || '').replace(/(^|\s)(#[^\s#]+)/g, '$1<span class="tg">$2</span>');
 function headAva(x) {
   const h = x.albumHead || {}, r = h.avatar || x.avatar;
-  return r ? `<img src="${imgS(r)}" style="${posT(r)}" alt="">` : `<span class="ini">${esc(initial(x.name))}</span>`;
+  return r ? `<span class="clip"><img src="${imgS(r)}" style="${posT(r)}" alt=""></span>` : `<span class="ini">${esc(initial(x.name))}</span>`;
 }
 function igHead(x, key) {
   const h = x.albumHead || {}, ws = worldsOf(x);
@@ -1211,7 +1212,7 @@ function openHeadEdit(cid) {
   const draw = () => {
     o.innerHTML = `<div class="win c-pink ig-hedit"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">앨범 헤더 편집</span></div><div class="pt-body">
       <div class="fld"><span class="lbl">헤더 사진</span><span class="hint">비워두면 프로필 사진이 나와요.</span>
-        <div class="row" style="justify-content:flex-start;gap:10px"><span class="ig-mini big">${(h.avatar || x.avatar) ? `<img src="${imgS(h.avatar || x.avatar)}" style="${posT(h.avatar || x.avatar)}" alt="">` : `<span class="ini">${esc(initial(x.name))}</span>`}</span>
+        <div class="row" style="justify-content:flex-start;gap:10px"><span class="ig-mini big">${(h.avatar || x.avatar) ? `<span class="clip"><img src="${imgS(h.avatar || x.avatar)}" style="${posT(h.avatar || x.avatar)}" alt=""></span>` : `<span class="ini">${esc(initial(x.name))}</span>`}</span>
         ${assets ? `<label class="btn sm filebtn">사진 고르기<input type="file" accept="image/*" data-hav="1"></label>` : ''}${h.avatar ? '<button type="button" class="btn sm" data-hop="pos">✥ 위치</button><button type="button" class="btn sm ghost" data-hop="clear">프로필 사진 쓰기</button>' : ''}</div></div>
       <label class="fld"><span class="lbl">보여줄 이름</span><input id="h_name" value="${esc(h.name || '')}" placeholder="${esc(x.name)} (프로필 이름)"></label>
       <label class="fld"><span class="lbl">@아이디</span><input id="h_handle" value="${esc(h.handle || '')}" placeholder="비워두면 안 보여요"></label>
