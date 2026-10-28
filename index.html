@@ -387,6 +387,15 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-tile .ov { position: absolute; inset: 0; background: rgba(77, 63, 71, .38); color: #fff; display: grid; place-items: center; font-weight: 700; opacity: 0; transition: opacity .15s; }
 .ig-tile:hover .ov, .ig-tile:focus-visible .ov { opacity: 1; }
 .ig .ap-empty { min-height: 26vh; }
+.ig-order { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 8px; border-radius: 10px; background: var(--pink); font-size: 13.5px; }
+.ig-grid.ordering .ig-tile { cursor: pointer; }
+.ig-grid.ordering .ig-tile img { transition: transform .15s, opacity .15s; }
+.ig-grid.ordering .ig-tile.sel { outline: 3px solid var(--pink-d); outline-offset: -3px; }
+.ig-grid.ordering .ig-tile.sel img { transform: scale(.9); opacity: .75; }
+.ig-tile .no { position: absolute; left: 6px; bottom: 6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: rgba(40, 30, 36, .6); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.ig-post .pmove { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 4px; background: rgba(40, 30, 36, .55); color: #fff; border-radius: 999px; padding: 2px 4px; font-size: 11.5px; }
+.ig-post .pmove button { width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .9); color: #4D3F47; font-size: 10px; }
+.ig-post .pmove button:disabled { opacity: .35; }
 .ig .ap-tools { margin-top: 14px; }
 .ig-mini { width: 34px; height: 34px; flex: none; border-radius: 50%; padding: 2px; background: conic-gradient(from 200deg, var(--pink-d), #E8B4C8, #B9A6E0, var(--pink-d)); display: inline-block; }
 .ig-mini > * { border-width: 2px; }
@@ -1101,13 +1110,21 @@ function igHead(x, key) {
     <div class="ig-nm"><h2>${esc(h.name || x.name)}</h2><span>${[h.handle && '@' + esc(h.handle), x.nick && '별명 ' + esc(x.nick)].filter(Boolean).join(' · ')}</span></div>
     ${h.stats === false ? '' : `<div class="ig-stats"><span><b>${n}</b>사진</span><span><b>${ws.length}</b>세계관</span><span><b>${(x.rels || []).length}</b>관계</span></div>`}
     <p class="ig-bio">${esc(h.bio || x.tagline || '')}${h.info !== false && info ? `<small>${info}</small>` : ''}</p>
-    ${canWrite ? `<div class="ig-btns"><button class="btn sm" data-ighead="${x.id}">앨범 헤더 편집</button>${assets ? `<label class="btn sm filebtn">＋ 사진 올리기<input type="file" accept="image/*" multiple data-igup="${up}"></label>` : ''}</div>` : ''}</div></div>`;
+    ${canWrite ? `<div class="ig-btns"><button class="btn sm" data-ighead="${x.id}">앨범 헤더 편집</button>${assets ? `<label class="btn sm filebtn">＋ 사진 올리기<input type="file" accept="image/*" multiple data-igup="${up}"></label>` : ''}<button class="btn sm" data-igorder="start">↕ 순서 바꾸기</button></div>` : ''}</div></div>`;
 }
 function igCircle(attr, v, label, inner, on) {
   return `<button ${attr}="${esc(v)}" aria-pressed="${on}"><span class="r"><span>${inner}</span></span><span class="l">${esc(label)}</span></button>`;
 }
 const circleImg = r => r ? `<img src="${imgS(r)}" style="${posT(r)}" alt="">` : '';
+// 순서 바꾸기: tap a post to pick it up, tap another to put it there; only inside one album, since 전체 mixes albums
+const ordering = key => sheet?.igOrder && sheet.igOrder.key === key;
 function igGrid(x, key) {
+  if (ordering(key)) {
+    const l = albumEntries(x, key), sel = sheet.igOrder.sel;
+    return `<div class="ig-order"><span>${sel ? '옮길 자리를 누르세요. 그 자리로 들어가요.' : '옮길 게시물을 누르세요.'}${l.some(e => e.g.pin) ? ' 📌 고정한 게시물은 늘 맨 앞이에요.' : ''}</span><button class="btn sm primary" data-igorder="done">다 했어요</button></div>
+      <div class="ig-grid ordering">${l.map((e, j) => `<button class="ig-tile ${sel === e.g.id ? 'sel' : ''}" data-igmove="${e.g.id}" aria-label="${j + 1}번째">
+      <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}<span class="no">${j + 1}</span></button>`).join('')}</div>`;
+  }
   const l = albumList(x, key);
   if (!l.length) return `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>${sheet.igTab === 'fav' ? '♡ 누른 사진이 여기 모여요.' : `아직 사진이 없어요.<br>${canWrite && assets ? '위의 「＋ 사진 올리기」로 올려 보세요.' : ''}`}</p></div>`;
   return `<div class="ig-grid">${l.map(e => `<button class="ig-tile" data-igpost="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}">
@@ -1121,7 +1138,7 @@ function instaAlbum(x, key, opts) {
     ${opts.circles.length > 1 ? `<div class="ig-hl">${opts.circles.map(([v, l, inner]) => igCircle(opts.attr, v, l, inner, v === opts.cur)).join('')}</div>` : ''}
     <div class="ig-tabs" role="tablist"><button role="tab" data-igtab="grid" aria-selected="${tab === 'grid'}">▦ 게시물</button><button role="tab" data-igtab="fav" aria-selected="${tab === 'fav'}">♡ 좋아요</button></div>
     ${igGrid(x, key)}
-    ${canWrite && key !== '*' && (key ? photosOf(x, key) : x.album || []).length ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
+    ${canWrite && key !== '*' && (key ? photosOf(x, key) : x.album || []).length && !ordering(key) ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
 }
 function charAlbumCircles(x) {
   const all = albumEntries(x, '*'), own = albumEntries(x, '');
@@ -1133,6 +1150,23 @@ function igTeaser(x) {
   const l = albumEntries(x, '*'), shown = l.slice(0, 5), rest = l.length - shown.length;
   return `<div class="ig-teaser"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>게시물 ${l.length} · 앨범 ${1 + worldsOf(x).length}개</small></div><button class="btn sm primary" data-page="2">앨범 보기 →</button></div>
     ${l.length ? `<div class="ig-strip">${shown.map(e => `<button data-igopen="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}"><img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}</button>`).join('')}${rest > 0 ? `<button class="more" data-page="2">+${rest}</button>` : ''}</div>` : '<p style="color:var(--muted);margin:0">아직 사진이 없어요.</p>'}</div>`;
+}
+
+async function movePost(x, key, from, to) {
+  // the grid shows the list newest-first, so work on that order and store it reversed again
+  const disp = albumEntries(x, key).map(e => e.g), i = disp.findIndex(g => g.id === from), j = disp.findIndex(g => g.id === to);
+  if (i < 0 || j < 0 || i === j) return;
+  const [g] = disp.splice(i, 1); disp.splice(j, 0, g);
+  const list = JSON.parse(JSON.stringify(disp.reverse()));
+  try { await db.collection('characters').doc(x.id).update({ ...(key ? { worldAlbums: { [key]: list } } : { album: list }), updatedAt: Date.now() }); }
+  catch (e) { toast(errMsg(e)); }
+}
+// photos of one post: the first one is the post itself, so its framing travels with it when the order changes
+const FRAME_KEYS = ['id', 'x', 'y', 'z', 'cx', 'cy', 'cz', 'tx', 'ty', 'tz'];
+function reorderImgs(g, imgs) {
+  const meta = Object.fromEntries(Object.entries(g).filter(([k]) => !FRAME_KEYS.includes(k) && k !== 'more'));
+  const ref = r => Object.fromEntries(Object.entries(r).filter(([k]) => FRAME_KEYS.includes(k)));
+  return { ...meta, ...ref(imgs[0]), more: imgs.slice(1).map(ref) };
 }
 
 /* Post viewer */
@@ -1166,7 +1200,7 @@ function renderPost() {
   setHtmlKeepImgs(el, `<div class="ig-post" role="dialog" aria-modal="true" aria-label="게시물">
     <div class="pic"><button class="ph" data-lightbox="${img(r)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(r)}" style="${pos(r)}" alt="${esc(g.caption || '')}"></button>
       ${canPrev ? '<button class="nav prev" data-pstep="-1" aria-label="이전">‹</button>' : ''}${canNext ? '<button class="nav next" data-pstep="1" aria-label="다음">›</button>' : ''}
-      ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>` : ''}</div>
+      ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>${canWrite ? `<div class="pmove"><button data-pop="mvL" ${n === 0 ? 'disabled' : ''} aria-label="이 사진을 앞으로">◀</button><span>순서</span><button data-pop="mvR" ${n === imgs.length - 1 ? 'disabled' : ''} aria-label="이 사진을 뒤로">▶</button></div>` : ''}` : ''}</div>
     <div class="side"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>${w ? esc(w.name) : '기본 앨범'}</small></div><button class="x" data-pclose aria-label="닫기">✕</button></div>
       <div class="cap">${igPost.edit ? `<textarea id="pcap" rows="5" placeholder="설명을 적어 주세요. #태그도 쓸 수 있어요.">${esc(g.caption || '')}</textarea><div class="row"><button class="btn sm ghost" data-pop="capcancel">취소</button><button class="btn sm primary" data-pop="capsave">저장</button></div>`
         : g.caption ? `<p>${capHtml(g.caption)}</p>` : `<p class="none">${canWrite ? '✎를 눌러 설명을 달 수 있어요.' : '설명이 없어요.'}</p>`}</div>
@@ -1195,6 +1229,14 @@ async function postOp(op) {
   if (op !== 'del') igPost.armed = false;
   if (op === 'fav' || op === 'pin') { await patchPost((l, i) => { l[i][op] = !l[i][op]; }); renderPost(); return; }
   if (op === 'cap') { igPost.edit = true; renderPost(); return; }
+  if (op === 'mvL' || op === 'mvR') {
+    const n = igPost.n, to = n + (op === 'mvL' ? -1 : 1), imgs = postImgs(f.g).slice();
+    if (to < 0 || to >= imgs.length) return;
+    [imgs[n], imgs[to]] = [imgs[to], imgs[n]];
+    const g2 = reorderImgs(f.g, imgs);
+    await patchPost((l, i) => { l[i] = g2; igPost.id = g2.id; igPost.n = to; });
+    renderPost(); return;
+  }
   if (op === 'capcancel') { igPost.edit = false; renderPost(); return; }
   if (op === 'capsave') { const v = $('#pcap').value; await patchPost((l, i) => { l[i].caption = v; }); igPost.edit = false; renderPost(); toast('저장했어요'); return; }
   if (op === 'pos') {
@@ -1214,13 +1256,12 @@ async function postOp(op) {
       // dropping one photo of a multi-photo post; when it is the first, the next photo takes over the post
       gone = await patchPost((l, i) => {
         const g = l[i];
-        if (n > 0) return g.more.splice(n - 1, 1)[0].id;
-        const [nx, ...rest] = g.more, { more, ...meta } = g;
-        l[i] = { ...meta, ...nx, id: nx.id, more: rest };
+        if (n > 0) { igPost.n = n - 1; return g.more.splice(n - 1, 1)[0].id; }
+        const imgs = postImgs(g).filter((_, j) => j !== 0);
+        l[i] = reorderImgs(g, imgs);
+        igPost.id = l[i].id; igPost.n = 0;
         return g.id;
       });
-      if (n === 0 && gone) igPost.id = postImgs(f.g)[1].id;
-      igPost.n = Math.max(0, n - 1);
     } else {
       gone = await patchPost((l, i) => l.splice(i, 1)[0].id);
       closePost();
@@ -1841,6 +1882,20 @@ document.addEventListener('click', async e => {
   if (!t) return;
   if (t.dataset.igpost !== undefined) { const [w, id] = t.dataset.igpost.split(':'); openPost(w, id); return; }
   if (t.dataset.igopen) { const [w, id] = t.dataset.igopen.split(':'); sheet.page = 2; sheet.albumWorld = '*'; sheet.flip = 'next'; renderSheet(); openPost(w, id); return; }
+  if (t.dataset.igorder) {
+    if (t.dataset.igorder === 'start') {
+      const key = albumKey();
+      if (key === '*') { toast('위 동그라미에서 앨범을 하나 고르면 순서를 바꿀 수 있어요'); return; }
+      sheet.igOrder = { key, sel: null }; sheet.igTab = 'grid';
+    } else sheet.igOrder = null;
+    renderSheet(); return;
+  }
+  if (t.dataset.igmove && sheet?.igOrder) {
+    const o = sheet.igOrder, id = t.dataset.igmove;
+    if (!o.sel || o.sel === id) { o.sel = o.sel === id ? null : id; renderSheet(); return; }
+    const from = o.sel; o.sel = null;
+    await movePost(albumChar(), o.key, from, id); renderSheet(); return;
+  }
   if (t.dataset.igtab) { sheet.igTab = t.dataset.igtab; renderSheet(); return; }
   if (t.dataset.ighead) { openHeadEdit(t.dataset.ighead); return; }
   if (t.dataset.pstep) { stepPost(+t.dataset.pstep); return; }
@@ -1856,8 +1911,8 @@ document.addEventListener('click', async e => {
     if (canWrite && db) { try { await saveSite({ font: t.dataset.font }); } catch (er) { toast(errMsg(er)); } }
     return;
   }
-  if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld; renderSheet(); return; }
-  if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; renderSheet(); return; }
+  if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld; sheet.igOrder = null; renderSheet(); return; }
+  if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; sheet.igOrder = null; renderSheet(); return; }
   if (t.dataset.posnow) {
     const [ty, id, k, tabs] = t.dataset.posnow.split(':'), x = byId(ty, id);
     openPosTool(x[k], tabs, async p => {
