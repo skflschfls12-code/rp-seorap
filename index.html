@@ -501,16 +501,17 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .castcard { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding: 10px; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--win); box-shadow: 3px 3px 0 var(--yellow-s); }
 .castcard.npc { background: var(--bg); box-shadow: none; }
 .cphoto { aspect-ratio: 4 / 5; border: 1.3px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--checker); display: grid; place-items: center; }
-.cphoto button { padding: 0; border: 0; width: 100%; height: 100%; }
+.cphoto button { padding: 0; border: 0; width: 100%; height: 100%; display: grid; place-items: center; background: none; }
 .cphoto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cphoto .ph { font-size: 30px; color: var(--yellow-d); }
 .cinfo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.cname { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 17px; }
+.cname { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 17px; padding: 0; border: 0; background: none; color: var(--fg); text-align: left; }
+.cname:hover { color: var(--pink-d); }
+.cmore { align-self: flex-start; padding: 2px 10px; border: 1.3px solid var(--ink); border-radius: 999px; background: var(--yellow); font-size: 12.5px; }
+.cmore:hover { background: var(--pink); }
+.crels.flat { border-top: 0; padding-top: 0; gap: 8px; }
 .cedit { margin-left: auto; padding: 0 8px; box-shadow: none !important; border-color: transparent !important; }
 .ctag { margin: 0; font-size: 13.5px; color: var(--muted); }
-.cdesc summary { cursor: pointer; font-size: 12.5px; color: var(--pink-d); }
-.cdesc h6 { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--pink-d); letter-spacing: .04em; }
-.cdesc p { margin: 2px 0 0; font-size: 13.5px; white-space: pre-wrap; }
 .crels { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; border-top: 1.3px dashed var(--line, #E6D3DA); padding-top: 10px; }
 .crow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: center; }
 .crow .who { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; text-align: left; max-width: 9em; }
@@ -982,7 +983,7 @@ function relationsOfChar(x) {
 // World-only characters (main characters and NPCs) live on the world: cast = [{ id, name, role, avatar, tagline, desc, rels: [{ to, label }] }]
 const ROLE = { main: '메인 캐릭터', npc: 'NPC' };
 function castTarget(w, to) {
-  if (to?.startsWith('cast:')) { const m = (w.cast || []).find(c => c.id === to.slice(5)); return m && { name: m.name, avatar: m.avatar, open: '' }; }
+  if (to?.startsWith('cast:')) { const m = (w.cast || []).find(c => c.id === to.slice(5)); return m && { name: m.name, avatar: m.avatar, open: `data-castview="${m.id}"` }; }
   const c = to && byId('characters', to);
   return c && { name: c.name, avatar: c.avatar, open: `data-open="characters:${c.id}"` };
 }
@@ -995,17 +996,39 @@ function castRelRow(t, label, incoming) {
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
   // other cast members who wrote a relation pointing at this one
-  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [{ name: o.name, avatar: o.avatar, open: '' }, r.label]));
+  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [{ name: o.name, avatar: o.avatar, open: `data-castview="${o.id}"` }, r.label]));
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
-    <div class="cphoto">${m.avatar ? `<button data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}"><img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}"></button>` : `<span class="ph">${esc(initial(m.name))}</span>`}</div>
+    <div class="cphoto"><button data-castview="${m.id}" aria-label="${esc(m.name)} 프로필">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}">` : `<span class="ph">${esc(initial(m.name))}</span>`}</button></div>
     <div class="cinfo">
-      <div class="row" style="justify-content:flex-start;gap:6px"><b class="cname">${esc(m.name)}</b><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
+      <div class="row" style="justify-content:flex-start;gap:6px"><button class="cname" data-castview="${m.id}">${esc(m.name)}</button><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
       ${m.tagline ? `<p class="ctag">${esc(m.tagline)}</p>` : ''}
       ${m.birthday || m.gender ? `<div class="row" style="justify-content:flex-start;gap:10px;font-size:13px">${m.birthday ? `<span><span class="lbl-box">BIRTH</span> ${esc(m.birthday)}</span>` : ''}${m.gender ? `<span><span class="lbl-box">GENDER</span> ${esc(m.gender)}</span>` : ''}</div>` : ''}
-      ${(() => { const parts = [['외모', m.appearance], ['성격', m.personality], ['말투', m.speech], ['배경', m.backstory], ['기타 설정', m.desc]].filter(([, v]) => v);
-        return parts.length ? `<details class="cdesc"><summary>자세히</summary>${parts.map(([l, v]) => `<h6>${l}</h6><p>${esc(v)}</p>`).join('')}</details>` : ''; })()}
+      <button class="cmore" data-castview="${m.id}">프로필 보기 →</button>
     </div>
     ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>` : ''}</div>`;
+}
+const castOf = (w, cid) => (w.cast || []).find(c => c.id === cid);
+function castProfile(w, m) {
+  const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
+  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [castTarget(w, 'cast:' + o.id), r.label]));
+  return `<div class="win c-yellow">${winbar(`CAST · ${m.role === 'npc' ? 'NPC' : 'MAIN'} CARD`)}<div class="wbody" style="padding:18px">
+      <div class="idhero">${idFrame(m, true)}
+      <div class="facts"><div class="row" style="justify-content:flex-start"><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span></div>
+        <span class="lbl-box" style="justify-self:start">NAME</span><h2>${esc(m.name)}</h2>
+        ${m.tagline ? `<p class="v" style="color:var(--muted)">${esc(m.tagline)}</p>` : ''}
+        <div class="row factrow" style="justify-content:flex-start;align-items:flex-start;gap:18px">
+          ${m.birthday ? `<div><span class="lbl-box">BIRTH</span><p class="v">${esc(m.birthday)}</p></div>` : ''}
+          ${m.gender ? `<div><span class="lbl-box">GENDER</span><p class="v">${esc(m.gender)}</p></div>` : ''}
+          <div><span class="lbl-box">WORLD</span><p class="v"><button class="btn sm" data-act="cast-back">${esc(w.name)} →</button></p></div></div>
+        <div class="hearts" aria-hidden="true">♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡</div></div></div></div></div>
+    <div class="sub-grid">${section('APPEARANCE · 외모', m.appearance, 'pink')}${section('PERSONALITY · 성격', m.personality, 'mint')}${section('VOICE · 말투', m.speech, 'yellow')}${section('STORY · 배경', m.backstory, 'blue')}</div>
+    ${section('ETC · 기타 설정', m.desc, 'pink')}
+    ${out.length || inc.length ? subWin('RELATIONS · 관계', 'blue', `<div class="crels flat">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>`) : ''}`;
+}
+function castText(w, m) {
+  return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
+    m.appearance && `\n외모:\n${m.appearance}`, m.personality && `\n성격:\n${m.personality}`, m.speech && `\n말투:\n${m.speech}`,
+    m.backstory && `\n배경:\n${m.backstory}`, m.desc && `\n기타:\n${m.desc}`].filter(Boolean).join('\n');
 }
 function castWin(w) {
   const cast = (w.cast || []).map((m, i) => [m, i]);
@@ -1265,6 +1288,7 @@ function viewBody(type, x) {
     const key = sheet.albumWorld ?? '*';
     return `${pageTabs(2)}<div class="${flipCls}">${instaAlbum(x, key, { circles: charAlbumCircles(x), attr: 'data-aworld', cur: key, back: true })}</div>`;
   }
+  if (type === 'worlds' && sheet.castView) { const m = castOf(x, sheet.castView); if (m) return castProfile(x, m); sheet.castView = null; }
   if (type === 'worlds' && sheet.page === 2) {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
     if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
@@ -1433,11 +1457,14 @@ const CAST_FIELDS = [
 function openCastEdit(wid, idx) {
   const w = byId('worlds', wid);
   const base = idx != null ? JSON.parse(JSON.stringify(w.cast[idx])) : { role: 'main', rels: [] };
-  sheet = { mode: 'edit', type: 'worlds', id: wid, draft: base, removed: [], castEdit: { idx }, armed: false, busy: '' };
+  sheet = { mode: 'edit', type: 'worlds', id: wid, draft: base, removed: [], castEdit: { idx, back: sheet?.castView || null }, armed: false, busy: '' };
   renderSheet();
   setTimeout(() => $('#f_name')?.focus(), 30);
 }
-function backFromCastEdit() { sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1 }; render(); }
+function backFromCastEdit(removed) {
+  const back = removed ? null : sheet.castEdit.back;
+  sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1, castView: back }; render();
+}
 async function saveCastEdit(removeIt) {
   const { id: wid, draft, castEdit: { idx } } = sheet, w = byId('worlds', wid);
   if (!removeIt && !String(draft.name || '').trim()) { toast('이름을 입력해 주세요.'); $('#f_name')?.focus(); return; }
@@ -1453,7 +1480,7 @@ async function saveCastEdit(removeIt) {
     await db.collection('worlds').doc(wid).update({ cast: list, updatedAt: Date.now() });
     w.cast = list;
     for (const aid of gone.filter(Boolean)) if (!assetInUse(aid)) { try { await assets.delete(aid); } catch {} }
-    toast(removeIt ? '등장인물을 뺐어요' : '저장했어요'); backFromCastEdit();
+    toast(removeIt ? '등장인물을 뺐어요' : '저장했어요'); backFromCastEdit(removeIt);
   } catch (e) { sheet.busy = ''; rerenderEdit(); toast(errMsg(e)); }
 }
 function editBody() {
@@ -1471,8 +1498,11 @@ function renderSheet() {
   if (mode === 'view' && !x) { sheet = null; L.innerHTML = ''; return; }
   const keepScroll = sheet.flip ? 0 : $('.sheet', L)?.scrollTop;
   const T = TYPES[type];
-  const title = sheet.castEdit ? `${sheet.castEdit.idx != null ? 'EDIT' : 'NEW'} · CAST` : mode === 'kinds' ? 'KINDS · 캐릭터 종류 관리' : mode === 'view' ? `${T.file} — ${esc(x.name || x.title || '')}` : `${id ? 'EDIT' : 'NEW'} · ${T.file}`;
+  const title = sheet.castEdit ? `${sheet.castEdit.idx != null ? 'EDIT' : 'NEW'} · CAST` : mode === 'kinds' ? 'KINDS · 캐릭터 종류 관리' : mode === 'view' ? (sheet.castView && castOf(x, sheet.castView) ? `CAST — ${esc(castOf(x, sheet.castView).name)}` : `${T.file} — ${esc(x.name || x.title || '')}`) : `${id ? 'EDIT' : 'NEW'} · ${T.file}`;
   const tools = mode === 'kinds' ? '<span class="grow"></span><button class="btn sm primary" data-act="close">완료</button>'
+    : mode === 'view' && sheet.castView
+    ? `<button class="btn sm" data-act="cast-back">← ${esc(x.name)}</button><button class="btn sm mint" data-act="copycast">프로필 복사</button><span class="grow"></span>
+       ${canWrite ? `<button class="btn sm primary" data-castedit="${(x.cast || []).findIndex(c => c.id === sheet.castView)}">편집</button>` : ''}`
     : mode === 'view'
     ? `${type === 'characters' ? `<button class="btn sm mint" data-act="copyprofile">프로필 복사</button>` : ''}
        ${type === 'scenes' ? `<button class="btn sm mint" data-act="copyscene">본문 복사</button>` : ''}
@@ -1811,6 +1841,7 @@ document.addEventListener('click', async e => {
     return;
   }
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
+  if (t.dataset.castview && sheet) { sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1, castView: t.dataset.castview, flip: 'next' }; renderSheet(); $('#layer .sheet')?.scrollTo(0, 0); return; }
   if (t.dataset.castedit && sheet) { openCastEdit(sheet.id, +t.dataset.castedit); return; }
   if (t.dataset.page && sheet) { const n = +t.dataset.page; if (n !== sheet.page) { sheet.flip = n > (sheet.page || 1) ? 'next' : 'prev'; sheet.page = n; renderSheet(); } return; }
   if (sheet?.mode === 'kinds') {
@@ -1891,6 +1922,8 @@ document.addEventListener('click', async e => {
   else if (act === 'save') save();
   else if (act === 'delete') { if (sheet.armed) remove(); else { sheet.armed = true; rerenderEdit(); setTimeout(() => { if (sheet?.armed) { sheet.armed = false; rerenderEdit(); } }, 4000); } }
   else if (act === 'fav') { const x = byId(sheet.type, sheet.id); try { await db.collection(sheet.type).doc(sheet.id).update({ fav: !x.fav }); } catch (er) { toast(errMsg(er)); } }
+  else if (act === 'cast-back') { sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1, flip: 'prev' }; renderSheet(); }
+  else if (act === 'copycast') { const w = byId('worlds', sheet.id); copy(castText(w, castOf(w, sheet.castView)), '프로필을 복사했어요'); }
   else if (act === 'copyprofile') copy(profileText(byId('characters', sheet.id)), '프로필을 복사했어요');
   else if (act === 'copyscene') copy(byId('scenes', sheet.id)?.body || '');
   else if (act === 'copyprompt') copy(byId('prompts', sheet.id)?.body || '');
