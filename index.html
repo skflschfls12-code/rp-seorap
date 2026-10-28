@@ -105,7 +105,14 @@ h1, h2, h3 { font-family: var(--f-display); font-weight: var(--dw); letter-spaci
 .cover-band.moving img { cursor: ns-resize; touch-action: none; }
 .cover-tools { position: absolute; top: 14px; right: max(16px, env(safe-area-inset-right, 0px), 28px); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; opacity: 0; transition: opacity .2s; }
 .cover-band:hover .cover-tools, .cover-tools:focus-within, .cover-band.moving .cover-tools { opacity: 1; }
-@media (hover: none) { .cover-tools { opacity: 1; } }
+.cv-toggle { display: none; }
+@media (hover: none) {
+  .cover-tools { pointer-events: none; }
+  .cover-band.tools-open .cover-tools, .cover-band.moving .cover-tools { opacity: 1; pointer-events: auto; }
+  .cover-band.tools-open .cover-tools, .cover-band.mc.tools-open .cover-tools { right: 56px; }
+  .cv-toggle { display: grid; place-items: center; position: absolute; z-index: 2; top: 12px; right: max(14px, env(safe-area-inset-right, 0px)); width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .75); color: #4D3F47; font-size: 14px; box-shadow: 0 1px 4px rgba(60, 40, 52, .25); }
+  .cover-band.tools-open .cv-toggle { background: var(--pink); opacity: 1; }
+}
 .sheet-in > .cover-band.mc:first-child { margin: -22px -24px 0; height: clamp(220px, 26vw, 320px); }
 .sheet-in > .cover-band.mc.none:first-child { height: 80px; }
 .cover-band.mc .cover-tools { top: 12px; right: 14px; }
@@ -490,7 +497,7 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
   .grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .idgrid { grid-template-columns: 128px minmax(0, 1fr); }
   .idhero { grid-template-columns: minmax(0, 1fr); }
-  .idhero .frame { width: 170px; }
+  .idhero .frame, .idhero .posable { width: 170px; }
   .sheet-in { padding: 18px 14px 24px; }
   .row2 { grid-template-columns: minmax(0, 1fr); }
   .chat .ln { max-width: 92%; }
@@ -507,8 +514,11 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 <style>
 body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }
 .posable { position: relative; }
-.posable .posnow { position: absolute; z-index: 3; left: 50%; bottom: 10px; transform: translateX(-50%); width: auto; height: auto; }
-.wbanner.posable .posnow { left: auto; right: 12px; bottom: 12px; transform: none; }
+.posable .posnow { position: absolute; z-index: 3; right: 10px; bottom: 10px; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .8); color: #4D3F47; font-size: 15px; line-height: 1; display: grid; place-items: center; box-shadow: 0 1px 4px rgba(60, 40, 52, .25); opacity: 0; transition: opacity .2s; }
+/* mouse: shows on hover; touch screens: stays as a faint corner icon */
+.posable:hover .posnow, .posable .posnow:focus-visible { opacity: 1; }
+@media (hover: none) { .posable .posnow { opacity: .7; width: 28px; height: 28px; font-size: 14px; } }
+.wbanner.posable .posnow { right: 12px; bottom: 12px; }
 .castgroup + .castgroup { margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--line, #E6D3DA); }
 .castgroup h5 { margin: 0 0 10px; }
 .castgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: stretch; }
@@ -764,7 +774,8 @@ function coverBlock(key, cls = '') {
   const tools = !(canWrite && status === 'ok') ? '' : editing
     ? `<span class="hintpill">사진을 위아래로 드래그해서 맞춰 주세요</span><button class="btn sm" data-act="cover-cancel">취소</button><button class="btn sm primary" data-act="cover-save">위치 저장</button>`
     : `${assets ? `<label class="btn sm filebtn">${c ? '커버 바꾸기' : '＋ 커버 추가'}<input type="file" accept="image/*" id="cf_${k}" data-cover="${k}"></label>` : ''}${c ? `<button class="btn sm" data-act="cover-move" data-ckey="${k}">위치 조정</button><button class="btn sm danger ${coverArmed === key ? 'armed' : ''}" data-act="cover-remove" data-ckey="${k}">${coverArmed === key ? '한 번 더 누르면 삭제' : '지우기'}</button>` : ''}`;
-  return `<div class="cover-band ${cls} ${editing ? 'moving' : ''} ${c ? '' : 'none'}">${c ? `<img src="${img(c.img)}" alt="" draggable="false" style="object-position:50% ${y}%">` : '<div class="cover-default" aria-hidden="true">♡ ✦ ♡ ✦ ♡</div>'}<div class="cover-tools">${tools}</div></div>`;
+  const toggle = tools && !editing ? '<button class="cv-toggle" data-act="cover-tools" aria-label="커버 편집" title="커버 편집">✎</button>' : '';
+  return `<div class="cover-band ${cls} ${editing ? 'moving' : ''} ${c ? '' : 'none'}">${c ? `<img src="${img(c.img)}" alt="" draggable="false" style="object-position:50% ${y}%">` : '<div class="cover-default" aria-hidden="true">♡ ✦ ♡ ✦ ♡</div>'}${toggle}<div class="cover-tools">${tools}</div></div>`;
 }
 function renderCover() { const el = $('#cover'); if (el) el.innerHTML = coverBlock('site:' + view); }
 function renderCovers() { renderCover(); if (sheet?.mode === 'view' && sheet.type === 'characters') renderSheet(); }
@@ -1381,7 +1392,7 @@ function viewBody(type, x) {
     const ws = worldsOf(x);
     const sc = sorted(S.scenes.filter(s => (s.characterIds || []).includes(x.id)));
     return `${coverBlock('char:' + x.id, 'mc')}${pageTabs(1)}<div class="pg ${sheet.flip ? 'flip-' + sheet.flip : ''}"><div class="win c-pink">${winbar(`CHARA · MEMBER CARD`)}<div class="wbody" style="padding:18px">
-      <div class="idhero"><div class="posable">${idFrame(x, true)}${canWrite && x.avatar ? `<button class="btn sm posnow" data-posnow="characters:${x.id}:avatar:avatar">✥ 위치 조정</button>` : ''}</div>
+      <div class="idhero"><div class="posable">${idFrame(x, true)}${canWrite && x.avatar ? `<button class="posnow" data-posnow="characters:${x.id}:avatar:avatar" aria-label="사진 위치 조정" title="위치 조정">✥</button>` : ''}</div>
       <div class="facts"><div class="row" style="justify-content:flex-start"><span class="lbl-box fill">${kindLabel(x)}</span>${exPill(x)}</div>
         <span class="lbl-box" style="justify-self:start">NAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.nick ? `<p class="v" style="color:var(--muted);margin:-2px 0 0"><span class="lbl-box" style="margin-right:6px">NICK</span>${esc(x.nick)}</p>` : ''}
         ${x.tagline ? `<p class="v" style="color:var(--muted)">${esc(x.tagline)}</p>` : ''}
@@ -1410,7 +1421,7 @@ function viewBody(type, x) {
   if (type === 'worlds') {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
     const colors = ['blue', 'pink', 'mint', 'yellow'];
-    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner posable">${canWrite ? `<button class="btn sm posnow" data-posnow="worlds:${x.id}:cover:wcover">✥ 위치 조정</button>` : ''}<button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
+    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner posable">${canWrite ? `<button class="posnow" data-posnow="worlds:${x.id}:cover:wcover" aria-label="커버 위치 조정" title="위치 조정">✥</button>` : ''}<button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
       ${castWin(x, cs)}
@@ -2024,6 +2035,7 @@ document.addEventListener('click', async e => {
   else if (act === 'logout') { await sb.auth.signOut(); location.reload(); }
   else if (act === 'album-edit') { const c = albumCtx(), x = ctxChar(); sheet = { mode: 'edit', type: 'characters', id: x.id, draft: { list: JSON.parse(JSON.stringify(photosOf(x, c.wid))) }, removed: [], albumEdit: { ...c, back: { type: sheet.type, id: sheet.id, albumChar: sheet.albumChar, albumWorld: sheet.albumWorld } }, busy: '' }; renderSheet(); }
   else if (act === 'kinds') { sheet = { mode: 'kinds', type: 'characters' }; renderSheet(); }
+  else if (act === 'cover-tools') t.closest('.cover-band')?.classList.toggle('tools-open');
   else if (act === 'cover-move') { coverEdit = { key: t.dataset.ckey, y: coverOf(t.dataset.ckey)?.y ?? 50 }; renderCovers(); }
   else if (act === 'cover-cancel') { coverEdit = null; renderCovers(); }
   else if (act === 'cover-save') { const { key, y } = coverEdit, c = coverOf(key); coverEdit = null; try { await setCover(key, { img: c.img, y: Math.round(y) }); toast('커버 위치를 저장했어요'); } catch (er) { toast(errMsg(er)); } renderCovers(); }
