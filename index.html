@@ -461,6 +461,15 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 </style>
 <style>
 body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }
+.postool { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(60, 40, 52, .45); }
+.postool .win { width: min(420px, 100%); }
+.pt-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+.pt-body p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.pt-frame { width: 100%; max-height: 60vh; margin: 0 auto; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); cursor: grab; touch-action: none; }
+.pt-frame:active { cursor: grabbing; }
+.pt-frame img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; pointer-events: none; }
+.pt-btns { display: flex; gap: 6px; align-items: center; }
+.gal-edit .th .posb { right: auto; left: 4px; }
 .login { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--bg) linear-gradient(115deg, #F4DCE4 0%, #EADFF0 45%, #DCEBE6 100%); }
 .login .win { width: min(380px, 100%); }
 .login form { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 12px; }
@@ -546,6 +555,8 @@ const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAA
 const urlCache = new Map(), urlWant = new Set();
 let urlTimer = null;
 const img = ref => ref && ref.id ? urlFor(ref.id) : '';
+// where a cropped photo is anchored (percent of the image), set with the 위치 조정 tool
+const pos = ref => ref && (ref.x != null || ref.y != null) ? `object-position:${ref.x ?? 50}% ${ref.y ?? 50}%` : '';
 function urlFor(id) {
   if (urlCache.has(id)) return urlCache.get(id);
   urlWant.add(id);
@@ -731,7 +742,7 @@ function loadbar(pct, label = 'Loading...') {
 }
 function idFrame(x, big) {
   return `<div class="frame"><span class="nametag">${esc(x.name || '이름 없음')}</span>
-    <div class="photo">${x.avatar ? (big ? `<button style="padding:0;border:0;width:100%;height:100%" data-lightbox="${img(x.avatar)}"><img src="${img(x.avatar)}" alt="${esc(x.name)}"></button>` : `<img src="${img(x.avatar)}" alt="" loading="lazy">`) : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
+    <div class="photo">${x.avatar ? (big ? `<button style="padding:0;border:0;width:100%;height:100%" data-lightbox="${img(x.avatar)}"><img src="${img(x.avatar)}" style="${pos(x.avatar)}" alt="${esc(x.name)}"></button>` : `<img src="${img(x.avatar)}" style="${pos(x.avatar)}" alt="" loading="lazy">`) : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
     ${SPARK('sp1')}${SPARK('sp2', '#fff')}</div>`;
 }
 function previewLines(body, n = 4) {
@@ -771,7 +782,7 @@ function cardFor(type, x) {
   if (type === 'worlds') {
     const n = S.characters.filter(c => worldIdsOf(c).includes(x.id)).length;
     return `<button class="win card c-blue" ${open}>${winbar(`${T.file} · ${esc(x.name || '')}`)}<div class="wbody">
-      <div class="coverbox">${x.cover ? `<img src="${img(x.cover)}" alt="" loading="lazy">` : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
+      <div class="coverbox">${x.cover ? `<img src="${img(x.cover)}" style="${pos(x.cover)}" alt="" loading="lazy">` : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
       <h3>${star}${esc(x.name || '이름 없는 세계')}</h3>
       ${x.summary ? `<p class="desc">${esc(x.summary)}</p>` : ''}
       <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span><span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
@@ -842,7 +853,7 @@ function allRels() {
   return S.characters.flatMap(c => (c.rels || []).filter(r => r.to && byId('characters', r.to)).map(r => ({ from: c.id, to: r.to, label: r.label || '', wid: r.wid || '' })));
 }
 function relAv(c) {
-  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
+  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
 }
 function relPairsHtml(rels, focusId) {
   // one row per pair of characters; show both directions when both were written
@@ -872,7 +883,7 @@ function relationsOfWorld(x, residents) {
   return subWin('RELATIONS · 이 세계의 관계', 'blue', `${here.length ? `<div class="relgroup">${relPairsHtml(here)}</div>` : ''}${common.length ? `<div class="relgroup"><h5><span class="lbl-box">ALL WORLDS · 공통</span></h5>${relPairsHtml(common)}</div>` : ''}`);
 }
 function charChip(c) {
-  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
+  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
 }
 function subWin(title, color, body) {
   return `<div class="win sub-win c-${color}">${winbar(title)}<div class="wbody">${body}</div></div>`;
@@ -902,7 +913,7 @@ const allWorldPhotos = x => Object.values(x.worldAlbums || {}).flat();
 function faceHtml(list, i) {
   const g = list[i];
   if (!g) return `<div class="face blank">♡</div>`;
-  return `<figure class="face"><span class="phead" aria-hidden="true">♡ MEMORIES ♡</span><button class="ph" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(g)}" alt="${esc(g.caption || '')}"></button><figcaption>${esc(g.caption || '')}</figcaption><span class="pno">♡ ${String(i + 1).padStart(2, '0')}</span></figure>`;
+  return `<figure class="face"><span class="phead" aria-hidden="true">♡ MEMORIES ♡</span><button class="ph" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(g)}" style="${pos(g)}" alt="${esc(g.caption || '')}"></button><figcaption>${esc(g.caption || '')}</figcaption><span class="pno">♡ ${String(i + 1).padStart(2, '0')}</span></figure>`;
 }
 const spreadCount = list => Math.ceil(list.length / 2);
 const TAPE = (a, b) => `<svg viewBox="0 0 120 34"><path d="M4 3h112l-3 5 3 5-3 5 3 5-3 5 3 4H4l3-4-3-5 3-5-3-5 3-5-3-5z" fill="${a}" opacity=".97"/><path d="M14 3l-8 28M34 3l-8 28M54 3l-8 28M74 3l-8 28M94 3l-8 28M114 3l-8 28" stroke="${b}" stroke-width="5" opacity=".55"/></svg>`;
@@ -967,7 +978,7 @@ function albumPage(x, wid = null) {
         <div class="bk-tabs"><span class="lab">ALBUM</span>${Array.from({ length: n }, (_, j) => `<button data-ato="${j}" aria-current="${j === sp}" aria-label="${j + 1}장">${j + 1}</button>`).join('')}</div></div>
       <div class="bk-ctrl"><button class="bk-nav prev" data-aidx="-1" aria-label="이전 장" ${sp === 0 ? 'disabled' : ''}>◀</button><span class="cnt" id="bkCnt">${sp + 1} / ${n}</span><button class="bk-nav next" data-aidx="1" aria-label="다음 장" ${sp === n - 1 ? 'disabled' : ''}>▶</button></div>
       <div class="deco-bar" id="decoBar">${decoBar()}</div>
-      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${img(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
+      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${img(g)}" style="${pos(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>아직 사진이 없어요.<br>${w ? `${esc(w.name)}에서의 ${esc(x.name)} 사진을 모아보세요.` : '이 캐릭터의 그림, 짤, 레퍼런스를 모아보세요.'}</p></div>`}
     ${canWrite && assets ? `<div class="ap-tools"><label class="btn sm primary filebtn">＋ 사진 추가 (여러 장 가능)<input type="file" accept="image/*" multiple data-quickgal="${wid ? `characters:${x.id}:wa:${wid}` : `characters:${x.id}:album`}"></label>${al.length ? `<button class="btn sm" data-act="${wid ? 'album-edit' : 'edit'}">설명 달기 · 빼기</button>` : ''}</div>` : ''}
   </div>`;
@@ -1013,7 +1024,7 @@ function viewBody(type, x) {
     if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
     const ch = byId('characters', sheet.albumChar);
     return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${cs.length
-      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${img(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
+      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>이 세계관에 연결된 캐릭터가 없어요.<br>캐릭터 편집에서 세계관을 고르면 여기에 캐릭터별 앨범이 생겨요.</p></div>`}</div>`;
   }
   if (type === 'characters') {
@@ -1033,7 +1044,7 @@ function viewBody(type, x) {
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
-      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${img(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
+      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${img(g)}" style="${pos(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}</div>`;
   }
@@ -1049,12 +1060,12 @@ function viewBody(type, x) {
   if (type === 'worlds') {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
     const colors = ['blue', 'pink', 'mint', 'yellow'];
-    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner"><button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
+    return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner"><button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
       ${relationsOfWorld(x, cs)}
       ${cs.length ? subWin('RESIDENTS · 이 세계의 캐릭터', 'pink', `<div class="links">${cs.map(charChip).join('')}<button class="btn sm primary" data-page="2" style="margin-left:auto">캐릭터 앨범</button></div>`) : ''}
-      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
+      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" style="${pos(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
         ${canWrite && assets ? `<div style="margin-top:14px"><label class="btn sm filebtn">＋ 이미지 추가<input type="file" accept="image/*" multiple data-quickgal="worlds:${x.id}:gallery"></label></div>` : ''}`)}
       ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}</div>`;
   }
@@ -1068,7 +1079,7 @@ function viewBody(type, x) {
 const FIELDS = {
   characters: [
     { k: 'avatar', t: 'image', l: '프로필 이미지' },
-    { k: 'cover', t: 'image', l: '커버 이미지 (상세 화면 맨 위)', wide: 1 },
+    { k: 'cover', t: 'image', l: '커버 이미지 (상세 화면 맨 위)', wide: 1, noPos: 1 },
     { row: [{ k: 'name', t: 'text', l: '이름', req: 1 }, { k: 'nick', t: 'text', l: '애칭', ph: '예: 윤이, 하냥' }] },
     { k: 'kind', t: 'kind', l: '종류' },
     { k: 'tagline', t: 'text', l: '한 줄 소개', ph: '예: 비 오는 날만 문을 여는 골동품점 주인' },
@@ -1140,9 +1151,9 @@ function fieldHtml(f, d) {
     case 'kind': return `<div class="fld"><span class="lbl">${f.l}</span><div class="picks">${allKinds(sheet.newKinds).map(k => `<button type="button" class="chip" data-kindpick="${esc(k)}" aria-pressed="${kindOf(d) === k}">${esc(k)}</button>`).join('')}</div>
         <div style="display:flex;gap:6px;max-width:420px"><input type="text" id="f_newkind" placeholder="새 종류 만들기 (예: 오너캐, 드림주, NPC)"><button type="button" class="btn sm" data-act="addkind">＋ 추가</button></div></div>`;
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
-    case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${img(v)}" alt="">` : '없음'}</div>
-        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
-    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${img(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
+    case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${img(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
+        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-ratio="${f.wide ? '16/9' : '4/5'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
+    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${img(g)}" style="${pos(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-ratio="${f.k === 'gallery' ? '1/1' : '3/4'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
@@ -1390,6 +1401,36 @@ async function restore(file) {
   } finally { setBusy(''); }
 }
 
+/* ---------- 위치 조정: drag a photo inside its frame to choose which part shows ---------- */
+function openPosTool(ref, ratio, done) {
+  let x = ref.x ?? 50, y = ref.y ?? 50, drag = null;
+  const o = document.createElement('div');
+  o.className = 'postool';
+  o.innerHTML = `<div class="win c-pink"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">위치 조정</span></div>
+    <div class="pt-body"><p>사진을 끌어서 보일 부분을 맞춰 주세요.</p>
+      <div class="pt-frame" style="aspect-ratio:${ratio}"><img src="${img(ref)}" alt="" draggable="false" style="object-position:${x}% ${y}%"></div>
+      <div class="pt-btns"><button type="button" class="btn sm ghost" data-pt="reset">가운데로</button><span style="flex:1"></span><button type="button" class="btn sm" data-pt="cancel">취소</button><button type="button" class="btn sm primary" data-pt="ok">완료</button></div></div></div>`;
+  document.body.appendChild(o);
+  const frame = o.querySelector('.pt-frame'), im = frame.querySelector('img');
+  const paint = () => { im.style.objectPosition = `${x}% ${y}%`; };
+  frame.addEventListener('pointerdown', e => { e.preventDefault(); frame.setPointerCapture(e.pointerId); drag = { px: e.clientX, py: e.clientY, x, y, w: frame.clientWidth, h: frame.clientHeight }; });
+  frame.addEventListener('pointermove', e => {
+    if (!drag) return;
+    // dragging the photo right reveals more of its left side, so the anchor moves the other way
+    x = Math.max(0, Math.min(100, drag.x - (e.clientX - drag.px) / drag.w * 100));
+    y = Math.max(0, Math.min(100, drag.y - (e.clientY - drag.py) / drag.h * 100));
+    paint();
+  });
+  frame.addEventListener('pointerup', () => { drag = null; });
+  o.addEventListener('click', e => {
+    const b = e.target.closest('[data-pt]'); if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.pt === 'reset') { x = 50; y = 50; paint(); return; }
+    o.remove();
+    if (b.dataset.pt === 'ok') done(Math.round(x), Math.round(y));
+  });
+}
+
 /* ---------- Events ---------- */
 document.addEventListener('click', async e => {
   const dock = $('#dock');
@@ -1466,6 +1507,8 @@ document.addEventListener('click', async e => {
       d.kind = v; rerenderEdit(); return;
     }
     if (t.dataset.pick) { const s = new Set(d.characterIds || []); s.has(t.dataset.pick) ? s.delete(t.dataset.pick) : s.add(t.dataset.pick); d.characterIds = [...s]; rerenderEdit(); return; }
+    if (t.dataset.imgpos) { const k = t.dataset.imgpos; openPosTool(d[k], t.dataset.ratio, (x, y) => { d[k] = { ...d[k], x, y }; rerenderEdit(); }); return; }
+    if (t.dataset.galpos) { const [k, i] = t.dataset.galpos.split(':'); openPosTool(d[k][+i], t.dataset.ratio, (x, y) => { d[k][+i] = { ...d[k][+i], x, y }; rerenderEdit(); }); return; }
     if (t.dataset.unimg) { if (d[t.dataset.unimg]) sheet.removed.push(d[t.dataset.unimg].id); d[t.dataset.unimg] = null; rerenderEdit(); return; }
     if (t.dataset.ungal) { const [k, i] = t.dataset.ungal.split(':'); const [g] = d[k].splice(+i, 1); if (g) sheet.removed.push(g.id); rerenderEdit(); return; }
     if (t.dataset.addsec) { (d.sections = d.sections || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('sec_t_' + (d.sections.length - 1))?.focus(); return; }
