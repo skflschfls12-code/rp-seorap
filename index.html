@@ -224,7 +224,8 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 
 /* Modal window */
 .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(111, 91, 103, .32); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
-.modal { width: min(1200px, 100%); height: 100%; display: flex; flex-direction: column; box-shadow: 8px 8px 0 var(--cs); animation: popin .25s cubic-bezier(.3,1.4,.6,1); }
+.modal { width: min(1200px, 100%); height: 100%; display: flex; flex-direction: column; box-shadow: 8px 8px 0 var(--cs); }
+.modal.pop { animation: popin .25s cubic-bezier(.3,1.4,.6,1); }
 @keyframes popin { from { transform: scale(.94); opacity: 0; } }
 .modal > .wbar .wbtns button { width: 22px; height: 22px; display: grid; place-items: center; border: 1.3px solid var(--ink); border-radius: 6px; background: var(--win); padding: 0; font-size: 13px; line-height: 1; }
 .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 14px; border-bottom: 1.5px dashed var(--ink); background: var(--win); }
@@ -780,7 +781,7 @@ function render() {
   // While the search box has focus, leave it in place: rebuilding it breaks Korean IME composition (ㅎㅐㄹㅣ instead of 해리)
   if (q && document.activeElement === q) {
     $('#tabLbl').textContent = query ? 'SEARCH' : TYPES[view].en;
-    $('#pageBody').innerHTML = bodyHtml();
+    setHtmlKeepImgs($('#pageBody'), bodyHtml());
     renderSheet();
     return;
   }
@@ -790,7 +791,7 @@ function render() {
     <label class="url"><span class="proto">https://rp-seorap.com/</span><input id="q" type="search" placeholder="전체에서 검색" value="${esc(query)}" aria-label="전체 검색" autocomplete="off"><span class="go">${ICO.search}</span></label>
     <span class="icobtn" aria-hidden="true">${ICO.mail}</span></div></div>
     <div id="pageBody">${bodyHtml()}</div>`;
-  $('#main').innerHTML = `<div class="wrap">${html}</div>`;
+  setHtmlKeepImgs($('#main'), `<div class="wrap">${html}</div>`);
   renderSheet();
 }
 function bodyHtml() {
@@ -1162,7 +1163,7 @@ function renderPost() {
   if (!el) { el = document.createElement('div'); el.id = 'igpost'; el.className = 'igpost'; document.body.appendChild(el); }
   const l = albumList(x, albumKey()), k = l.findIndex(e => e.wid === igPost.wid && e.g.id === igPost.id);
   const canPrev = n > 0 || k > 0, canNext = n < imgs.length - 1 || (k >= 0 && k < l.length - 1);
-  el.innerHTML = `<div class="ig-post" role="dialog" aria-modal="true" aria-label="게시물">
+  setHtmlKeepImgs(el, `<div class="ig-post" role="dialog" aria-modal="true" aria-label="게시물">
     <div class="pic"><button class="ph" data-lightbox="${img(r)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(r)}" style="${pos(r)}" alt="${esc(g.caption || '')}"></button>
       ${canPrev ? '<button class="nav prev" data-pstep="-1" aria-label="이전">‹</button>' : ''}${canNext ? '<button class="nav next" data-pstep="1" aria-label="다음">›</button>' : ''}
       ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>` : ''}</div>
@@ -1174,7 +1175,7 @@ function renderPost() {
         <button data-pop="pin" class="${g.pin ? 'on' : ''}" title="${g.pin ? '고정 풀기' : '맨 앞에 고정'}" aria-label="고정">📌</button><span class="grow"></span>
         ${assets ? `<label class="addm" title="이 게시물에 사진 추가">＋<input type="file" accept="image/*" multiple data-igmore="1"></label>` : ''}
         <button data-pop="del" class="del ${igPost.armed ? 'armed' : ''}" title="${imgs.length > 1 ? '이 사진 빼기' : '게시물 삭제'}">${igPost.armed ? (imgs.length > 1 ? '한 번 더 누르면 이 사진을 빼요' : '한 번 더 누르면 삭제') : '🗑'}</button>` : ''}</div>
-        <div class="like">${g.fav ? '좋아요 표시함' : ''}</div>${g.at ? `<time>${fmtDate(g.at)}</time>` : ''}</div></div></div>`;
+        <div class="like">${g.fav ? '좋아요 표시함' : ''}</div>${g.at ? `<time>${fmtDate(g.at)}</time>` : ''}</div></div></div>`);
   if (igPost.edit) setTimeout(() => $('#pcap')?.focus(), 0);
 }
 // edits one post of the open character's album and saves the whole album list
@@ -1490,6 +1491,21 @@ function editBody() {
   return `<form class="form" id="edform">${FIELDS[type].map(f => fieldHtml(f, draft)).join('')}</form>`;
 }
 
+// Re-rendering recreates every <img>, and the browser blanks each one while it decodes again.
+// Putting the old, already-decoded nodes back in place keeps photos steady when something else on screen changes.
+function setHtmlKeepImgs(el, html) {
+  const old = new Map();
+  el.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth) { const k = i.getAttribute('src'); old.has(k) ? old.get(k).push(i) : old.set(k, [i]); } });
+  el.innerHTML = html;
+  if (!old.size) return;
+  el.querySelectorAll('img').forEach(n => {
+    const o = old.get(n.getAttribute('src'))?.shift();
+    if (!o) return;
+    for (const a of ['style', 'alt', 'class', 'draggable']) n.hasAttribute(a) ? o.setAttribute(a, n.getAttribute(a)) : o.removeAttribute(a);
+    o.removeAttribute('loading');
+    n.replaceWith(o);
+  });
+}
 function renderSheet() {
   const L = $('#layer');
   if (!sheet) { L.innerHTML = ''; return; }
@@ -1513,11 +1529,21 @@ function renderSheet() {
        ${sheet.castEdit?.idx != null ? `<button class="btn sm danger ${sheet.armed ? 'armed' : ''}" data-act="cast-del">${sheet.armed ? '한 번 더 누르면 빼기' : '이 인물 빼기'}</button>` : ''}
        ${id && canWrite && !sheet.albumEdit && !sheet.castEdit ? `<button class="btn sm danger ${sheet.armed ? 'armed' : ''}" data-act="delete">${sheet.armed ? '한 번 더 누르면 삭제' : '삭제'}</button>` : ''}
        <button class="btn sm primary" data-act="save" ${sheet.busy ? 'disabled' : ''}>${sheet.busy ? esc(sheet.busy) : '저장'}</button>`;
-  L.innerHTML = `<div class="scrim" data-scrim="1"><div class="win modal c-${T.color}" role="dialog" aria-modal="true" aria-label="${T.label}">
-    <div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">${title}</span><span class="wbtns"><button data-act="${mode === 'edit' ? 'cancel' : 'close'}" aria-label="닫기">✕</button></span></div>
+  const body = mode === 'kinds' ? kindsBody() : mode === 'view' ? viewBody(type, x) : editBody();
+  const close = `<button data-act="${mode === 'edit' ? 'cancel' : 'close'}" aria-label="닫기">✕</button>`;
+  const M = $('.modal', L);
+  if (M) {
+    // the window is already open: swap its contents only, so it doesn't pop in again or blink its photos
+    M.className = `win modal c-${T.color}`; M.setAttribute('aria-label', T.label);
+    $('.wt', M).innerHTML = title; $('.wbtns', M).innerHTML = close; $('.toolbar', M).innerHTML = tools;
+    setHtmlKeepImgs($('.sheet-in', M), body);
+  } else {
+    L.innerHTML = `<div class="scrim" data-scrim="1"><div class="win modal pop c-${T.color}" role="dialog" aria-modal="true" aria-label="${T.label}">
+    <div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">${title}</span><span class="wbtns">${close}</span></div>
     <div class="toolbar">${tools}</div>
-    <div class="sheet"><div class="sheet-in">${mode === 'kinds' ? kindsBody() : mode === 'view' ? viewBody(type, x) : editBody()}</div></div></div></div>`;
-  if (keepScroll) $('.sheet', L).scrollTop = keepScroll;
+    <div class="sheet"><div class="sheet-in">${body}</div></div></div></div>`;
+  }
+  $('.sheet', L).scrollTop = keepScroll || 0;
   sheet.flip = null;
   if (igPost) renderPost();
 }
@@ -2064,31 +2090,52 @@ function makeDb() {
   const snapColl = c => { const docs = [...C(c).entries()].map(([id, d]) => ({ id, exists: true, data: () => d })); return { docs, size: docs.length, empty: !docs.length }; };
   const emit = c => listeners.filter(l => l.c === c).forEach(l => l.cb(l.id ? snapDoc(c, l.id) : snapColl(c)));
   const merge = (a, b) => { const o = { ...a }; for (const k in b) { const v = b[k]; o[k] = v && typeof v === 'object' && !Array.isArray(v) && a[k] && typeof a[k] === 'object' && !Array.isArray(a[k]) ? merge(a[k], v) : v; } return o; };
+  // updated_at of each row as this tab last saw it; a different value on the server means another device or tab saved in between
+  const seen = new Map();
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  // replay only what this tab changed (mine vs. the version it started from) on top of the newer server copy
+  const rebase = (server, base, mine) => {
+    const o = { ...server };
+    for (const k of new Set([...Object.keys(base), ...Object.keys(mine)])) if (!same(base[k], mine[k])) { if (k in mine) o[k] = mine[k]; else delete o[k]; }
+    return o;
+  };
   async function load() {
     const all = [];
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await sb.from('items').select('coll,id,data').range(from, from + 999);
+      const { data, error } = await sb.from('items').select('coll,id,data,updated_at').range(from, from + 999);
       if (error) throw dbError(error);
       all.push(...data);
       if (data.length < 1000) break;
     }
     Object.values(cache).forEach(m => m.clear());
-    for (const r of all) C(r.coll).set(r.id, r.data);
+    seen.clear();
+    for (const r of all) { C(r.coll).set(r.id, r.data); seen.set(r.coll + '/' + r.id, r.updated_at); }
     loadedOnce = true;
     new Set([...Object.keys(cache), ...listeners.map(l => l.c)]).forEach(emit);
   }
-  async function write(c, id, data) {
-    const { error } = await sb.from('items').upsert({ user_id: uid, coll: c, id, data, updated_at: new Date().toISOString() });
+  // patch: for update() the fields to merge; for set() null, and the whole new document is in data
+  async function write(c, id, data, patch) {
+    const key = c + '/' + id, base = C(c).get(id) || {};
+    const { data: row, error: e1 } = await sb.from('items').select('data,updated_at').match({ coll: c, id }).maybeSingle();
+    if (e1) throw dbError(e1);
+    let out = data, merged = false;
+    if (row && row.updated_at !== seen.get(key)) {
+      out = patch ? merge(row.data, patch) : rebase(row.data, base, data);
+      merged = true;
+    }
+    const { data: saved, error } = await sb.from('items').upsert({ user_id: uid, coll: c, id, data: out, updated_at: new Date().toISOString() }).select('updated_at').single();
     if (error) throw dbError(error);
-    C(c).set(id, data); emit(c);
+    seen.set(key, saved?.updated_at);
+    C(c).set(id, out); emit(c);
+    if (merged && c !== 'settings') toast('다른 기기에서 바뀐 내용을 지키면서 저장했어요');
   }
   const listen = (c, id, cb) => { const l = { c, id, cb }; listeners.push(l); if (loadedOnce) cb(id ? snapDoc(c, id) : snapColl(c)); return () => listeners.splice(listeners.indexOf(l), 1); };
   const ref = (c, id) => ({
     id, path: `${c}/${id}`,
     get: async () => snapDoc(c, id),
     set: d => write(c, id, JSON.parse(JSON.stringify(d))),
-    async update(p) { const cur = C(c).get(id); if (!cur) throw { code: 'invalid_argument', message: 'missing document' }; return write(c, id, merge(cur, JSON.parse(JSON.stringify(p)))); },
-    async delete() { const { error } = await sb.from('items').delete().match({ coll: c, id }); if (error) throw dbError(error); C(c).delete(id); emit(c); },
+    async update(p) { const cur = C(c).get(id); if (!cur) throw { code: 'invalid_argument', message: 'missing document' }; p = JSON.parse(JSON.stringify(p)); return write(c, id, merge(cur, p), p); },
+    async delete() { const { error } = await sb.from('items').delete().match({ coll: c, id }); if (error) throw dbError(error); C(c).delete(id); seen.delete(c + '/' + id); emit(c); },
     onSnapshot: (cb, err) => listen(c, id, cb),
   });
   return {
@@ -2166,11 +2213,13 @@ async function start(sessionUser) {
   if (status === 'ok') setTimeout(backfillThumbs, 4000);
   // pick up changes made on another device when this tab comes back
   let lastSync = Date.now();
-  document.addEventListener('visibilitychange', async () => {
-    if (document.hidden || Date.now() - lastSync < 20000 || sheet?.mode === 'edit') return;
+  const resync = async () => {
+    if (document.hidden || Date.now() - lastSync < 3000 || sheet?.mode === 'edit') return;
     lastSync = Date.now();
     try { await db._load(); } catch {}
-  });
+  };
+  document.addEventListener('visibilitychange', resync);
+  window.addEventListener('pageshow', e => { if (e.persisted) resync(); });
 }
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
