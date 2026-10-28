@@ -388,7 +388,11 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-tile:hover .ov, .ig-tile:focus-visible .ov { opacity: 1; }
 .ig .ap-empty { min-height: 26vh; }
 .ig-order { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 8px; border-radius: 10px; background: var(--pink); font-size: 13.5px; }
-.ig-grid.ordering .ig-tile { cursor: pointer; }
+.ig-grid.ordering .ig-tile { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.ig-grid.ordering .ig-tile img { pointer-events: none; -webkit-user-drag: none; }
+.ig-grid.ordering .ig-tile.dragging { opacity: .25; }
+.ig-ghost { position: fixed; z-index: 70; pointer-events: none; border-radius: 6px; overflow: hidden; box-shadow: 0 10px 28px rgba(60, 40, 52, .4); transform: scale(1.06); opacity: .95; }
+.ig-ghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ig-grid.ordering .ig-tile img { transition: transform .15s, opacity .15s; }
 .ig-grid.ordering .ig-tile.sel { outline: 3px solid var(--pink-d); outline-offset: -3px; }
 .ig-grid.ordering .ig-tile.sel img { transform: scale(.9); opacity: .75; }
@@ -739,7 +743,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).map(c => c.avatar)].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -1017,7 +1021,6 @@ function castCard(w, m, i) {
     </div>
     ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>` : ''}</div>`;
 }
-const castOf = (w, cid) => (w.cast || []).find(c => c.id === cid);
 function castProfile(w, m) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
   const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [castTarget(w, 'cast:' + o.id), r.label]));
@@ -1033,6 +1036,7 @@ function castProfile(w, m) {
         <div class="hearts" aria-hidden="true">♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡</div></div></div></div></div>
     <div class="sub-grid">${section('APPEARANCE · 외모', m.appearance, 'pink')}${section('PERSONALITY · 성격', m.personality, 'mint')}${section('VOICE · 말투', m.speech, 'yellow')}${section('STORY · 배경', m.backstory, 'blue')}</div>
     ${section('ETC · 기타 설정', m.desc, 'pink')}
+    ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(m, '').length})</span>`, 'pink', igTeaser(m))}
     ${out.length || inc.length ? subWin('RELATIONS · 관계', 'blue', `<div class="crels flat">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>`) : ''}`;
 }
 function castText(w, m) {
@@ -1085,8 +1089,25 @@ const allWorldPhotos = x => Object.values(x.worldAlbums || {}).flat().flatMap(po
 // A post is one album entry; extra photos of the same post live in its `more` list.
 // sheet.albumWorld: '*' every album, '' the character's own album, or a world id.
 const postImgs = g => [g, ...(g.more || [])];
-const albumKey = () => sheet?.type === 'worlds' ? sheet.id : (sheet?.albumWorld ?? '*');
-const albumChar = () => sheet && byId('characters', sheet.type === 'worlds' ? sheet.albumChar : sheet.id);
+const castOf = (w, cid) => (w.cast || []).find(c => c.id === cid);
+// on a world's 캐릭터 앨범 page, albumChar is a character id or "cast:<id>" for one of the world's own cast
+const castPick = () => sheet?.type === 'worlds' && !sheet.castView && sheet.albumChar?.startsWith('cast:') ? sheet.albumChar.slice(5) : null;
+const albumKey = () => sheet?.castView || castPick() ? '' : sheet?.type === 'worlds' ? sheet.id : (sheet?.albumWorld ?? '*');
+// Whose album is open: "char:<id>" (a character document) or "cast:<world id>:<cast id>" (a member inside a world's cast list)
+const albumRef = () => !sheet ? '' : sheet.castView || castPick() ? `cast:${sheet.id}:${sheet.castView || castPick()}` : `char:${sheet.type === 'worlds' ? sheet.albumChar : sheet.id}`;
+const isCastAlbum = () => albumRef().startsWith('cast:');
+function ownerOf(ref) {
+  const [kind, a, b] = (ref || '').split(':');
+  if (kind === 'cast') {
+    const w = byId('worlds', a), m = w && castOf(w, b);
+    // album fields are kept on the member itself, so a patch rewrites the world's cast list with that member changed
+    return m && { x: m, cast: true, save: p => db.collection('worlds').doc(w.id).update({ cast: (w.cast || []).map(c => c.id === b ? { ...c, ...p } : c), updatedAt: Date.now() }) };
+  }
+  const x = byId('characters', a);
+  return x && { x, save: p => db.collection('characters').doc(x.id).update({ ...p, updatedAt: Date.now() }) };
+}
+const albumOwner = () => ownerOf(albumRef());
+const albumPatch = (key, list) => key ? { worldAlbums: { [key]: list } } : { album: list };
 function albumEntries(x, key) {
   const own = (x.album || []).map((g, i) => ({ g, wid: '', i }));
   const inWorlds = worldsOf(x).flatMap(w => photosOf(x, w.id).map((g, i) => ({ g, wid: w.id, i })));
@@ -1102,15 +1123,14 @@ function headAva(x) {
   return r ? `<span class="clip"><img src="${imgS(r)}" style="${posT(r)}" alt=""></span>` : `<span class="ini">${esc(initial(x.name))}</span>`;
 }
 function igHead(x, key) {
-  const h = x.albumHead || {}, ws = worldsOf(x);
+  const h = x.albumHead || {}, ws = worldsOf(x), cast = isCastAlbum();
   const info = [x.gender, x.birthday].filter(Boolean).map(esc).join(' · ');
   const n = albumEntries(x, '*').reduce((s, e) => s + postImgs(e.g).length, 0);
-  const up = key === '*' || !key ? `characters:${x.id}:album` : `characters:${x.id}:wa:${key}`;
   return `<div class="ig-head"><div class="ig-ava">${headAva(x)}</div><div class="ig-meta">
     <div class="ig-nm"><h2>${esc(h.name || x.name)}</h2><span>${[h.handle && '@' + esc(h.handle), x.nick && '별명 ' + esc(x.nick)].filter(Boolean).join(' · ')}</span></div>
-    ${h.stats === false ? '' : `<div class="ig-stats"><span><b>${n}</b>사진</span><span><b>${ws.length}</b>세계관</span><span><b>${(x.rels || []).length}</b>관계</span></div>`}
+    ${h.stats === false ? '' : `<div class="ig-stats"><span><b>${n}</b>사진</span>${cast ? '' : `<span><b>${ws.length}</b>세계관</span>`}<span><b>${(x.rels || []).length}</b>관계</span></div>`}
     <p class="ig-bio">${esc(h.bio || x.tagline || '')}${h.info !== false && info ? `<small>${info}</small>` : ''}</p>
-    ${canWrite ? `<div class="ig-btns"><button class="btn sm" data-ighead="${x.id}">앨범 헤더 편집</button>${assets ? `<label class="btn sm filebtn">＋ 사진 올리기<input type="file" accept="image/*" multiple data-igup="${up}"></label>` : ''}<button class="btn sm" data-igorder="start">↕ 순서 바꾸기</button></div>` : ''}</div></div>`;
+    ${canWrite ? `<div class="ig-btns"><button class="btn sm" data-ighead="1">앨범 헤더 편집</button>${assets ? `<label class="btn sm filebtn">＋ 사진 올리기<input type="file" accept="image/*" multiple data-igup="${albumRef()}|${key === '*' ? '' : key}"></label>` : ''}<button class="btn sm" data-igorder="start">↕ 순서 바꾸기</button></div>` : ''}</div></div>`;
 }
 function igCircle(attr, v, label, inner, on) {
   return `<button ${attr}="${esc(v)}" aria-pressed="${on}"><span class="r"><span>${inner}</span></span><span class="l">${esc(label)}</span></button>`;
@@ -1121,7 +1141,7 @@ const ordering = key => sheet?.igOrder && sheet.igOrder.key === key;
 function igGrid(x, key) {
   if (ordering(key)) {
     const l = albumEntries(x, key), sel = sheet.igOrder.sel;
-    return `<div class="ig-order"><span>${sel ? '옮길 자리를 누르세요. 그 자리로 들어가요.' : '옮길 게시물을 누르세요.'}${l.some(e => e.g.pin) ? ' 📌 고정한 게시물은 늘 맨 앞이에요.' : ''}</span><button class="btn sm primary" data-igorder="done">다 했어요</button></div>
+    return `<div class="ig-order"><span>${sel ? '옮길 자리를 누르세요. 그 자리로 들어가요.' : '끌어서 옮기거나, 옮길 게시물을 누른 뒤 갈 자리를 누르세요.'}${l.some(e => e.g.pin) ? ' 📌 고정한 게시물은 늘 맨 앞이에요.' : ''}</span><button class="btn sm primary" data-igorder="done">다 했어요</button></div>
       <div class="ig-grid ordering">${l.map((e, j) => `<button class="ig-tile ${sel === e.g.id ? 'sel' : ''}" data-igmove="${e.g.id}" aria-label="${j + 1}번째">
       <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}<span class="no">${j + 1}</span></button>`).join('')}</div>`;
   }
@@ -1138,7 +1158,7 @@ function instaAlbum(x, key, opts) {
     ${opts.circles.length > 1 ? `<div class="ig-hl">${opts.circles.map(([v, l, inner]) => igCircle(opts.attr, v, l, inner, v === opts.cur)).join('')}</div>` : ''}
     <div class="ig-tabs" role="tablist"><button role="tab" data-igtab="grid" aria-selected="${tab === 'grid'}">▦ 게시물</button><button role="tab" data-igtab="fav" aria-selected="${tab === 'fav'}">♡ 좋아요</button></div>
     ${igGrid(x, key)}
-    ${canWrite && key !== '*' && (key ? photosOf(x, key) : x.album || []).length && !ordering(key) ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
+    ${canWrite && !isCastAlbum() && key !== '*' && (key ? photosOf(x, key) : x.album || []).length && !ordering(key) ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
 }
 function charAlbumCircles(x) {
   const all = albumEntries(x, '*'), own = albumEntries(x, '');
@@ -1148,18 +1168,24 @@ function charAlbumCircles(x) {
 // the album strip on the profile page
 function igTeaser(x) {
   const l = albumEntries(x, '*'), shown = l.slice(0, 5), rest = l.length - shown.length;
-  return `<div class="ig-teaser"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>게시물 ${l.length} · 앨범 ${1 + worldsOf(x).length}개</small></div><button class="btn sm primary" data-page="2">앨범 보기 →</button></div>
+  return `<div class="ig-teaser"><div class="top"><span class="ig-mini">${headAva(x)}</span><div><b>${esc(x.albumHead?.name || x.name)}</b><small>게시물 ${l.length}${isCastAlbum() ? '' : ` · 앨범 ${1 + worldsOf(x).length}개`}</small></div><button class="btn sm primary" data-page="2">앨범 보기 →</button></div>
     ${l.length ? `<div class="ig-strip">${shown.map(e => `<button data-igopen="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}"><img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}</button>`).join('')}${rest > 0 ? `<button class="more" data-page="2">+${rest}</button>` : ''}</div>` : '<p style="color:var(--muted);margin:0">아직 사진이 없어요.</p>'}</div>`;
 }
 
-async function movePost(x, key, from, to) {
-  // the grid shows the list newest-first, so work on that order and store it reversed again
-  const disp = albumEntries(x, key).map(e => e.g), i = disp.findIndex(g => g.id === from), j = disp.findIndex(g => g.id === to);
-  if (i < 0 || j < 0 || i === j) return;
-  const [g] = disp.splice(i, 1); disp.splice(j, 0, g);
-  const list = JSON.parse(JSON.stringify(disp.reverse()));
-  try { await db.collection('characters').doc(x.id).update({ ...(key ? { worldAlbums: { [key]: list } } : { album: list }), updatedAt: Date.now() }); }
+// ids: the posts in the order they should show (newest-first, like the grid); stored reversed again
+async function saveOrder(key, ids) {
+  const o = albumOwner(); if (!o) return;
+  const by = new Map(albumEntries(o.x, key).map(e => [e.g.id, e.g]));
+  const disp = ids.map(id => by.get(id)).filter(Boolean);
+  if (disp.length !== by.size) return;
+  try { await o.save(albumPatch(key, JSON.parse(JSON.stringify(disp.reverse())))); }
   catch (e) { toast(errMsg(e)); }
+}
+async function movePost(key, from, to) {
+  const ids = albumEntries(albumOwner().x, key).map(e => e.g.id), i = ids.indexOf(from), j = ids.indexOf(to);
+  if (i < 0 || j < 0 || i === j) return;
+  ids.splice(j, 0, ids.splice(i, 1)[0]);
+  await saveOrder(key, ids);
 }
 // photos of one post: the first one is the post itself, so its framing travels with it when the order changes
 const FRAME_KEYS = ['id', 'x', 'y', 'z', 'cx', 'cy', 'cz', 'tx', 'ty', 'tz'];
@@ -1172,7 +1198,7 @@ function reorderImgs(g, imgs) {
 /* Post viewer */
 let igPost = null; // { wid, id, n: photo index inside the post, edit, armed }
 function igFind() {
-  const x = albumChar(); if (!x || !igPost) return null;
+  const x = albumOwner()?.x; if (!x || !igPost) return null;
   const list = photosOf(x, igPost.wid), i = list.findIndex(g => g.id === igPost.id);
   return i < 0 ? null : { x, list, i, g: list[i] };
 }
@@ -1214,14 +1240,10 @@ function renderPost() {
 }
 // edits one post of the open character's album and saves the whole album list
 async function patchPost(fn) {
-  const f = igFind(); if (!f) return;
+  const f = igFind(), o = albumOwner(); if (!f || !o) return;
   const list = JSON.parse(JSON.stringify(f.list));
   const res = fn(list, f.i);
-  const patch = igPost.wid ? { worldAlbums: { [igPost.wid]: list } } : { album: list };
-  try {
-    await db.collection('characters').doc(f.x.id).update({ ...patch, updatedAt: Date.now() });
-    if (igPost.wid) f.x.worldAlbums = { ...(f.x.worldAlbums || {}), [igPost.wid]: list }; else f.x.album = list;
-  } catch (e) { toast(errMsg(e)); return; }
+  try { await o.save(albumPatch(igPost.wid, list)); } catch (e) { toast(errMsg(e)); return; }
   return res;
 }
 async function postOp(op) {
@@ -1271,8 +1293,9 @@ async function postOp(op) {
   }
 }
 // header editor
-function openHeadEdit(cid) {
-  const x = byId('characters', cid), h = { ...(x.albumHead || {}) };
+function openHeadEdit() {
+  const ref = albumRef(), x = ownerOf(ref)?.x; if (!x) return;
+  const h = { ...(x.albumHead || {}) };
   const o = document.createElement('div'); o.className = 'postool';
   const draw = () => {
     o.innerHTML = `<div class="win c-pink ig-hedit"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">앨범 헤더 편집</span></div><div class="pt-body">
@@ -1302,8 +1325,7 @@ function openHeadEdit(cid) {
     if (op === 'pos') { openPosTool(h.avatar, 'ighead', p => { h.avatar = { ...h.avatar, ...p }; draw(); }); return; }
     if (op === 'ok') {
       try {
-        await db.collection('characters').doc(x.id).update({ albumHead: h, updatedAt: Date.now() });
-        x.albumHead = h;
+        await ownerOf(ref).save({ albumHead: h });
         if (old && old !== h.avatar?.id && !assetInUse(old)) { try { await assets.delete(old); } catch {} }
         o.remove(); toast('헤더를 저장했어요'); renderSheet();
       } catch (er) { toast(errMsg(er)); }
@@ -1330,13 +1352,20 @@ function viewBody(type, x) {
     const key = sheet.albumWorld ?? '*';
     return `${pageTabs(2)}<div class="${flipCls}">${instaAlbum(x, key, { circles: charAlbumCircles(x), attr: 'data-aworld', cur: key, back: true })}</div>`;
   }
-  if (type === 'worlds' && sheet.castView) { const m = castOf(x, sheet.castView); if (m) return castProfile(x, m); sheet.castView = null; }
+  if (type === 'worlds' && sheet.castView) {
+    const m = castOf(x, sheet.castView);
+    if (m) return `${pageTabs(sheet.page === 2 ? 2 : 1)}<div class="${flipCls}">${sheet.page === 2 ? instaAlbum(m, '', { circles: [], back: true }) : castProfile(x, m)}</div>`;
+    sheet.castView = null;
+  }
   if (type === 'worlds' && sheet.page === 2) {
     const cs = sorted(S.characters.filter(c => worldIdsOf(c).includes(x.id)), 'characters');
-    if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
-    const ch = byId('characters', sheet.albumChar);
-    return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${cs.length
-      ? instaAlbum(ch, x.id, { circles: cs.map(c => [c.id, c.name, c.avatar ? circleImg(c.avatar) : esc(initial(c.name))]), attr: 'data-achar', cur: ch.id })
+    // my characters first, then the world's own main characters and NPCs
+    const circles = [...cs.map(c => [c.id, c.name, c.avatar ? circleImg(c.avatar) : esc(initial(c.name))]),
+      ...(x.cast || []).map(m => ['cast:' + m.id, m.name, m.avatar ? circleImg(m.avatar) : esc(initial(m.name))])];
+    if (!circles.some(([v]) => v === sheet.albumChar)) sheet.albumChar = circles[0]?.[0];
+    const pick = castPick(), ch = pick ? castOf(x, pick) : byId('characters', sheet.albumChar);
+    return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${ch
+      ? instaAlbum(ch, pick ? '' : x.id, { circles, attr: 'data-achar', cur: sheet.albumChar })
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>이 세계관에 연결된 캐릭터가 없어요.<br>캐릭터 편집에서 세계관을 고르면 여기에 캐릭터별 앨범이 생겨요.</p></div>`}</div>`;
   }
   if (type === 'characters') {
@@ -1511,7 +1540,7 @@ async function saveCastEdit(removeIt) {
   const { id: wid, draft, castEdit: { idx } } = sheet, w = byId('worlds', wid);
   if (!removeIt && !String(draft.name || '').trim()) { toast('이름을 입력해 주세요.'); $('#f_name')?.focus(); return; }
   const list = [...(w.cast || [])];
-  const gone = removeIt ? [list[idx]?.avatar?.id, ...sheet.removed] : sheet.removed;
+  const gone = removeIt ? [...assetIdsOf({ cast: [list[idx] || {}] }), ...sheet.removed] : sheet.removed;
   if (removeIt) list.splice(idx, 1);
   else {
     const m = { ...draft, id: draft.id || newId(12), rels: (draft.rels || []).filter(r => r.to) };
@@ -1696,7 +1725,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).map(c => c.avatar)].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -1890,14 +1919,15 @@ document.addEventListener('click', async e => {
     } else sheet.igOrder = null;
     renderSheet(); return;
   }
+  if (t.dataset.igmove && ordDragged) return;
   if (t.dataset.igmove && sheet?.igOrder) {
     const o = sheet.igOrder, id = t.dataset.igmove;
     if (!o.sel || o.sel === id) { o.sel = o.sel === id ? null : id; renderSheet(); return; }
     const from = o.sel; o.sel = null;
-    await movePost(albumChar(), o.key, from, id); renderSheet(); return;
+    await movePost(o.key, from, id); renderSheet(); return;
   }
   if (t.dataset.igtab) { sheet.igTab = t.dataset.igtab; renderSheet(); return; }
-  if (t.dataset.ighead) { openHeadEdit(t.dataset.ighead); return; }
+  if (t.dataset.ighead) { openHeadEdit(); return; }
   if (t.dataset.pstep) { stepPost(+t.dataset.pstep); return; }
   if (t.dataset.pclose !== undefined) { closePost(); return; }
   if (t.dataset.pop) { postOp(t.dataset.pop); return; }
@@ -2034,13 +2064,13 @@ document.addEventListener('change', async e => {
   if (el.dataset.igup) {
     const grp = await askGroup(files.length);
     if (grp === null) return;
-    const [ty, did, k, wid] = el.dataset.igup.split(':'); toast(`사진 ${files.length}장 올리는 중…`);
+    const [ref, key] = el.dataset.igup.split('|'); toast(`사진 ${files.length}장 올리는 중…`);
     try {
-      const rs = await uploadFiles(files), x = byId(ty, did), at = Date.now();
+      const rs = await uploadFiles(files), o = ownerOf(ref), at = Date.now();
+      if (!o) throw { code: 'invalid_argument' };
       // oldest first in storage, so the first picked photo ends up in front when shown newest-first
       const add = grp ? [{ ...rs[0], caption: '', at, more: rs.slice(1) }] : rs.map((r, i) => ({ ...r, caption: '', at: at + i }));
-      if (k === 'wa') await db.collection(ty).doc(did).update({ worldAlbums: { [wid]: [...photosOf(x, wid), ...add] }, updatedAt: Date.now() });
-      else await db.collection(ty).doc(did).update({ album: [...(x.album || []), ...add], updatedAt: Date.now() });
+      await o.save(albumPatch(key, [...photosOf(o.x, key), ...add]));
       toast('앨범에 올렸어요');
     } catch (er) { toast(errMsg(er)); }
     return;
@@ -2112,6 +2142,46 @@ document.addEventListener('pointermove', e => {
   coverEdit.y = Math.max(0, Math.min(100, coverDrag.start - (e.clientY - coverDrag.y0) / coverDrag.h * 100));
   coverDrag.im.style.objectPosition = `50% ${coverEdit.y}%`;
 });
+// 순서 바꾸기: drag a tile; the others make room as it passes over them, and the new order is saved on release
+let ordDrag = null, ordDragged = false;
+document.addEventListener('pointerdown', e => {
+  const t = e.target.closest('.ig-grid.ordering .ig-tile');
+  if (!t || e.button > 0) return;
+  ordDrag = { t, x: e.clientX, y: e.clientY, on: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = ordDrag; if (!d) return;
+  if (!d.on) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8) return;
+    const r = d.t.getBoundingClientRect();
+    d.on = true; d.dx = d.x - r.left; d.dy = d.y - r.top;
+    d.g = document.createElement('div'); d.g.className = 'ig-ghost';
+    d.g.style.cssText = `width:${r.width}px;height:${r.height}px`;
+    d.g.innerHTML = d.t.querySelector('img')?.outerHTML || '';
+    document.body.appendChild(d.g); d.t.classList.add('dragging');
+    if (sheet?.igOrder) sheet.igOrder.sel = null;
+  }
+  e.preventDefault();
+  d.g.style.left = e.clientX - d.dx + 'px'; d.g.style.top = e.clientY - d.dy + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.ig-grid.ordering .ig-tile');
+  if (over && over !== d.t) {
+    const kids = [...d.t.parentNode.children];
+    kids.indexOf(over) > kids.indexOf(d.t) ? over.after(d.t) : over.before(d.t);
+  }
+  // near the top or bottom edge of the window, keep scrolling so a post can travel far
+  const sh = $('#layer .sheet');
+  if (sh) { const r = sh.getBoundingClientRect(); if (e.clientY < r.top + 60) sh.scrollBy(0, -14); else if (e.clientY > r.bottom - 60) sh.scrollBy(0, 14); }
+}, { passive: false });
+const endOrdDrag = async () => {
+  const d = ordDrag; ordDrag = null;
+  if (!d?.on) return;
+  d.g.remove(); d.t.classList.remove('dragging');
+  ordDragged = true; setTimeout(() => { ordDragged = false; }, 300);
+  const ids = [...d.t.parentNode.querySelectorAll('[data-igmove]')].map(n => n.dataset.igmove);
+  if (sheet?.igOrder) { await saveOrder(sheet.igOrder.key, ids); renderSheet(); }
+};
+document.addEventListener('pointerup', endOrdDrag);
+document.addEventListener('pointercancel', endOrdDrag);
 let swipe = null;
 document.addEventListener('pointerdown', e => { if (e.target.closest('.ig-post .pic')) swipe = { x: e.clientX, y: e.clientY }; });
 document.addEventListener('pointerup', e => {
