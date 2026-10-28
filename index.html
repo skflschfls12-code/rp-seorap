@@ -1019,7 +1019,6 @@ function castIncoming(w, m) {
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
   // other cast members who wrote a relation pointing at this one
-  const inc = castIncoming(w, m);
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
     <div class="cphoto"><button data-castview="${m.id}" aria-label="${esc(m.name)} 프로필">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}">` : `<span class="ph">${esc(initial(m.name))}</span>`}</button></div>
     <div class="cinfo">
@@ -1029,7 +1028,7 @@ function castCard(w, m, i) {
       ${m.birthday || m.gender ? `<div class="row" style="justify-content:flex-start;gap:10px;font-size:13px">${m.birthday ? `<span><span class="lbl-box">BIRTH</span> ${esc(m.birthday)}</span>` : ''}${m.gender ? `<span><span class="lbl-box">GENDER</span> ${esc(m.gender)}</span>` : ''}</div>` : ''}
       <button class="cmore" data-castview="${m.id}">프로필 보기 →</button>
     </div>
-    ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>` : ''}</div>`;
+    ${out.length ? `<div class="crels">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}</div>` : ''}</div>`;
 }
 function castProfile(w, m) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
