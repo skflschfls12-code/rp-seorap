@@ -511,21 +511,24 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .wbanner.posable .posnow { left: auto; right: 12px; bottom: 12px; transform: none; }
 .castgroup + .castgroup { margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--line, #E6D3DA); }
 .castgroup h5 { margin: 0 0 10px; }
-.castgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; }
-.castcard { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding: 10px; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--win); box-shadow: 3px 3px 0 var(--yellow-s); }
+.castgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: stretch; }
+/* cards in one row share a height; the relation list sits on the bottom edge so the rows line up */
+.castcard { display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: start; gap: 12px; padding: 10px; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--win); box-shadow: 3px 3px 0 var(--yellow-s); }
 .castcard.npc { background: var(--bg); box-shadow: none; }
 .cphoto { aspect-ratio: 4 / 5; border: 1.3px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--checker); display: grid; place-items: center; }
 .cphoto button { padding: 0; border: 0; width: 100%; height: 100%; display: grid; place-items: center; background: none; }
 .cphoto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cphoto .ph { font-size: 30px; color: var(--yellow-d); }
 .cinfo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.cname { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 17px; padding: 0; border: 0; background: none; color: var(--fg); text-align: left; }
+.chead { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 24px; }
+.chead .lbl-box { flex: none; white-space: nowrap; }
+.cname { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 17px; line-height: 1.3; padding: 0; border: 0; background: none; color: var(--fg); text-align: left; min-width: 0; word-break: keep-all; }
 .cname:hover { color: var(--pink-d); }
 .cmore { align-self: flex-start; padding: 2px 10px; border: 1.3px solid var(--ink); border-radius: 999px; background: var(--yellow); font-size: 12.5px; }
 .cmore:hover { background: var(--pink); }
 .crels.flat { border-top: 0; padding-top: 0; gap: 8px; }
-.cedit { margin-left: auto; padding: 0 8px; box-shadow: none !important; border-color: transparent !important; }
-.ctag { margin: 0; font-size: 13.5px; color: var(--muted); }
+.cedit { flex: none; margin-left: auto; padding: 0 8px; box-shadow: none !important; border-color: transparent !important; }
+.castcard .ctag { margin: 0; font-size: 13.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .crels { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; border-top: 1.3px dashed var(--line, #E6D3DA); padding-top: 10px; }
 .crow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: center; }
 .crow .who { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; text-align: left; max-width: 9em; }
@@ -1014,8 +1017,9 @@ function castCard(w, m, i) {
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
     <div class="cphoto"><button data-castview="${m.id}" aria-label="${esc(m.name)} 프로필">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}">` : `<span class="ph">${esc(initial(m.name))}</span>`}</button></div>
     <div class="cinfo">
-      <div class="row" style="justify-content:flex-start;gap:6px"><button class="cname" data-castview="${m.id}">${esc(m.name)}</button><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
-      ${m.tagline ? `<p class="ctag">${esc(m.tagline)}</p>` : ''}
+      <div class="chead"><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
+      <button class="cname" data-castview="${m.id}">${esc(m.name)}</button>
+      ${m.tagline ? `<p class="ctag" title="${esc(m.tagline)}">${esc(m.tagline)}</p>` : ''}
       ${m.birthday || m.gender ? `<div class="row" style="justify-content:flex-start;gap:10px;font-size:13px">${m.birthday ? `<span><span class="lbl-box">BIRTH</span> ${esc(m.birthday)}</span>` : ''}${m.gender ? `<span><span class="lbl-box">GENDER</span> ${esc(m.gender)}</span>` : ''}</div>` : ''}
       <button class="cmore" data-castview="${m.id}">프로필 보기 →</button>
     </div>
