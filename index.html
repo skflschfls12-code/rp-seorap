@@ -537,7 +537,7 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .crow .who b { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .crow button.who b { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
 .crow .lab { font-size: 13.5px; line-height: 1.45; color: var(--fg); background: var(--pink); border-radius: 8px; padding: 3px 9px; justify-self: start; word-break: keep-all; overflow-wrap: anywhere; }
-.crow .lab .dir { white-space: nowrap; font-size: 11.5px; font-weight: 700; color: var(--pink-d); margin-right: 6px; }
+.crow .lab .dir { white-space: nowrap; font-size: 11.5px; color: var(--muted); margin-right: 6px; }
 .relrow.crel { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
 .postool { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(60, 40, 52, .45); }
 .postool .win { width: min(420px, 100%); }
@@ -1008,12 +1008,18 @@ function castTarget(w, to) {
 function castRelRow(t, label, incoming) {
   const tag = t.open ? 'button' : 'span';
   return `<div class="crow"><${tag} class="who" ${t.open}><span class="av">${t.avatar ? `<img src="${imgS(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span><b>${esc(t.name)}</b></${tag}>
-    <span class="lab">${incoming ? '<span class="dir">→ 나</span>' : ''}${esc(label || '관계 미정')}</span></div>`;
+    <span class="lab">${incoming ? '<span class="dir">상대에게 나는</span>' : ''}${esc(label || '관계 미정')}</span></div>`;
+}
+// relations other cast members wrote toward m; when m already wrote one back to that person, theirs would only repeat it
+function castIncoming(w, m) {
+  const mine = new Set((m.rels || []).map(r => r.to));
+  return (w.cast || []).filter(o => o.id !== m.id && !mine.has('cast:' + o.id))
+    .flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [castTarget(w, 'cast:' + o.id), r.label]));
 }
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
   // other cast members who wrote a relation pointing at this one
-  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [{ name: o.name, avatar: o.avatar, open: `data-castview="${o.id}"` }, r.label]));
+  const inc = castIncoming(w, m);
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
     <div class="cphoto"><button data-castview="${m.id}" aria-label="${esc(m.name)} 프로필">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}">` : `<span class="ph">${esc(initial(m.name))}</span>`}</button></div>
     <div class="cinfo">
@@ -1027,7 +1033,7 @@ function castCard(w, m, i) {
 }
 function castProfile(w, m) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
-  const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [castTarget(w, 'cast:' + o.id), r.label]));
+  const inc = castIncoming(w, m);
   return `<div class="win c-yellow">${winbar(`CAST · ${m.role === 'npc' ? 'NPC' : 'MAIN'} CARD`)}<div class="wbody" style="padding:18px">
       <div class="idhero">${idFrame(m, true)}
       <div class="facts"><div class="row" style="justify-content:flex-start"><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span></div>
