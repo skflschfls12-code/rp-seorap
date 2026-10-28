@@ -120,9 +120,6 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .icobtn { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 1.5px solid var(--ink); border-radius: 9px; background: var(--win); }
 .icobtn svg { width: 18px; height: 18px; }
 .icobtn.menu { display: none; }
-/* phones: the menu button in the address bar scrolls away, so a second one stays in the corner */
-.fab-menu { display: none; position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 46; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--pink); box-shadow: 3px 3px 0 var(--pink-s); padding: 11px; }
-.fab-menu svg { width: 100%; height: 100%; display: block; }
 .url { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 6px 4px 14px; background: var(--win); }
 .url .proto { font-family: var(--f-pixel); font-size: 13px; color: var(--muted); white-space: nowrap; }
 .url input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; padding: 4px 0; }
@@ -483,8 +480,6 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
   .strip { display: none; }
   .panel { width: min(300px, 86vw); }
   .icobtn.menu { display: grid; background: var(--pink); }
-  .fab-menu { display: block; }
-  .dock.open { z-index: 47; }
   .icobtn.reload { display: none; }
   .cover-band { height: 210px; }
   .sheet-in > .cover-band.mc:first-child { margin: -18px -14px 0; height: 180px; }
@@ -589,7 +584,6 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
     </form>
   </div>
 </div>
-<button class="fab-menu" data-act="menu" aria-label="메뉴 열기"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <aside class="dock" id="dock" aria-label="메뉴">
   <div class="strip" id="strip"></div>
   <div class="panel">
@@ -1947,8 +1941,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.pclose !== undefined) { closePost(); return; }
   if (t.dataset.pop) { postOp(t.dataset.pop); return; }
   if (t.dataset.scrim && e.target === t) { if (sheet?.mode === 'view') { sheet = null; renderSheet(); } return; }
-  if (t.dataset.nav && sheet?.mode === 'edit') { dock.classList.remove('open'); toast('편집 중이에요. 저장하거나 취소한 뒤에 이동해 주세요'); return; }
-  if (t.dataset.nav) { dock.classList.remove('open'); t.blur(); if (sheet) { sheet = null; closePost(); renderSheet(); } if (coverEdit?.key.startsWith('site:')) coverEdit = null; view = t.dataset.nav; query = ''; filter = { tag: null, sub: 'all' }; try { history.replaceState(null, '', '#' + view); } catch {} render(); return; }
+  if (t.dataset.nav) { dock.classList.remove('open'); t.blur(); if (coverEdit?.key.startsWith('site:')) coverEdit = null; view = t.dataset.nav; query = ''; filter = { tag: null, sub: 'all' }; try { history.replaceState(null, '', '#' + view); } catch {} render(); return; }
   if (t.dataset.sub) { filter.sub = t.dataset.sub; render(); return; }
   if (t.dataset.tag !== undefined) { const v = t.dataset.tag; filter.tag = !v || filter.tag === v ? null : v; filter.showTags = false; render(); return; }
   if (t.dataset.open) { const [ty, id] = t.dataset.open.split(':'); openView(ty, id); return; }
