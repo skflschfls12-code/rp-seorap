@@ -692,7 +692,7 @@ function bodyHtml() {
   const T = TYPES[view];
   let html = `<div class="head"><h2>${SPARK()}${query ? '검색 결과' : T.label}<span class="en">${query ? '' : T.en}</span></h2>
     ${canWrite && status === 'ok' && !query ? `<button class="btn primary" data-act="new">＋ ${T.add}</button>` : ''}</div>`;
-  if (status === 'offline') html += alertWin('저장소에 연결하지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.');
+  if (status === 'offline') html += alertWin(`저장소에 연결하지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.${loadError ? `<br><small style="color:var(--muted)">오류 내용: ${esc(loadError)}</small>` : ''}`);
   else if (status === 'connecting') html += alertWin('서랍을 여는 중이에요… 잠시만요!', 'LOADING');
   else if (!canWrite) html += alertWin('보기 전용이에요. 이 서랍장의 주인만 내용을 바꿀 수 있어요.', 'NOTICE');
   html += query ? renderSearch() : renderFilters() + renderList();
@@ -1669,7 +1669,7 @@ render();
 const SB_URL = 'https://teidxcdcothqwiovvgie.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaWR4Y2Rjb3RocXdpb3Z2Z2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMDI4MjksImV4cCI6MjEwODc3ODgyOX0.7aJlreZrAskLGr1lpAZoaZ7aqvGmqr-55grwlAjSUik';
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
-let uid = null;
+let uid = null, loadError = '';
 const newId = n => [...crypto.getRandomValues(new Uint8Array(n / 2))].map(b => b.toString(16).padStart(2, '0')).join('');
 const dbError = e => ({ code: /quota|exceed|limit/i.test(e?.message || '') ? 'quota_exceeded' : 'unavailable', message: e?.message || '' });
 
@@ -1740,7 +1740,7 @@ async function start(sessionUser) {
       if (sheet?.mode === 'edit' || sheet?.mode === 'kinds' || sheet?.deco) renderNav(); else render();
     });
   }
-  try { await db._load(); status = 'ok'; } catch { status = 'offline'; }
+  try { await db._load(); status = 'ok'; } catch (e) { status = 'offline'; loadError = e?.message || String(e); console.error(e); }
   render();
   // pick up changes made on another device when this tab comes back
   let lastSync = Date.now();
