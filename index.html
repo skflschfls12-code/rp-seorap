@@ -510,8 +510,15 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .cdesc summary { cursor: pointer; font-size: 12.5px; color: var(--pink-d); }
 .cdesc h6 { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--pink-d); letter-spacing: .04em; }
 .cdesc p { margin: 2px 0 0; font-size: 13.5px; white-space: pre-wrap; }
-.crels { display: flex; flex-wrap: wrap; gap: 6px; }
-.crels .crl { color: var(--pink-d); margin-left: 2px; }
+.crels { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; border-top: 1.3px dashed var(--line, #E6D3DA); padding-top: 10px; }
+.crow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: center; }
+.crow .who { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; text-align: left; max-width: 9em; }
+.crow .who .av { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1.2px solid var(--ink); background: var(--pink); overflow: hidden; display: grid; place-items: center; font-family: var(--f-display); font-weight: var(--dw); font-size: 12px; }
+.crow .who .av img { width: 100%; height: 100%; object-fit: cover; }
+.crow .who b { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.crow button.who b { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
+.crow .lab { font-size: 13.5px; line-height: 1.45; color: var(--fg); background: var(--pink); border-radius: 8px; padding: 3px 9px; justify-self: start; word-break: keep-all; overflow-wrap: anywhere; }
+.crow .lab .dir { white-space: nowrap; font-size: 11.5px; font-weight: 700; color: var(--pink-d); margin-right: 6px; }
 .relrow.crel { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
 .postool { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(60, 40, 52, .45); }
 .postool .win { width: min(420px, 100%); }
@@ -978,8 +985,11 @@ function castTarget(w, to) {
   const c = to && byId('characters', to);
   return c && { name: c.name, avatar: c.avatar, open: `data-open="characters:${c.id}"` };
 }
-function relChip(t, label, incoming) {
-  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${imgS(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
+// one relation per line in a cast card: who on the left, the (often long) label wrapping freely on the right
+function castRelRow(t, label, incoming) {
+  const tag = t.open ? 'button' : 'span';
+  return `<div class="crow"><${tag} class="who" ${t.open}><span class="av">${t.avatar ? `<img src="${imgS(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span><b>${esc(t.name)}</b></${tag}>
+    <span class="lab">${incoming ? '<span class="dir">→ 나</span>' : ''}${esc(label || '관계 미정')}</span></div>`;
 }
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
@@ -993,8 +1003,8 @@ function castCard(w, m, i) {
       ${m.birthday || m.gender ? `<div class="row" style="justify-content:flex-start;gap:10px;font-size:13px">${m.birthday ? `<span><span class="lbl-box">BIRTH</span> ${esc(m.birthday)}</span>` : ''}${m.gender ? `<span><span class="lbl-box">GENDER</span> ${esc(m.gender)}</span>` : ''}</div>` : ''}
       ${(() => { const parts = [['외모', m.appearance], ['성격', m.personality], ['말투', m.speech], ['배경', m.backstory], ['기타 설정', m.desc]].filter(([, v]) => v);
         return parts.length ? `<details class="cdesc"><summary>자세히</summary>${parts.map(([l, v]) => `<h6>${l}</h6><p>${esc(v)}</p>`).join('')}</details>` : ''; })()}
-      ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => relChip(t, l, false)).join('')}${inc.map(([t, l]) => relChip(t, l, true)).join('')}</div>` : ''}
-    </div></div>`;
+    </div>
+    ${out.length || inc.length ? `<div class="crels">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>` : ''}</div>`;
 }
 function castWin(w) {
   const cast = (w.cast || []).map((m, i) => [m, i]);
