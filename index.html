@@ -265,7 +265,7 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gallery figcaption { font-size: 12.5px; text-align: center; color: var(--muted); }
 .wbanner { aspect-ratio: 21 / 8; width: 100%; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--blue); }
-.wbanner button { padding: 0; border: 0; width: 100%; height: 100%; }
+.wbanner button[data-lightbox] { padding: 0; border: 0; width: 100%; height: 100%; display: block; }
 .wbanner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .notepad.full { max-height: none; font-family: var(--f-body); font-size: 14.5px; line-height: 30px; background-size: 100% 30px; background-image: linear-gradient(transparent 29px, var(--yellow-s) 29px); padding: 0 16px; }
 
@@ -462,7 +462,7 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 <style>
 body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }
 .posable { position: relative; }
-.posable .posnow { position: absolute; z-index: 3; left: 50%; bottom: 10px; transform: translateX(-50%); opacity: .92; }
+.posable .posnow { position: absolute; z-index: 3; left: 50%; bottom: 10px; transform: translateX(-50%); width: auto; height: auto; }
 .wbanner.posable .posnow { left: auto; right: 12px; bottom: 12px; transform: none; }
 .castgroup + .castgroup { margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--line, #E6D3DA); }
 .castgroup h5 { margin: 0 0 10px; }
