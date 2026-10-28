@@ -461,6 +461,24 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 </style>
 <style>
 body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important; }
+.castgroup + .castgroup { margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--line, #E6D3DA); }
+.castgroup h5 { margin: 0 0 10px; }
+.castgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; }
+.castcard { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding: 10px; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--win); box-shadow: 3px 3px 0 var(--yellow-s); }
+.castcard.npc { background: var(--bg); box-shadow: none; }
+.cphoto { aspect-ratio: 4 / 5; border: 1.3px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--checker); display: grid; place-items: center; }
+.cphoto button { padding: 0; border: 0; width: 100%; height: 100%; }
+.cphoto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cphoto .ph { font-size: 30px; color: var(--yellow-d); }
+.cinfo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cname { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 17px; }
+.cedit { margin-left: auto; padding: 0 8px; box-shadow: none !important; border-color: transparent !important; }
+.ctag { margin: 0; font-size: 13.5px; color: var(--muted); }
+.cdesc summary { cursor: pointer; font-size: 12.5px; color: var(--pink-d); }
+.cdesc p { margin: 6px 0 0; font-size: 13.5px; white-space: pre-wrap; }
+.crels { display: flex; flex-wrap: wrap; gap: 6px; }
+.crels .crl { color: var(--pink-d); margin-left: 2px; }
+.relrow.crel { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; }
 .postool { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(60, 40, 52, .45); }
 .postool .win { width: min(420px, 100%); }
 .pt-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
@@ -624,7 +642,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x)].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x), ...(x.cast || []).map(c => c.avatar)].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -785,7 +803,7 @@ function cardFor(type, x) {
       <div class="coverbox">${x.cover ? `<img src="${img(x.cover)}" style="${pos(x.cover)}" alt="" loading="lazy">` : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
       <h3>${star}${esc(x.name || '이름 없는 세계')}</h3>
       ${x.summary ? `<p class="desc">${esc(x.summary)}</p>` : ''}
-      <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span><span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
+      <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span>${(x.cast || []).length ? `<span class="lbl-box">CAST ${x.cast.length}</span>` : ''}<span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
   }
   return `<div class="win card c-yellow" ${open} role="button" tabindex="0">${winbar(T.file)}<div class="wbody">
       <div class="row"><span class="lbl-box fill">${esc(x.category || '기타')}</span>${exPill(x)}</div>
@@ -811,7 +829,7 @@ function emptyFor(t) {
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption)].filter(Boolean).join(' ').toLowerCase();
+    ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -874,6 +892,26 @@ function relationsOfChar(x) {
   // the profile shows only relations that hold in every world; per-world ones live on that world's page
   const mine = allRels().filter(r => !r.wid && (r.from === x.id || r.to === x.id));
   return mine.length ? subWin('RELATIONS · 관계', 'blue', `<div class="relgroup">${relPairsHtml(mine, x.id)}</div>`) : '';
+}
+// World-only characters (main characters and NPCs) live on the world: cast = [{ id, name, role, avatar, tagline, desc, rels: [{ to, label }] }]
+const ROLE = { main: '메인 캐릭터', npc: 'NPC' };
+function castCard(w, m, i) {
+  const rels = (m.rels || []).filter(r => r.to && byId('characters', r.to));
+  return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
+    <div class="cphoto">${m.avatar ? `<button data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}"></button>` : `<span class="ph">${esc(initial(m.name))}</span>`}</div>
+    <div class="cinfo">
+      <div class="row" style="justify-content:flex-start;gap:6px"><b class="cname">${esc(m.name)}</b><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
+      ${m.tagline ? `<p class="ctag">${esc(m.tagline)}</p>` : ''}
+      ${m.desc ? `<details class="cdesc"><summary>자세히</summary><p>${esc(m.desc)}</p></details>` : ''}
+      ${rels.length ? `<div class="crels">${rels.map(r => { const c = byId('characters', r.to); return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${pos(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}<span class="crl">· ${esc(r.label || '관계 미정')}</span></button>`; }).join('')}</div>` : ''}
+    </div></div>`;
+}
+function castWin(w) {
+  const cast = (w.cast || []).map((m, i) => [m, i]);
+  if (!cast.length && !canWrite) return '';
+  const group = (role, title) => { const list = cast.filter(([m]) => (m.role || 'main') === role); return list.length ? `<div class="castgroup"><h5><span class="lbl-box">${title}</span></h5><div class="castgrid">${list.map(([m, i]) => castCard(w, m, i)).join('')}</div></div>` : ''; };
+  return subWin('CAST · 이 세계의 등장인물', 'yellow', `${cast.length ? group('main', 'MAIN · 메인 캐릭터') + group('npc', 'NPC') : '<p style="color:var(--muted);margin:0">이 세계관에만 나오는 메인 캐릭터나 NPC를 넣어 보세요. 내 캐릭터와 어떤 관계인지도 적을 수 있어요.</p>'}
+    ${canWrite ? '<div style="margin-top:12px"><button class="btn sm primary" data-castadd="1">＋ 등장인물 추가</button></div>' : ''}`);
 }
 function relationsOfWorld(x, residents) {
   const ids = new Set(residents.map(c => c.id));
@@ -1063,6 +1101,7 @@ function viewBody(type, x) {
     return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner"><button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
+      ${castWin(x, cs)}
       ${relationsOfWorld(x, cs)}
       ${cs.length ? subWin('RESIDENTS · 이 세계의 캐릭터', 'pink', `<div class="links">${cs.map(charChip).join('')}<button class="btn sm primary" data-page="2" style="margin-left:auto">캐릭터 앨범</button></div>`) : ''}
       ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" style="${pos(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
@@ -1135,6 +1174,17 @@ function fieldHtml(f, d) {
     case 'date': return `<div class="fld">${lab}<input type="date" id="${id}" data-k="${f.k}" value="${esc(v)}"></div>`;
     case 'area': return `<div class="fld">${lab}<textarea id="${id}" data-k="${f.k}" class="${f.cls || ''}" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>${hint}</div>`;
     case 'select': return `<div class="fld">${lab}<select id="${id}" data-k="${f.k}">${f.opts.map(([a, b]) => `<option value="${esc(a)}" ${v === a ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select></div>`;
+    case 'castrels': {
+      const w = byId('worlds', sheet.id), resIds = new Set(S.characters.filter(c => worldIdsOf(c).includes(w?.id)).map(c => c.id));
+      const mine = sorted(S.characters, 'characters').sort((a, b) => (resIds.has(b.id) ? 1 : 0) - (resIds.has(a.id) ? 1 : 0));
+      if (!mine.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">캐릭터 서랍에 내 캐릭터를 먼저 추가하면 관계를 이어줄 수 있어요.</span></div>`;
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">이 인물이 내 캐릭터와 어떤 사이인지 적어요. 이 세계관 페이지에서만 보여요.</span>
+        <div class="relrows">${(v || []).map((r, i) => `<div class="relrow crel">
+          <select id="crel_to_${i}" data-crelk="${i}:to" aria-label="내 캐릭터">${mine.map(c => `<option value="${c.id}" ${r.to === c.id ? 'selected' : ''}>${esc(c.name)}${resIds.has(c.id) ? '' : ' (이 세계관 밖)'}</option>`).join('')}</select>
+          <input type="text" id="crel_l_${i}" data-crelk="${i}:label" value="${esc(r.label || '')}" placeholder="관계 (예: 소꿉친구, 스승, 라이벌)">
+          <button type="button" class="btn sm ghost" data-uncrel="${i}" aria-label="관계 빼기">✕</button></div>`).join('')}</div>
+        <div><button type="button" class="btn sm" data-addcrel="1">＋ 관계 추가</button></div></div>`;
+    }
     case 'rels': {
       const others = sorted(S.characters.filter(c => c.id !== sheet.id), 'characters');
       if (!others.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">다른 캐릭터를 먼저 추가하면 관계를 이어줄 수 있어요.</span></div>`;
@@ -1159,8 +1209,42 @@ function fieldHtml(f, d) {
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
   }
 }
+const CAST_FIELDS = [
+  { k: 'avatar', t: 'image', l: '사진' },
+  { row: [{ k: 'name', t: 'text', l: '이름', req: 1 }, { k: 'role', t: 'select', l: '구분', opts: [['main', '메인 캐릭터'], ['npc', 'NPC']] }] },
+  { k: 'tagline', t: 'text', l: '한 줄 소개', ph: '예: 등대를 지키는 무뚝뚝한 청년' },
+  { k: 'desc', t: 'area', l: '설명', ph: '성격, 외모, 이 세계에서 맡은 역할 등' },
+  { k: 'rels', t: 'castrels', l: '내 캐릭터와의 관계' },
+];
+function openCastEdit(wid, idx) {
+  const w = byId('worlds', wid);
+  const base = idx != null ? JSON.parse(JSON.stringify(w.cast[idx])) : { role: 'main', rels: [] };
+  sheet = { mode: 'edit', type: 'worlds', id: wid, draft: base, removed: [], castEdit: { idx }, armed: false, busy: '' };
+  renderSheet();
+  setTimeout(() => $('#f_name')?.focus(), 30);
+}
+function backFromCastEdit() { sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1 }; render(); }
+async function saveCastEdit(removeIt) {
+  const { id: wid, draft, castEdit: { idx } } = sheet, w = byId('worlds', wid);
+  if (!removeIt && !String(draft.name || '').trim()) { toast('이름을 입력해 주세요.'); $('#f_name')?.focus(); return; }
+  const list = [...(w.cast || [])];
+  const gone = removeIt ? [list[idx]?.avatar?.id, ...sheet.removed] : sheet.removed;
+  if (removeIt) list.splice(idx, 1);
+  else {
+    const m = { ...draft, id: draft.id || newId(12), rels: (draft.rels || []).filter(r => r.to) };
+    if (idx != null) list[idx] = m; else list.push(m);
+  }
+  sheet.busy = '저장 중…'; rerenderEdit();
+  try {
+    await db.collection('worlds').doc(wid).update({ cast: list, updatedAt: Date.now() });
+    w.cast = list;
+    for (const aid of gone.filter(Boolean)) if (!assetInUse(aid)) { try { await assets.delete(aid); } catch {} }
+    toast(removeIt ? '등장인물을 뺐어요' : '저장했어요'); backFromCastEdit();
+  } catch (e) { sheet.busy = ''; rerenderEdit(); toast(errMsg(e)); }
+}
 function editBody() {
   const { type, draft } = sheet;
+  if (sheet.castEdit) return `<form class="form" id="edform">${CAST_FIELDS.map(f => fieldHtml(f, draft)).join('')}</form>`;
   if (sheet.albumEdit) { const w = byId('worlds', sheet.albumEdit.wid); return `<form class="form" id="edform">${fieldHtml({ k: 'list', t: 'gallery', l: `${esc(byId('characters', sheet.id)?.name || '')} · ${esc(w?.name || '')} 앨범`, hint: '사진마다 설명을 달거나 ✕로 뺄 수 있어요.' }, draft)}</form>`; }
   return `<form class="form" id="edform">${FIELDS[type].map(f => fieldHtml(f, draft)).join('')}</form>`;
 }
@@ -1173,7 +1257,7 @@ function renderSheet() {
   if (mode === 'view' && !x) { sheet = null; L.innerHTML = ''; return; }
   const keepScroll = sheet.flip ? 0 : $('.sheet', L)?.scrollTop;
   const T = TYPES[type];
-  const title = mode === 'kinds' ? 'KINDS · 캐릭터 종류 관리' : mode === 'view' ? `${T.file} — ${esc(x.name || x.title || '')}` : `${id ? 'EDIT' : 'NEW'} · ${T.file}`;
+  const title = sheet.castEdit ? `${sheet.castEdit.idx != null ? 'EDIT' : 'NEW'} · CAST` : mode === 'kinds' ? 'KINDS · 캐릭터 종류 관리' : mode === 'view' ? `${T.file} — ${esc(x.name || x.title || '')}` : `${id ? 'EDIT' : 'NEW'} · ${T.file}`;
   const tools = mode === 'kinds' ? '<span class="grow"></span><button class="btn sm primary" data-act="close">완료</button>'
     : mode === 'view'
     ? `${type === 'characters' ? `<button class="btn sm mint" data-act="copyprofile">프로필 복사</button>` : ''}
@@ -1182,7 +1266,8 @@ function renderSheet() {
        <span class="grow"></span>
        ${canWrite ? `<button class="btn sm" data-act="fav" aria-pressed="${!!x.fav}">${x.fav ? '<span class="star">★</span> 즐겨찾기' : '☆ 즐겨찾기'}</button><button class="btn sm primary" data-act="edit">편집</button>` : ''}`
     : `<button class="btn sm ghost" data-act="cancel">취소</button><span class="grow"></span>
-       ${id && canWrite && !sheet.albumEdit ? `<button class="btn sm danger ${sheet.armed ? 'armed' : ''}" data-act="delete">${sheet.armed ? '한 번 더 누르면 삭제' : '삭제'}</button>` : ''}
+       ${sheet.castEdit?.idx != null ? `<button class="btn sm danger ${sheet.armed ? 'armed' : ''}" data-act="cast-del">${sheet.armed ? '한 번 더 누르면 빼기' : '이 인물 빼기'}</button>` : ''}
+       ${id && canWrite && !sheet.albumEdit && !sheet.castEdit ? `<button class="btn sm danger ${sheet.armed ? 'armed' : ''}" data-act="delete">${sheet.armed ? '한 번 더 누르면 삭제' : '삭제'}</button>` : ''}
        <button class="btn sm primary" data-act="save" ${sheet.busy ? 'disabled' : ''}>${sheet.busy ? esc(sheet.busy) : '저장'}</button>`;
   L.innerHTML = `<div class="scrim" data-scrim="1"><div class="win modal c-${T.color}" role="dialog" aria-modal="true" aria-label="${T.label}">
     <div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">${title}</span><span class="wbtns"><button data-act="${mode === 'edit' ? 'cancel' : 'close'}" aria-label="닫기">✕</button></span></div>
@@ -1269,6 +1354,7 @@ async function saveAlbumEdit() {
 }
 async function save() {
   if (sheet.albumEdit) return saveAlbumEdit();
+  if (sheet.castEdit) return saveCastEdit(false);
   const { type, id, draft } = sheet;
   const req = FIELDS[type].flatMap(f => f.row || [f]).find(f => f.req);
   if (req && !String(draft[req.k] || '').trim()) { toast(`${req.l}을(를) 입력해 주세요.`); document.getElementById('f_' + req.k)?.focus(); return; }
@@ -1291,7 +1377,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x)].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []), ...allWorldPhotos(x), ...(x.cast || []).map(c => c.avatar)].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -1460,6 +1546,8 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.aworld !== undefined && sheet) { sheet.albumWorld = t.dataset.aworld || null; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
   if (t.dataset.achar && sheet) { sheet.albumChar = t.dataset.achar; sheet.albumIdx = 0; sheet.deco = false; renderSheet(); return; }
+  if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
+  if (t.dataset.castedit && sheet) { openCastEdit(sheet.id, +t.dataset.castedit); return; }
   if (t.dataset.aidx && sheet) { turnAlbum((sheet.albumIdx || 0) + +t.dataset.aidx); return; }
   if (t.dataset.ato && sheet) { turnAlbum(+t.dataset.ato); return; }
   if (t.dataset.page && sheet) { const n = +t.dataset.page; if (n !== sheet.page) { sheet.flip = n > (sheet.page || 1) ? 'next' : 'prev'; sheet.page = n; renderSheet(); } return; }
@@ -1496,6 +1584,8 @@ document.addEventListener('click', async e => {
   }
   if (sheet?.mode === 'edit') {
     const d = sheet.draft;
+    if (t.dataset.addcrel) { (d.rels = d.rels || []).push({ to: S.characters[0]?.id || '', label: '' }); rerenderEdit(); document.getElementById('crel_l_' + (d.rels.length - 1))?.focus(); return; }
+    if (t.dataset.uncrel) { d.rels.splice(+t.dataset.uncrel, 1); rerenderEdit(); return; }
     if (t.dataset.addrel) { const o = S.characters.find(c => c.id !== sheet.id); (d.rels = d.rels || []).push({ to: o?.id || '', label: '', wid: '' }); rerenderEdit(); document.getElementById('rel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.unrel) { d.rels.splice(+t.dataset.unrel, 1); rerenderEdit(); return; }
     if (t.dataset.wpick) { const st = new Set(d.worldIds || []); st.has(t.dataset.wpick) ? st.delete(t.dataset.wpick) : st.add(t.dataset.wpick); d.worldIds = [...st]; rerenderEdit(); return; }
@@ -1536,6 +1626,8 @@ document.addEventListener('click', async e => {
   else if (act === 'close') { sheet = null; render(); }
   else if (act === 'edit') openEdit(sheet.type, sheet.id);
   else if (act === 'cancel' && sheet.albumEdit) backFromAlbumEdit();
+  else if (act === 'cancel' && sheet.castEdit) backFromCastEdit();
+  else if (act === 'cast-del') { if (sheet.armed) saveCastEdit(true); else { sheet.armed = true; rerenderEdit(); setTimeout(() => { if (sheet?.armed) { sheet.armed = false; rerenderEdit(); } }, 4000); } }
   else if (act === 'cancel') { sheet = sheet.id ? { mode: 'view', type: sheet.type, id: sheet.id } : null; render(); }
   else if (act === 'save') save();
   else if (act === 'delete') { if (sheet.armed) remove(); else { sheet.armed = true; rerenderEdit(); setTimeout(() => { if (sheet?.armed) { sheet.armed = false; rerenderEdit(); } }, 4000); } }
@@ -1552,6 +1644,7 @@ document.addEventListener('input', e => {
   if (el.dataset.k) d[el.dataset.k] = el.value;
   else if (el.dataset.tags) d[el.dataset.tags] = el.value.split(/[,，]/).map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); d.rels[+i][f] = el.value; }
+  else if (el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.gcap) { const [k, i] = el.dataset.gcap.split(':'); d[k][+i].caption = el.value; }
   else if (el.dataset.sect) d.sections[+el.dataset.sect].title = el.value;
   else if (el.dataset.secb) d.sections[+el.dataset.secb].body = el.value;
@@ -1559,6 +1652,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', async e => {
   const el = e.target;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.k) sheet.draft[el.dataset.k] = el.value;
+  if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); sheet.draft.rels[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); sheet.draft.rels[+i][f] = el.value; }
   if (el.dataset.restore && el.files?.length) { const f = el.files[0]; el.value = ''; restore(f); return; }
   if (!el.files || !el.files.length || !assets) return;
