@@ -581,8 +581,22 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const urlCache = new Map(), urlWant = new Set();
 let urlTimer = null;
+// Signed links stay valid for a week; reusing the same link lets the browser keep the photo in its cache
+const URL_TTL = 7 * 24 * 3600, URL_KEY = () => 'rp-urls-' + uid;
+function loadUrlCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(URL_KEY()) || '{}'), now = Date.now();
+    for (const [k, [u, exp]] of Object.entries(saved)) if (exp > now + 3600e3) urlCache.set(k, { u, exp });
+  } catch {}
+}
+let saveUrlTimer = null;
+function saveUrlCache() {
+  clearTimeout(saveUrlTimer);
+  saveUrlTimer = setTimeout(() => { try { localStorage.setItem(URL_KEY(), JSON.stringify(Object.fromEntries([...urlCache].map(([k, v]) => [k, [v.u, v.exp]])))); } catch {} }, 500);
+}
+let thumbSrc = null, thumbSet = new Set();
+const hasThumb = id => { if (thumbSrc !== site.thumbs) { thumbSrc = site.thumbs; thumbSet = new Set(site.thumbs || []); } return thumbSet.has(id); };
 const img = ref => ref && ref.id ? urlFor(ref.id) : '';
-// where a cropped photo is anchored (percent of the image), set with the 위치 조정 tool
 // Each photo can carry up to three framings: '' = detail view (x, y, z), 'c' = list card (cx, cy, cz),
 // 't' = small round/square thumbnails (tx, ty, tz). A missing one falls back down the chain.
 const FRAMING_CHAIN = { '': [''], c: ['c', ''], t: ['t', 'c', ''] };
@@ -599,19 +613,24 @@ function frameStyle(f) {
 const pos = ref => frameStyle(framing(ref, ''));
 const posC = ref => frameStyle(framing(ref, 'c'));
 const posT = ref => frameStyle(framing(ref, 't'));
-function urlFor(id) {
-  if (urlCache.has(id)) return urlCache.get(id);
-  urlWant.add(id);
+// small spots (cards, chips, previews) use a ~480px copy when one exists
+const imgS = ref => ref && ref.id ? urlFor(hasThumb(ref.id) ? ref.id + '_t' : ref.id) : '';
+function urlFor(key) {
+  const c = urlCache.get(key);
+  if (c) return c.u;
+  urlWant.add(key);
   clearTimeout(urlTimer); urlTimer = setTimeout(flushUrls, 30);
   return BLANK;
 }
-async function ensureUrls(ids) {
-  const need = ids.filter(id => !urlCache.has(id));
+async function ensureUrls(keys) {
+  const need = keys.filter(k => !urlCache.has(k));
   for (let i = 0; i < need.length; i += 100) {
     const part = need.slice(i, i + 100);
-    const { data } = await sb.storage.from('files').createSignedUrls(part.map(id => `${uid}/${id}`), 60 * 60 * 24 * 7);
-    (data || []).forEach((d, j) => { if (d?.signedUrl) urlCache.set(part[j], d.signedUrl); });
+    const { data } = await sb.storage.from('files').createSignedUrls(part.map(k => `${uid}/${k}`), URL_TTL);
+    const exp = Date.now() + URL_TTL * 1000;
+    (data || []).forEach((d, j) => { if (d?.signedUrl) urlCache.set(part[j], { u: d.signedUrl, exp }); });
   }
+  if (need.length) saveUrlCache();
 }
 async function flushUrls() {
   if (!uid || !urlWant.size) return;
@@ -749,7 +768,7 @@ function renderNav() {
     `<button class="fold" data-nav="${k}" aria-current="${cur(k)}">${folder(k)}<span class="lb">${T.label}</span><span class="ct">${S[k].length}</span><span class="sub">${T.sub}</span></button>`).join('');
   $('#strip').innerHTML = Object.keys(TYPES).map(k => `<span class="mini" aria-current="${cur(k)}">${folder(k)}</span>`).join('') + '<span class="vt">MENU ▸</span>';
   const total = Object.values(S).reduce((n, l) => n + l.length, 0);
-  $('#railFoot').innerHTML = status === 'ok' ? `지금까지 <b>${total}</b>개를 모았어요<div class="hearts" style="margin-top:4px;color:var(--mint-d)">♡♡♡♡♡♡♡♡♡♡♡♡</div><div class="statusbtns"><button class="btn sm" data-act="backup" ${backingUp ? 'disabled' : ''}>${backingUp ? esc(backingUp) : '⬇ 백업 내려받기'}</button><label class="btn sm filebtn">⬆ 백업 불러오기<input type="file" accept=".zip,application/zip" data-restore="1"></label><button class="btn sm ghost" data-act="logout">로그아웃</button></div>` : '연결 중…';
+  $('#railFoot').innerHTML = status === 'ok' ? `지금까지 <b>${total}</b>개를 모았어요<div class="hearts" style="margin-top:4px;color:var(--mint-d)">♡♡♡♡♡♡♡♡♡♡♡♡</div>${thumbJob ? `<div style="font-size:12px;margin-top:6px">${esc(thumbJob)}</div>` : ''}<div class="statusbtns"><button class="btn sm" data-act="backup" ${backingUp ? 'disabled' : ''}>${backingUp ? esc(backingUp) : '⬇ 백업 내려받기'}</button><label class="btn sm filebtn">⬆ 백업 불러오기<input type="file" accept=".zip,application/zip" data-restore="1"></label><button class="btn sm ghost" data-act="logout">로그아웃</button></div>` : '연결 중…';
 }
 function subFilters() {
   if (view === 'characters') return [['all', '전체'], ...allKinds().map(k => ['k:' + k, k]), ['fav', '★ 즐겨찾기']];
@@ -784,7 +803,7 @@ function loadbar(pct, label = 'Loading...') {
 }
 function idFrame(x, big) {
   return `<div class="frame"><span class="nametag">${esc(x.name || '이름 없음')}</span>
-    <div class="photo">${x.avatar ? (big ? `<button style="padding:0;border:0;width:100%;height:100%" data-lightbox="${img(x.avatar)}"><img src="${img(x.avatar)}" style="${pos(x.avatar)}" alt="${esc(x.name)}"></button>` : `<img src="${img(x.avatar)}" style="${posC(x.avatar)}" alt="" loading="lazy">`) : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
+    <div class="photo">${x.avatar ? (big ? `<button style="padding:0;border:0;width:100%;height:100%" data-lightbox="${img(x.avatar)}"><img src="${img(x.avatar)}" style="${pos(x.avatar)}" alt="${esc(x.name)}"></button>` : `<img src="${imgS(x.avatar)}" style="${posC(x.avatar)}" alt="" loading="lazy">`) : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
     ${SPARK('sp1')}${SPARK('sp2', '#fff')}</div>`;
 }
 function previewLines(body, n = 4) {
@@ -824,7 +843,7 @@ function cardFor(type, x) {
   if (type === 'worlds') {
     const n = S.characters.filter(c => worldIdsOf(c).includes(x.id)).length;
     return `<button class="win card c-blue" ${open}>${winbar(`${T.file} · ${esc(x.name || '')}`)}<div class="wbody">
-      <div class="coverbox">${x.cover ? `<img src="${img(x.cover)}" style="${posC(x.cover)}" alt="" loading="lazy">` : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
+      <div class="coverbox">${x.cover ? `<img src="${imgS(x.cover)}" style="${posC(x.cover)}" alt="" loading="lazy">` : `<span class="ph">${esc(initial(x.name))}</span>`}</div>
       <h3>${star}${esc(x.name || '이름 없는 세계')}</h3>
       ${x.summary ? `<p class="desc">${esc(x.summary)}</p>` : ''}
       <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span>${(x.cast || []).length ? `<span class="lbl-box">CAST ${x.cast.length}</span>` : ''}<span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
@@ -895,7 +914,7 @@ function allRels() {
   return S.characters.flatMap(c => (c.rels || []).filter(r => r.to && byId('characters', r.to)).map(r => ({ from: c.id, to: r.to, label: r.label || '', wid: r.wid || '' })));
 }
 function relAv(c) {
-  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
+  return `<button class="relwho" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${imgS(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span><b>${esc(c.name)}</b></button>`;
 }
 function relPairsHtml(rels, focusId) {
   // one row per pair of characters; show both directions when both were written
@@ -925,14 +944,14 @@ function castTarget(w, to) {
   return c && { name: c.name, avatar: c.avatar, open: `data-open="characters:${c.id}"` };
 }
 function relChip(t, label, incoming) {
-  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${img(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
+  return `<${t.open ? 'button' : 'span'} class="link-chip" ${t.open}><span class="av">${t.avatar ? `<img src="${imgS(t.avatar)}" style="${posT(t.avatar)}" alt="">` : esc(initial(t.name))}</span>${esc(t.name)}<span class="crl">${incoming ? '→ 나: ' : '· '}${esc(label || '관계 미정')}</span></${t.open ? 'button' : 'span'}>`;
 }
 function castCard(w, m, i) {
   const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t);
   // other cast members who wrote a relation pointing at this one
   const inc = (w.cast || []).filter(o => o.id !== m.id).flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [{ name: o.name, avatar: o.avatar, open: '' }, r.label]));
   return `<div class="castcard ${m.role === 'npc' ? 'npc' : ''}">
-    <div class="cphoto">${m.avatar ? `<button data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}"></button>` : `<span class="ph">${esc(initial(m.name))}</span>`}</div>
+    <div class="cphoto">${m.avatar ? `<button data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}"><img src="${imgS(m.avatar)}" style="${pos(m.avatar)}" alt="${esc(m.name)}"></button>` : `<span class="ph">${esc(initial(m.name))}</span>`}</div>
     <div class="cinfo">
       <div class="row" style="justify-content:flex-start;gap:6px"><b class="cname">${esc(m.name)}</b><span class="lbl-box ${m.role === 'npc' ? '' : 'fill'}">${ROLE[m.role] || ROLE.main}</span>${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>
       ${m.tagline ? `<p class="ctag">${esc(m.tagline)}</p>` : ''}
@@ -957,7 +976,7 @@ function relationsOfWorld(x, residents) {
   return subWin('RELATIONS · 이 세계의 관계', 'blue', `${here.length ? `<div class="relgroup">${relPairsHtml(here)}</div>` : ''}${common.length ? `<div class="relgroup"><h5><span class="lbl-box">ALL WORLDS · 공통</span></h5>${relPairsHtml(common)}</div>` : ''}`);
 }
 function charChip(c) {
-  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
+  return `<button class="link-chip" data-open="characters:${c.id}"><span class="av">${c.avatar ? `<img src="${imgS(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))}</span>${esc(c.name)}</button>`;
 }
 function subWin(title, color, body) {
   return `<div class="win sub-win c-${color}">${winbar(title)}<div class="wbody">${body}</div></div>`;
@@ -1052,7 +1071,7 @@ function albumPage(x, wid = null) {
         <div class="bk-tabs"><span class="lab">ALBUM</span>${Array.from({ length: n }, (_, j) => `<button data-ato="${j}" aria-current="${j === sp}" aria-label="${j + 1}장">${j + 1}</button>`).join('')}</div></div>
       <div class="bk-ctrl"><button class="bk-nav prev" data-aidx="-1" aria-label="이전 장" ${sp === 0 ? 'disabled' : ''}>◀</button><span class="cnt" id="bkCnt">${sp + 1} / ${n}</span><button class="bk-nav next" data-aidx="1" aria-label="다음 장" ${sp === n - 1 ? 'disabled' : ''}>▶</button></div>
       <div class="deco-bar" id="decoBar">${decoBar()}</div>
-      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${img(g)}" style="${posT(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
+      <div class="bk-thumbs" id="bkThumbs">${al.map((g, j) => `<button data-ato="${Math.floor(j / 2)}" aria-current="${Math.floor(j / 2) === sp}" aria-label="${j + 1}번째 사진"><img src="${imgS(g)}" style="${posT(g)}" alt="" loading="lazy"></button>`).join('')}</div>`
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>아직 사진이 없어요.<br>${w ? `${esc(w.name)}에서의 ${esc(x.name)} 사진을 모아보세요.` : '이 캐릭터의 그림, 짤, 레퍼런스를 모아보세요.'}</p></div>`}
     ${canWrite && assets ? `<div class="ap-tools"><label class="btn sm primary filebtn">＋ 사진 추가 (여러 장 가능)<input type="file" accept="image/*" multiple data-quickgal="${wid ? `characters:${x.id}:wa:${wid}` : `characters:${x.id}:album`}"></label>${al.length ? `<button class="btn sm" data-act="${wid ? 'album-edit' : 'edit'}">설명 달기 · 빼기</button>` : ''}</div>` : ''}
   </div>`;
@@ -1098,7 +1117,7 @@ function viewBody(type, x) {
     if (!cs.some(c => c.id === sheet.albumChar)) sheet.albumChar = cs[0]?.id;
     const ch = byId('characters', sheet.albumChar);
     return `${pageTabs(2, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${cs.length
-      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${img(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
+      ? albumPicker(cs.map(c => [c.id, c.name, c.avatar ? `<img src="${imgS(c.avatar)}" style="${posT(c.avatar)}" alt="">` : esc(initial(c.name))]), 'data-achar', sheet.albumChar) + albumPage(ch, x.id)
       : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>이 세계관에 연결된 캐릭터가 없어요.<br>캐릭터 편집에서 세계관을 고르면 여기에 캐릭터별 앨범이 생겨요.</p></div>`}</div>`;
   }
   if (type === 'characters') {
@@ -1118,7 +1137,7 @@ function viewBody(type, x) {
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
-      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${img(g)}" style="${posT(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
+      ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${(x.album || []).length})</span>`, 'pink', `<div class="teaser">${(x.album || []).slice(0, 5).map(g => `<span class="tthumb"><img src="${imgS(g)}" style="${posT(g)}" alt="" loading="lazy"></span>`).join('') || '<span style="color:var(--muted)">아직 사진이 없어요.</span>'}<button class="btn sm primary" data-page="2" style="margin-left:auto">앨범</button></div>`)}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}</div>`;
   }
@@ -1140,7 +1159,7 @@ function viewBody(type, x) {
       ${castWin(x, cs)}
       ${relationsOfWorld(x, cs)}
       ${cs.length ? subWin('RESIDENTS · 이 세계의 캐릭터', 'pink', `<div class="links">${cs.map(charChip).join('')}<button class="btn sm primary" data-page="2" style="margin-left:auto">캐릭터 앨범</button></div>`) : ''}
-      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${img(g)}" style="${posT(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
+      ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${imgS(g)}" style="${posT(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
         ${canWrite && assets ? `<div style="margin-top:14px"><label class="btn sm filebtn">＋ 이미지 추가<input type="file" accept="image/*" multiple data-quickgal="worlds:${x.id}:gallery"></label></div>` : ''}`)}
       ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}</div>`;
   }
@@ -1238,9 +1257,9 @@ function fieldHtml(f, d) {
     case 'kind': return `<div class="fld"><span class="lbl">${f.l}</span><div class="picks">${allKinds(sheet.newKinds).map(k => `<button type="button" class="chip" data-kindpick="${esc(k)}" aria-pressed="${kindOf(d) === k}">${esc(k)}</button>`).join('')}</div>
         <div style="display:flex;gap:6px;max-width:420px"><input type="text" id="f_newkind" placeholder="새 종류 만들기 (예: 오너캐, 드림주, NPC)"><button type="button" class="btn sm" data-act="addkind">＋ 추가</button></div></div>`;
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
-    case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${img(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
+    case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${imgS(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
         ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? 'wcover' : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
-    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${img(g)}" style="${posT(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
+    case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt=""><button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
@@ -1474,7 +1493,7 @@ async function backup() {
     for (let i = 0; i < ids.length; i++) {
       setBusy(`사진 모으는 중… ${i + 1}/${ids.length}`);
       try {
-        const r = await fetch(urlCache.get(ids[i]));
+        const r = await fetch(urlCache.get(ids[i]).u);
         if (!r.ok) { missing.push(ids[i]); continue; }
         const b = await r.blob();
         zip.file(`images/${ids[i]}.${ext[b.type] || 'bin'}`, b);
@@ -1891,16 +1910,56 @@ function makeAssets() {
   return {
     async upload(blob) {
       const id = newId(32);
-      const { error } = await sb.storage.from('files').upload(`${uid}/${id}`, blob, { contentType: blob.type || 'application/octet-stream' });
+      const { error } = await sb.storage.from('files').upload(`${uid}/${id}`, blob, { contentType: blob.type || 'application/octet-stream', cacheControl: '31536000' });
       if (error) throw { code: /size|large/i.test(error.message) ? 'too_large' : 'unavailable', message: error.message };
+      putThumb(id, blob).catch(() => {});
       return { id };
     },
-    async delete(id) { await sb.storage.from('files').remove([`${uid}/${id}`]); urlCache.delete(id); return { deleted: true }; },
+    async delete(id) { await sb.storage.from('files').remove([`${uid}/${id}`, `${uid}/${id}_t`]); urlCache.delete(id); urlCache.delete(id + '_t'); return { deleted: true }; },
   };
+}
+
+// ---- thumbnails: a small webp next to each photo ("<id>_t"), listed in settings.thumbs
+async function makeThumb(blob) {
+  if (!/^image\/(jpeg|png|webp)$/.test(blob.type)) return null;
+  const bmp = await createImageBitmap(blob);
+  const s = Math.min(1, 480 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(r, 'image/webp', 0.82));
+}
+let newThumbs = [], thumbSaveTimer = null;
+async function putThumb(id, blob) {
+  const t = await makeThumb(blob);
+  if (!t) return false;
+  const { error } = await sb.storage.from('files').upload(`${uid}/${id}_t`, t, { contentType: 'image/webp', cacheControl: '31536000', upsert: true });
+  if (error) return false;
+  newThumbs.push(id);
+  clearTimeout(thumbSaveTimer);
+  thumbSaveTimer = setTimeout(() => { const add = newThumbs; newThumbs = []; saveSite({ thumbs: [...new Set([...(site.thumbs || []), ...add])] }).catch(() => {}); }, 1500);
+  return true;
+}
+let thumbJob = '';
+async function backfillThumbs() {
+  // photos uploaded before thumbnails existed get one, a few at a time in the background
+  const skip = new Set(JSON.parse(sessionStorage.getItem('rp-nothumb') || '[]'));
+  const todo = referencedAssetIds().filter(id => !hasThumb(id) && !skip.has(id));
+  for (let i = 0; i < todo.length; i++) {
+    thumbJob = `섬네일 만드는 중 ${i + 1}/${todo.length}`; renderNav();
+    let ok = false;
+    try {
+      await ensureUrls([todo[i]]);
+      const r = await fetch(urlCache.get(todo[i]).u);
+      if (r.ok) ok = await putThumb(todo[i], await r.blob());
+    } catch {}
+    if (!ok) { skip.add(todo[i]); try { sessionStorage.setItem('rp-nothumb', JSON.stringify([...skip])); } catch {} }
+  }
+  thumbJob = ''; renderNav();
 }
 
 async function start(sessionUser) {
   uid = sessionUser.id;
+  loadUrlCache();
   $('#login').hidden = true;
   db = makeDb(); assets = makeAssets(); canWrite = true;
   db.doc('settings/site').onSnapshot(s => { site = s.exists ? s.data() : {}; applyFont(site.font); if (!coverEdit?.key.startsWith('site:')) renderCover(); });
@@ -1913,6 +1972,7 @@ async function start(sessionUser) {
   }
   try { await db._load(); status = 'ok'; } catch (e) { status = 'offline'; loadError = e?.message || String(e); console.error(e); }
   render();
+  if (status === 'ok') setTimeout(backfillThumbs, 4000);
   // pick up changes made on another device when this tab comes back
   let lastSync = Date.now();
   document.addEventListener('visibilitychange', async () => {
