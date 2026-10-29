@@ -456,6 +456,21 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-post .ic .grow { flex: 1; }
 .ig-post .ic .del { font-size: 17px; }
 .ig-post .ic .del.armed { font-size: 12px; color: #fff; background: #D9667E; border-radius: 999px; padding: 4px 10px; }
+.ig-post .cmts { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line, #E6D3DA); }
+.ig-post .cmt { display: flex; gap: 10px; align-items: flex-start; }
+.ig-post .cav { flex: none; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pink); border: 1.2px solid var(--ink); font-size: 12px; font-weight: 700; color: var(--pink-d); }
+.ig-post .cav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-post .cbody { min-width: 0; flex: 1; }
+.ig-post .cbody p { margin: 0; font-size: 13.5px; line-height: 1.55; }
+.ig-post .cbody b { font-weight: 700; margin-right: 2px; }
+.ig-post .cmeta { display: flex; gap: 12px; align-items: center; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.ig-post .cmeta button { border: 0; background: none; padding: 0; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.ig-post .cmeta button.armed { color: #D9667E; }
+.ig-post .ccnt { margin-left: 10px; font-weight: 400; color: var(--muted); }
+.ig-post .cform { display: flex; gap: 6px; align-items: center; border-top: 1px solid var(--line, #E6D3DA); padding: 8px 10px; }
+.ig-post .cform select { flex: none; max-width: 38%; font: inherit; font-size: 12.5px; padding: 5px 6px; border: 1.2px solid var(--ink); border-radius: 8px; background: var(--checker); color: var(--fg); }
+.ig-post .cform input { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 6px 4px; border: 0; background: none; color: var(--fg); outline: none; }
+.ig-post .cform button { flex: none; border: 0; background: none; padding: 4px 6px; font-weight: 700; color: var(--pink-d); }
 .ig-post .like { font-size: 13px; font-weight: 700; margin: 8px 0 2px; min-height: 1em; }
 .ig-post time { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
 .ig-hedit { width: min(440px, 100%) !important; }
@@ -1178,7 +1193,7 @@ function igGrid(x, key) {
   if (!l.length) return `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>${sheet.igTab === 'fav' ? '♡ 누른 사진이 여기 모여요.' : `아직 사진이 없어요.<br>${canWrite && assets ? '위의 「＋ 사진 올리기」로 올려 보세요.' : ''}`}</p></div>`;
   return `<div class="ig-grid">${l.map(e => `<button class="ig-tile" data-igpost="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}">
     <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.pin ? '<span class="pin" aria-label="고정">📌</span>' : ''}${e.g.more?.length ? '<span class="multi" aria-label="여러 장">❐</span>' : ''}
-    <span class="ov">${e.g.fav ? '♥' : '♡'}${e.g.more?.length ? ` · ${e.g.more.length + 1}장` : ''}</span></button>`).join('')}</div>`;
+    <span class="ov">${e.g.fav ? '♥' : '♡'}${e.g.comments?.length ? ` · 💬 ${e.g.comments.length}` : ''}${e.g.more?.length ? ` · ${e.g.more.length + 1}장` : ''}</span></button>`).join('')}</div>`;
 }
 // opts.circles: [[value, label, innerHtml]] with opts.attr; the character page uses albums, the world page uses characters
 function instaAlbum(x, key, opts) {
@@ -1243,9 +1258,35 @@ function stepPost(d) {
   igPost = { wid: nx.wid, id: nx.g.id, n: d < 0 ? postImgs(nx.g).length - 1 : 0 };
   renderPost();
 }
+/* Comments on a post, written as one of my characters or a world's cast: g.comments = [{ id, who: "char:<id>" | "cast:<world>:<id>", name, text, at }] */
+function whoOf(ref) {
+  const [k, a, b] = String(ref || '').split(':');
+  if (k === 'char') { const c = byId('characters', a); return c && { name: c.name, avatar: c.avatar }; }
+  const w = byId('worlds', a), m = w && castOf(w, b);
+  return m && { name: m.name, avatar: m.avatar };
+}
+// my characters, then the cast of the world(s) this album belongs to
+function commenters(x) {
+  const out = sorted(S.characters, 'characters').map(c => ['char:' + c.id, c.name]);
+  const ref = albumRef(), wids = ref.startsWith('cast:') ? [ref.split(':')[1]] : igPost?.wid ? [igPost.wid] : worldIdsOf(x);
+  for (const wid of wids) { const w = byId('worlds', wid); for (const m of w?.cast || []) out.push([`cast:${wid}:${m.id}`, `${m.name} · ${w.name}`]); }
+  return out;
+}
+const fmtAgo = t => { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? '방금' : m < 60 ? `${m}분 전` : m < 1440 ? `${Math.floor(m / 60)}시간 전` : m < 10080 ? `${Math.floor(m / 1440)}일 전` : fmtDate(t); };
+const avHtml = (r, name) => r ? `<img src="${imgS(r)}" style="${posT(r)}" alt="">` : esc(initial(name));
+let lastWho = ''; try { lastWho = localStorage.getItem('rp-cwho') || ''; } catch {}
+function commentsHtml(g) {
+  return (g.comments || []).map(c => {
+    const who = whoOf(c.who) || { name: c.name || '사라진 인물' };
+    return `<div class="cmt"><span class="cav">${avHtml(who.avatar, who.name)}</span><div class="cbody"><p><b>${esc(who.name)}</b> ${capHtml(c.text)}</p>
+      <div class="cmeta"><time>${fmtAgo(c.at)}</time>${canWrite ? `<button data-pop="creply:${c.id}">답글</button><button data-pop="cdel:${c.id}" class="${igPost.carmed === c.id ? 'armed' : ''}">${igPost.carmed === c.id ? '한 번 더 누르면 지워요' : '지우기'}</button>` : ''}</div></div></div>`;
+  }).join('');
+}
 function renderPost() {
   const f = igFind();
   if (!f) { closePost(); return; }
+  // a background refresh can redraw the post while a comment is being typed; keep the draft and the cursor
+  const draft = $('#ctext')?.value, typing = document.activeElement?.id === 'ctext', capDraft = $('#pcap')?.value;
   const { x, g } = f, imgs = postImgs(g), n = Math.min(igPost.n, imgs.length - 1), r = imgs[n], w = igPost.wid && byId('worlds', igPost.wid);
   igPost.n = n;
   let el = $('#igpost');
@@ -1258,14 +1299,21 @@ function renderPost() {
       ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>${canWrite ? `<div class="pmove"><button data-pop="mvL" ${n === 0 ? 'disabled' : ''} aria-label="이 사진을 앞으로">◀</button><span>순서</span><button data-pop="mvR" ${n === imgs.length - 1 ? 'disabled' : ''} aria-label="이 사진을 뒤로">▶</button></div>` : ''}` : ''}</div>
     <div class="side"><div class="top"><span class="ig-mini">${headAva(x, igPost.wid)}</span><div><b>${esc(headOf(x, igPost.wid).name || x.name)}</b><small>${w ? esc(w.name) : '기본 앨범'}</small></div><button class="x" data-pclose aria-label="닫기">✕</button></div>
       <div class="cap">${igPost.edit ? `<textarea id="pcap" rows="5" placeholder="설명을 적어 주세요. #태그도 쓸 수 있어요.">${esc(g.caption || '')}</textarea><div class="row"><button class="btn sm ghost" data-pop="capcancel">취소</button><button class="btn sm primary" data-pop="capsave">저장</button></div>`
-        : g.caption ? `<p>${capHtml(g.caption)}</p>` : `<p class="none">${canWrite ? '✎를 눌러 설명을 달 수 있어요.' : '설명이 없어요.'}</p>`}</div>
+        : g.caption ? `<p>${capHtml(g.caption)}</p>` : `<p class="none">${canWrite ? '✎를 눌러 설명을 달 수 있어요.' : '설명이 없어요.'}</p>`}
+        ${(g.comments || []).length ? `<div class="cmts">${commentsHtml(g)}</div>` : ''}</div>
       <div class="act"><div class="ic"><button class="heart ${g.fav ? 'on' : ''}" ${canWrite ? 'data-pop="fav"' : 'disabled'} aria-label="좋아요">${g.fav ? '♥' : '♡'}</button>
         ${canWrite ? `<button data-pop="pos" title="위치 조정" aria-label="위치 조정">✥</button><button data-pop="cap" title="설명 고치기" aria-label="설명 고치기">✎</button>
         <button data-pop="pin" class="${g.pin ? 'on' : ''}" title="${g.pin ? '고정 풀기' : '맨 앞에 고정'}" aria-label="고정">📌</button><span class="grow"></span>
         ${assets ? `<label class="addm" title="이 게시물에 사진 추가">＋<input type="file" accept="image/*" multiple data-igmore="1"></label>` : ''}
         <button data-pop="del" class="del ${igPost.armed ? 'armed' : ''}" title="${imgs.length > 1 ? '이 사진 빼기' : '게시물 삭제'}">${igPost.armed ? (imgs.length > 1 ? '한 번 더 누르면 이 사진을 빼요' : '한 번 더 누르면 삭제') : '🗑'}</button>` : ''}</div>
-        <div class="like">${g.fav ? '좋아요 표시함' : ''}</div>${g.at ? `<time>${fmtDate(g.at)}</time>` : ''}</div></div></div>`);
-  if (igPost.edit) setTimeout(() => $('#pcap')?.focus(), 0);
+        <div class="like">${g.fav ? '좋아요 표시함' : ''}${(g.comments || []).length ? `<span class="ccnt">댓글 ${g.comments.length}개</span>` : ''}</div>${g.at ? `<time>${fmtDate(g.at)}</time>` : ''}</div>
+      ${canWrite ? (() => { const opts = commenters(x), cur = opts.some(([v]) => v === lastWho) ? lastWho : opts[0]?.[0];
+        return opts.length ? `<div class="cform"><select id="cwho" aria-label="누가 다는 댓글인지">${opts.map(([v, l]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+          <input id="ctext" type="text" maxlength="500" placeholder="댓글 달기…" autocomplete="off"><button data-pop="cpost">게시</button></div>` : ''; })() : ''}</div></div>`);
+  if (draft) $('#ctext').value = draft;
+  if (typing) $('#ctext')?.focus();
+  if (capDraft != null && $('#pcap')) $('#pcap').value = capDraft;
+  if (igPost.edit && !typing) setTimeout(() => $('#pcap')?.focus(), 0);
 }
 // edits one post of the open character's album and saves the whole album list
 async function patchPost(fn) {
@@ -1277,6 +1325,28 @@ async function patchPost(fn) {
 }
 async function postOp(op) {
   const f = igFind(); if (!f) return;
+  const [cop, cid] = op.split(':');
+  if (cop === 'cpost') {
+    const text = $('#ctext')?.value.trim(), who = $('#cwho')?.value;
+    if (!text || !who) return;
+    lastWho = who; try { localStorage.setItem('rp-cwho', who); } catch {}
+    $('#ctext').value = '';
+    const c = { id: newId(10), who, name: whoOf(who)?.name || '', text, at: Date.now() };
+    await patchPost((l, i) => { l[i].comments = [...(l[i].comments || []), c]; });
+    renderPost(); $('.ig-post .cap')?.scrollTo(0, 1e6); $('#ctext')?.focus(); return;
+  }
+  if (cop === 'creply') {
+    const c = (f.g.comments || []).find(c => c.id === cid), name = c && (whoOf(c.who)?.name || c.name);
+    const inp = $('#ctext'); if (inp && name) { inp.value = `@${name} `; inp.focus(); }
+    return;
+  }
+  if (cop === 'cdel') {
+    if (igPost.carmed !== cid) { igPost.carmed = cid; renderPost(); return; }
+    igPost.carmed = null;
+    await patchPost((l, i) => { l[i].comments = (l[i].comments || []).filter(c => c.id !== cid); });
+    renderPost(); return;
+  }
+  igPost.carmed = null;
   if (op !== 'del') igPost.armed = false;
   if (op === 'fav' || op === 'pin') { await patchPost((l, i) => { l[i][op] = !l[i][op]; }); renderPost(); return; }
   if (op === 'cap') { igPost.edit = true; renderPost(); return; }
@@ -2154,6 +2224,7 @@ document.addEventListener('change', async e => {
   }
 });
 document.addEventListener('keydown', e => {
+  if (e.target.id === 'ctext' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); postOp('cpost'); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('div[data-open]')) { e.preventDefault(); const [ty, id] = e.target.dataset.open.split(':'); openView(ty, id); return; }
   if (lbStep && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { lbStep(e.key === 'ArrowLeft' ? -1 : 1); return; }
   if (igPost && !$('.postool') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !/INPUT|TEXTAREA/.test(e.target.tagName)) { stepPost(e.key === 'ArrowLeft' ? -1 : 1); return; }
