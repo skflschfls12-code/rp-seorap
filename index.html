@@ -1574,12 +1574,12 @@ function viewBody(type, x) {
         <div class="tags">${tagsHtml(x.tags)}</div>
         <div class="hearts" aria-hidden="true">♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡</div>
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
-      ${songsWin('characters:' + x.id)}
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
       ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
       ${relationsOfChar(x)}
-      ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}</div>`;
+      ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}
+      ${songsWin('characters:' + x.id)}</div>`;
   }
   if (type === 'scenes') {
     const cs = (x.characterIds || []).map(id => byId('characters', id)).filter(Boolean);
@@ -1595,14 +1595,14 @@ function viewBody(type, x) {
     const colors = ['blue', 'pink', 'mint', 'yellow'];
     return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner posable">${canWrite ? `<button class="posnow" data-posnow="worlds:${x.id}:cover:wcover" aria-label="커버 위치 조정" title="위치 조정">✥</button>` : ''}<button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
-      ${songsWin('worlds:' + x.id)}
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
       ${castWin(x, cs)}
       ${relationsOfWorld(x, cs)}
       ${cs.length ? subWin('RESIDENTS · 이 세계의 캐릭터', 'pink', `<div class="links">${cs.map(charChip).join('')}<button class="btn sm primary" data-page="2" style="margin-left:auto">캐릭터 앨범</button></div>`) : ''}
       ${subWin('GALLERY · 갤러리', 'blue', `${(x.gallery || []).length ? `<div class="gallery">${x.gallery.map(g => `<figure><button data-group="gal-${x.id}" data-lightbox="${img(g)}" data-cap="${esc(g.caption || '')}"><img src="${imgS(g)}" style="${posT(g)}" alt="${esc(g.caption || '')}" loading="lazy"></button>${g.caption ? `<figcaption>${esc(g.caption)}</figcaption>` : ''}</figure>`).join('')}</div>` : `<p style="color:var(--muted)">아직 이미지가 없어요.</p>`}
         ${canWrite && assets ? `<div style="margin-top:14px"><label class="btn sm filebtn">＋ 이미지 추가<input type="file" accept="image/*" multiple data-quickgal="worlds:${x.id}:gallery"></label></div>` : ''}`)}
-      ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}</div>`;
+      ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}
+      ${songsWin('worlds:' + x.id)}</div>`;
   }
   return `<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
     <div class="notepad full">${esc(x.body)}</div>
