@@ -456,6 +456,39 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-post .ic .grow { flex: 1; }
 .ig-post .ic .del { font-size: 17px; }
 .ig-post .ic .del.armed { font-size: 12px; color: #fff; background: #D9667E; border-radius: 999px; padding: 4px 10px; }
+.songs { display: flex; flex-direction: column; gap: 6px; }
+.song { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 7px 10px; border: 1.3px solid var(--line, #E6D3DA); border-radius: 10px; background: var(--win); }
+.song:hover { background: var(--mint); }
+.song.on { background: var(--mint); border-color: var(--mint-d); }
+.song .sp { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--mint-d); color: #fff; font-size: 11px; }
+.song .st { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.song .st b { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song .st small { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song .sk { flex: none; font-family: "Orbit", var(--f-body); font-size: 11px; color: var(--muted); }
+.songrows { display: flex; flex-direction: column; gap: 8px; }
+.songrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; padding: 8px; border: 1.3px dashed var(--line, #E6D3DA); border-radius: 12px; }
+.songrow input { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); }
+.songrow .songlink { grid-column: 1 / 3; }
+.songrow [data-unsong] { justify-self: end; }
+@media (max-width: 760px) { .bgm-v { width: 72px; } }
+.songrow .songfile { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+/* corner player: stays while browsing */
+.bgm { position: fixed; z-index: 57; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; width: min(360px, calc(100vw - 28px)); padding: 8px 10px; background: var(--win); border: 1.5px solid var(--ink); border-radius: 14px; box-shadow: 4px 4px 0 var(--mint-s); }
+.bgm-v { flex: none; width: 96px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; }
+.bgm-v iframe { width: 100%; height: 100%; border: 0; display: block; }
+.bgm audio { display: none; }
+.bgm-disc { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--mint); border: 1.3px solid var(--ink); font-size: 18px; animation: spin 3s linear infinite; }
+.bgm.paused .bgm-disc { animation-play-state: paused; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bgm-disc { animation: none; } }
+.bgm-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bgm-info b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bgm-info small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bgm-c { flex: none; display: flex; gap: 2px; }
+.bgm-c button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; font-size: 12px; color: var(--fg); }
+.bgm-c button:hover { background: var(--mint); }
+.bgm-c button:disabled { opacity: .3; }
+.bgm-c .pp { background: var(--mint-d); color: #fff; }
 .ig-post .cmts { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line, #E6D3DA); }
 .ig-post .cmt { display: flex; gap: 10px; align-items: flex-start; }
 .ig-post .cav { flex: none; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pink); border: 1.2px solid var(--ink); font-size: 12px; font-weight: 700; color: var(--pink-d); }
@@ -771,7 +804,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -1120,6 +1153,61 @@ function albumCtx() {
 const ctxChar = () => { const c = albumCtx(); return c && byId('characters', c.cid); };
 const photosOf = (x, wid) => (wid ? x.worldAlbums?.[wid] : x.album) || [];
 const allWorldPhotos = x => Object.values(x.worldAlbums || {}).flat().flatMap(postImgs);
+/* ---------- Theme songs: songs = [{ id, title, artist, link, file: { id } }] on a character or a world ---------- */
+const ytId = u => String(u || '').match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/))([\w-]{11})/)?.[1] || null;
+const songKind = s => s?.file?.id ? 'file' : ytId(s?.link) ? 'yt' : /^https?:\/\//.test(s?.link || '') ? 'link' : '';
+const songsOf = src => { const [t, id] = src.split(':'); return (byId(t, id)?.songs || []).filter(songKind); };
+// what plays in the corner player: { src: 'characters:<id>' | 'worlds:<id>', i, playing }; it keeps going while you browse
+let bgm = null;
+function songsWin(src) {
+  const list = songsOf(src);
+  if (!list.length) return '';
+  return subWin('♪ THEME SONG · 테마곡', 'mint', `<div class="songs">${list.map((s, i) => {
+    const on = bgm?.src === src && bgm.i === i, k = songKind(s);
+    return `<button class="song ${on ? 'on' : ''}" data-song="${src}|${i}"><span class="sp">${k === 'link' ? '↗' : on && bgm.playing ? '❚❚' : '▶'}</span><span class="st"><b>${esc(s.title || '제목 없는 노래')}</b>${s.artist ? `<small>${esc(s.artist)}</small>` : ''}</span><span class="sk">${{ yt: 'YouTube', file: '파일', link: '링크' }[k]}</span></button>`;
+  }).join('')}</div>`);
+}
+const ytCmd = (fn) => $('#bgm iframe')?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func: fn, args: [] }), '*');
+async function playSong(src, i) {
+  const list = songsOf(src), s = list[i];
+  if (!s) return;
+  if (songKind(s) === 'link') { window.open(s.link, '_blank', 'noopener'); return; }
+  if (bgm && bgm.src === src && bgm.i === i) { toggleSong(); return; }
+  bgm = { src, i, playing: true };
+  let el = $('#bgm');
+  if (!el) { el = document.createElement('div'); el.id = 'bgm'; el.className = 'bgm'; document.body.appendChild(el); }
+  const [t, id] = src.split(':'), owner = byId(t, id);
+  const yt = ytId(s.link);
+  el.innerHTML = `${yt ? `<div class="bgm-v"><iframe src="https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&enablejsapi=1&playsinline=1" title="${esc(s.title || '노래')}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>` : '<audio preload="auto"></audio><span class="bgm-disc" aria-hidden="true">♪</span>'}
+    <div class="bgm-info"><b>${esc(s.title || '제목 없는 노래')}</b><small>${esc([s.artist, owner?.name].filter(Boolean).join(' · '))}</small></div>
+    <div class="bgm-c"><button data-bgm="prev" aria-label="이전 곡" ${list.length < 2 ? 'disabled' : ''}>⏮</button><button data-bgm="toggle" class="pp" aria-label="재생/일시정지">❚❚</button><button data-bgm="next" aria-label="다음 곡" ${list.length < 2 ? 'disabled' : ''}>⏭</button><button data-bgm="close" aria-label="끄기">✕</button></div>`;
+  if (!yt) {
+    const a = $('audio', el);
+    a.onended = () => { if (list.length > 1) playSong(src, (i + 1) % list.length); else { bgm.playing = false; syncSongUi(); } };
+    a.onpause = () => { if (bgm) { bgm.playing = false; syncSongUi(); } };
+    a.onplay = () => { if (bgm) { bgm.playing = true; syncSongUi(); } };
+    try { await ensureUrls([s.file.id]); a.src = urlCache.get(s.file.id).u; await a.play(); } catch { bgm.playing = false; toast('노래를 틀지 못했어요. 한 번 더 눌러 주세요'); }
+  }
+  syncSongUi();
+}
+function toggleSong() {
+  if (!bgm) return;
+  const a = $('#bgm audio');
+  if (a) { a.paused ? a.play().catch(() => {}) : a.pause(); return; }
+  bgm.playing = !bgm.playing; ytCmd(bgm.playing ? 'playVideo' : 'pauseVideo'); syncSongUi();
+}
+function stopSong() { bgm = null; $('#bgm')?.remove(); syncSongUi(); }
+// the ▶/❚❚ marks in any open song list and in the player follow what is playing
+function syncSongUi() {
+  $('#bgm .pp') && ($('#bgm .pp').textContent = bgm?.playing ? '❚❚' : '▶');
+  $('#bgm')?.classList.toggle('paused', !bgm?.playing);
+  document.querySelectorAll('[data-song]').forEach(b => {
+    const [src, i] = b.dataset.song.split('|'), on = bgm?.src === src && bgm.i === +i;
+    b.classList.toggle('on', on);
+    const sp = b.querySelector('.sp'); if (sp && sp.textContent !== '↗') sp.textContent = on && bgm.playing ? '❚❚' : '▶';
+  });
+}
+
 /* ---------- Album: Instagram-style grid ---------- */
 // A post is one album entry; extra photos of the same post live in its `more` list.
 // sheet.albumWorld: '*' every album, '' the character's own album, or a world id.
@@ -1486,6 +1574,7 @@ function viewBody(type, x) {
         <div class="tags">${tagsHtml(x.tags)}</div>
         <div class="hearts" aria-hidden="true">♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡♥♡</div>
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
+      ${songsWin('characters:' + x.id)}
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
       ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
@@ -1506,6 +1595,7 @@ function viewBody(type, x) {
     const colors = ['blue', 'pink', 'mint', 'yellow'];
     return `${pageTabs(1, '세계관', '캐릭터 앨범')}<div class="${flipCls}">${x.cover ? `<div class="wbanner posable">${canWrite ? `<button class="posnow" data-posnow="worlds:${x.id}:cover:wcover" aria-label="커버 위치 조정" title="위치 조정">✥</button>` : ''}<button data-lightbox="${img(x.cover)}"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt="${esc(x.name)}"></button></div>` : ''}
       <div><div class="row" style="justify-content:flex-start;margin-bottom:6px">${exPill(x)}</div><h2 style="font-size:32px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.name)}</h2>${x.summary ? `<p class="prose" style="margin-top:6px;color:var(--muted);font-size:16px">${esc(x.summary)}</p>` : ''}</div>
+      ${songsWin('worlds:' + x.id)}
       <div class="sub-grid">${(x.sections || []).filter(s => s.title || s.body).map((s, i) => section(esc(s.title || '설정'), s.body, colors[i % 4])).join('')}</div>
       ${castWin(x, cs)}
       ${relationsOfWorld(x, cs)}
@@ -1531,6 +1621,7 @@ const FIELDS = {
     { row: [{ k: 'birthday', t: 'text', l: '생일', ph: '예: 3월 14일' }, { k: 'gender', t: 'text', l: '성별', ph: '예: 여성, 남성, 무성, 비공개' }] },
     { k: 'worldIds', t: 'worlds', l: '세계관 (여러 개 고를 수 있어요)' },
     { k: 'rels', t: 'rels', l: '관계' },
+    { k: 'songs', t: 'songs', l: '테마곡' },
     { k: 'appearance', t: 'area', l: '외모' },
     { k: 'personality', t: 'area', l: '성격' },
     { k: 'speech', t: 'area', l: '말투 · 대사 예시' },
@@ -1554,6 +1645,7 @@ const FIELDS = {
     { k: 'summary', t: 'area', l: '한눈에 보는 소개' },
     { k: 'sections', t: 'sections', l: '설정 항목' },
     { k: 'gallery', t: 'gallery', l: '갤러리' },
+    { k: 'songs', t: 'songs', l: '테마곡' },
     { k: 'tags', t: 'tags', l: '태그' },
   ],
   prompts: [
@@ -1592,6 +1684,14 @@ function fieldHtml(f, d) {
           <button type="button" class="btn sm ghost" data-uncrel="${i}" aria-label="관계 빼기">✕</button></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addcrel="1">＋ 관계 추가</button></div></div>`;
     }
+    case 'songs': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">유튜브 링크를 붙여넣거나 음악 파일(mp3 등)을 올려요. 프로필에서 ▶를 누르면 화면 아래에서 재생돼요.</span>
+        <div class="songrows">${(v || []).map((s, i) => `<div class="songrow">
+          <input type="text" id="song_t_${i}" data-songk="${i}:title" value="${esc(s.title || '')}" placeholder="노래 제목">
+          <input type="text" id="song_a_${i}" data-songk="${i}:artist" value="${esc(s.artist || '')}" placeholder="가수">
+          <button type="button" class="btn sm ghost" data-unsong="${i}" aria-label="노래 빼기" title="노래 빼기">✕</button>
+          ${s.file?.id ? `<span class="songfile">🎵 올린 파일로 재생 <button type="button" class="btn sm ghost" data-unsongfile="${i}">파일 빼기</button></span>`
+            : `<input type="text" id="song_l_${i}" class="songlink" data-songk="${i}:link" value="${esc(s.link || '')}" placeholder="유튜브 링크 붙여넣기">${assets ? `<label class="btn sm filebtn">또는 파일<input type="file" accept="audio/*" data-songup="${i}"></label>` : ''}`}</div>`).join('')}</div>
+        <div><button type="button" class="btn sm" data-addsong="1">＋ 노래 추가</button></div></div>`;
     case 'rels': {
       const others = sorted(S.characters.filter(c => c.id !== sheet.id), 'characters');
       if (!others.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">다른 캐릭터를 먼저 추가하면 관계를 이어줄 수 있어요.</span></div>`;
@@ -1828,7 +1928,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -1879,7 +1979,7 @@ async function backup() {
       collections: Object.fromEntries(Object.keys(TYPES).map(t => [t, strip(S[t])])), settings: site }, null, 1));
     const ids = referencedAssetIds(), missing = [];
     await ensureUrls(ids);
-    const ext = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/svg+xml': 'svg' };
+    const ext = { 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/svg+xml': 'svg', 'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/x-m4a': 'm4a', 'audio/aac': 'aac', 'audio/wav': 'wav', 'audio/x-wav': 'wav', 'audio/ogg': 'ogg', 'audio/flac': 'flac' };
     for (let i = 0; i < ids.length; i++) {
       setBusy(`사진 모으는 중… ${i + 1}/${ids.length}`);
       try {
@@ -1903,7 +2003,7 @@ async function backup() {
   } finally { setBusy(''); }
 }
 
-const MIME = { webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml' };
+const MIME = { webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac' };
 async function restore(file) {
   if (backingUp) return;
   const setBusy = m => { backingUp = m; renderNav(); };
@@ -2010,6 +2110,14 @@ document.addEventListener('click', async e => {
   if (dock.classList.contains('open') && !e.target.closest('#dock, [data-act="menu"]')) dock.classList.remove('open');
   if (e.target.closest('#strip')) { dock.classList.toggle('open'); return; }
   if (e.target.id === 'igpost') { closePost(); return; }
+  const sb2 = e.target.closest('[data-song], [data-bgm]');
+  if (sb2?.dataset.song) { const [src, i] = sb2.dataset.song.split('|'); playSong(src, +i); return; }
+  if (sb2?.dataset.bgm) {
+    const op = sb2.dataset.bgm, n = bgm ? songsOf(bgm.src).length : 0;
+    if (op === 'toggle') toggleSong(); else if (op === 'close') stopSong();
+    else if (bgm && n) { const src = bgm.src, i = (bgm.i + (op === 'next' ? 1 : -1) + n) % n; bgm = null; playSong(src, i); }
+    return;
+  }
   const t = e.target.closest('button, [data-open], [data-scrim]');
   if (!t) return;
   if (t.dataset.igpost !== undefined) { const [w, id] = t.dataset.igpost.split(':'); openPost(w, id); return; }
@@ -2092,6 +2200,9 @@ document.addEventListener('click', async e => {
     const d = sheet.draft;
     if (t.dataset.addcrel) { const w = byId('worlds', sheet.id), oc = (w?.cast || []).find(c => c.id !== d.id); (d.rels = d.rels || []).push({ to: S.characters[0]?.id || (oc ? 'cast:' + oc.id : ''), label: '' }); rerenderEdit(); document.getElementById('crel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.uncrel) { d.rels.splice(+t.dataset.uncrel, 1); rerenderEdit(); return; }
+    if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
+    if (t.dataset.unsong) { const [g] = d.songs.splice(+t.dataset.unsong, 1); if (g?.file?.id) sheet.removed.push(g.file.id); rerenderEdit(); return; }
+    if (t.dataset.unsongfile) { const g = d.songs[+t.dataset.unsongfile]; if (g?.file?.id) sheet.removed.push(g.file.id); delete g.file; rerenderEdit(); return; }
     if (t.dataset.addrel) { const o = S.characters.find(c => c.id !== sheet.id); (d.rels = d.rels || []).push({ to: o?.id || '', label: '', wid: '' }); rerenderEdit(); document.getElementById('rel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.unrel) { d.rels.splice(+t.dataset.unrel, 1); rerenderEdit(); return; }
     if (t.dataset.wpick) { const st = new Set(d.worldIds || []); st.has(t.dataset.wpick) ? st.delete(t.dataset.wpick) : st.add(t.dataset.wpick); d.worldIds = [...st]; rerenderEdit(); return; }
@@ -2151,6 +2262,7 @@ document.addEventListener('input', e => {
   if (el.dataset.k) d[el.dataset.k] = el.value;
   else if (el.dataset.tags) d[el.dataset.tags] = el.value.split(/[,，]/).map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); d.rels[+i][f] = el.value; }
+  else if (el.dataset.songk) { const [i, f] = el.dataset.songk.split(':'); d.songs[+i][f] = el.value; }
   else if (el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.gcap) { const [k, i] = el.dataset.gcap.split(':'); d[k][+i].caption = el.value; }
   else if (el.dataset.sect) d.sections[+el.dataset.sect].title = el.value;
@@ -2205,6 +2317,14 @@ document.addEventListener('change', async e => {
       const [r] = await uploadFiles(files);
       if (sheet.draft[k]) sheet.removed.push(sheet.draft[k].id);
       sheet.draft[k] = r;
+    });
+  } else if (el.dataset.songup) {
+    const i = +el.dataset.songup;
+    await withBusy('노래 올리는 중…', async () => {
+      const [r] = await uploadFiles(files.slice(0, 1)), g = sheet.draft.songs[i];
+      if (g.file?.id) sheet.removed.push(g.file.id);
+      g.file = r; g.link = '';
+      if (!g.title) g.title = files[0].name.replace(/\.[^.]+$/, '');
     });
   } else if (el.dataset.gal) {
     await withBusy(`이미지 ${files.length}장 올리는 중…`, async () => {
