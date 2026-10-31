@@ -489,6 +489,23 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .bgm-c button:hover { background: var(--mint); }
 .bgm-c button:disabled { opacity: .3; }
 .bgm-c .pp { background: var(--mint-d); color: #fff; }
+.mention { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: var(--blue-d); cursor: pointer; }
+.mention:hover { text-decoration: underline; }
+.ig-post .ptags { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 10px; font-size: 13px; }
+.ig-post .ptags > span { color: var(--muted); font-size: 12px; }
+.mpop { position: fixed; z-index: 95; width: min(280px, calc(100vw - 16px)); background: var(--win); border: 1.5px solid var(--ink); border-radius: 12px; box-shadow: 3px 3px 0 var(--pink-s); padding: 4px; display: flex; flex-direction: column; }
+.mpop button, .ppl .pp { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; background: none; text-align: left; }
+.mpop button.on, .mpop button:hover, .ppl .pp:hover { background: var(--pink); }
+.mpop .cav, .ppl .cav { flex: none; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pink); border: 1.2px solid var(--ink); font-size: 12px; font-weight: 700; color: var(--pink-d); }
+.mpop .cav img, .ppl .cav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mpop .nm, .ppl .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mpop .nm b, .ppl .nm b { font-size: 13.5px; font-weight: 600; }
+.mpop .nm small, .ppl .nm small { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ppl-q { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); font: inherit; }
+.ppl { max-height: 50vh; overflow: auto; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.ppl .pp.on { background: var(--mint); }
+.ppl .ck { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.3px solid var(--ink); display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--win); }
+.ppl .pp.on .ck { background: var(--mint-d); color: #fff; border-color: var(--mint-d); }
 .ig-post .cmts { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line, #E6D3DA); }
 .ig-post .cmt { display: flex; gap: 10px; align-items: flex-start; }
 .ig-post .cav { flex: none; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pink); border: 1.2px solid var(--ink); font-size: 12px; font-weight: 700; color: var(--pink-d); }
@@ -1240,7 +1257,37 @@ function albumEntries(x, key) {
 }
 const albumList = (x, key) => { const l = albumEntries(x, key); return sheet?.igTab === 'fav' ? l.filter(e => e.g.fav) : l; };
 const fmtDate = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}`; };
-const capHtml = s => esc(s || '').replace(/(^|\s)(#[^\s#]+)/g, '$1<span class="tg">$2</span>');
+/* Accounts for @mentions and people tags: my characters and every world's cast. Handle = album @아이디, or the name without spaces */
+function accounts() {
+  const out = sorted(S.characters, 'characters').map(c => ({ ref: 'char:' + c.id, name: c.name, avatar: c.albumHead?.avatar || c.avatar, handle: c.albumHead?.handle || '' }));
+  for (const w of S.worlds) for (const m of w.cast || []) out.push({ ref: `cast:${w.id}:${m.id}`, name: m.name, avatar: m.albumHead?.avatar || m.avatar, handle: m.albumHead?.handle || '', sub: w.name });
+  for (const a of out) a.tag = a.handle || String(a.name || '').replace(/\s+/g, '');
+  return out;
+}
+const accountOf = ref => accounts().find(a => a.ref === ref);
+// "@handle" in captions and comments becomes a button to that account's album; unknown names stay plain text
+const capHtml = s => {
+  const by = new Map(accounts().flatMap(a => [[a.tag.toLowerCase(), a], [String(a.name || '').replace(/\s+/g, '').toLowerCase(), a]]));
+  return esc(s || '').replace(/(^|\s)(#[^\s#]+)/g, '$1<span class="tg">$2</span>')
+    .replace(/(^|[\s(])@([^\s@#<>&]+)/g, (m, pre, h) => { const a = by.get(h.toLowerCase()); return a ? `${pre}<button class="mention" data-mention="${a.ref}">@${esc(h)}</button>` : m; });
+};
+// every post in every album, with whose album it is in
+function allPosts() {
+  const out = [];
+  for (const c of S.characters) {
+    for (const g of c.album || []) out.push({ ref: 'char:' + c.id, wid: '', g });
+    for (const [wid, list] of Object.entries(c.worldAlbums || {})) for (const g of list || []) out.push({ ref: 'char:' + c.id, wid, g });
+  }
+  for (const w of S.worlds) for (const m of w.cast || []) for (const g of m.album || []) out.push({ ref: `cast:${w.id}:${m.id}`, wid: '', g });
+  return out;
+}
+const taggedFor = ref => allPosts().filter(e => (e.g.people || []).includes(ref)).sort((a, b) => (b.g.at || 0) - (a.g.at || 0));
+function openAccount(ref) {
+  const [k, a, b] = ref.split(':');
+  closePost();
+  sheet = k === 'char' ? { mode: 'view', type: 'characters', id: a, page: 2, albumWorld: '*' } : { mode: 'view', type: 'worlds', id: a, castView: b, page: 2 };
+  renderSheet(); $('#layer .sheet')?.scrollTo(0, 0);
+}
 // a character's world album can have its own header (worldHeads[world id]); empty fields fall back to the main album header, then the profile
 function headOf(x, key) {
   const base = x.albumHead || {}, w = key && key !== '*' ? x.worldHeads?.[key] : null;
@@ -1277,9 +1324,9 @@ function igGrid(x, key) {
       <div class="ig-grid ordering">${l.map((e, j) => `<button class="ig-tile ${sel === e.g.id ? 'sel' : ''}" data-igmove="${e.g.id}" aria-label="${j + 1}번째">
       <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="">${e.g.more?.length ? '<span class="multi">❐</span>' : ''}<span class="no">${j + 1}</span></button>`).join('')}</div>`;
   }
-  const l = albumList(x, key);
-  if (!l.length) return `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>${sheet.igTab === 'fav' ? '♡ 누른 사진이 여기 모여요.' : `아직 사진이 없어요.<br>${canWrite && assets ? '위의 「＋ 사진 올리기」로 올려 보세요.' : ''}`}</p></div>`;
-  return `<div class="ig-grid">${l.map(e => `<button class="ig-tile" data-igpost="${e.wid}:${e.g.id}" aria-label="${esc(e.g.caption || '사진')}">
+  const tagged = sheet.igTab === 'tagged', l = tagged ? taggedFor(albumRef()) : albumList(x, key);
+  if (!l.length) return `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>${tagged ? '다른 앨범에서 이 인물을 태그하면 여기 모여요.' : sheet.igTab === 'fav' ? '♡ 누른 사진이 여기 모여요.' : `아직 사진이 없어요.<br>${canWrite && assets ? '위의 「＋ 사진 올리기」로 올려 보세요.' : ''}`}</p></div>`;
+  return `<div class="ig-grid">${l.map(e => `<button class="ig-tile" data-igpost="${e.wid}:${e.g.id}" ${e.ref ? `data-igref="${e.ref}"` : ''} aria-label="${esc(e.g.caption || '사진')}">
     <img src="${imgS(e.g)}" style="${posT(e.g)}" alt="" loading="lazy">${e.g.pin ? '<span class="pin" aria-label="고정">📌</span>' : ''}${e.g.more?.length ? '<span class="multi" aria-label="여러 장">❐</span>' : ''}
     <span class="ov">${e.g.fav ? '♥' : '♡'}${e.g.comments?.length ? ` · 💬 ${e.g.comments.length}` : ''}${e.g.more?.length ? ` · ${e.g.more.length + 1}장` : ''}</span></button>`).join('')}</div>`;
 }
@@ -1288,7 +1335,7 @@ function instaAlbum(x, key, opts) {
   const tab = sheet.igTab || 'grid';
   return `<div class="ig">${opts.back ? '<button class="ig-back" data-page="1">← 프로필로</button>' : ''}${igHead(x, key)}
     ${opts.circles.length > 1 ? `<div class="ig-hl">${opts.circles.map(([v, l, inner]) => igCircle(opts.attr, v, l, inner, v === opts.cur)).join('')}</div>` : ''}
-    <div class="ig-tabs" role="tablist"><button role="tab" data-igtab="grid" aria-selected="${tab === 'grid'}">▦ 게시물</button><button role="tab" data-igtab="fav" aria-selected="${tab === 'fav'}">♡ 좋아요</button></div>
+    <div class="ig-tabs" role="tablist"><button role="tab" data-igtab="grid" aria-selected="${tab === 'grid'}">▦ 게시물</button><button role="tab" data-igtab="fav" aria-selected="${tab === 'fav'}">♡ 좋아요</button><button role="tab" data-igtab="tagged" aria-selected="${tab === 'tagged'}">👤 태그됨</button></div>
     ${igGrid(x, key)}
     ${canWrite && !isCastAlbum() && key !== '*' && (key ? photosOf(x, key) : x.album || []).length && !ordering(key) ? `<div class="ap-tools"><button class="btn sm ghost" data-act="${key ? 'album-edit' : 'edit'}">여러 장 한꺼번에 정리</button></div>` : ''}</div>`;
 }
@@ -1328,22 +1375,29 @@ function reorderImgs(g, imgs) {
 }
 
 /* Post viewer */
-let igPost = null; // { wid, id, n: photo index inside the post, edit, armed }
+let igPost = null; // { ref: whose album, wid, id, n: photo index inside the post, edit, armed }
 function igFind() {
-  const x = albumOwner()?.x; if (!x || !igPost) return null;
+  const x = igPost && ownerOf(igPost.ref)?.x; if (!x) return null;
   const list = photosOf(x, igPost.wid), i = list.findIndex(g => g.id === igPost.id);
   return i < 0 ? null : { x, list, i, g: list[i] };
 }
-function openPost(wid, id) { igPost = { wid, id, n: 0 }; renderPost(); }
-function closePost() { igPost = null; $('#igpost')?.remove(); }
+function openPost(wid, id, ref) { igPost = { ref: ref || albumRef(), wid, id, n: 0 }; renderPost(); }
+// the posts ‹ › walks through: the grid that is showing
+function postSeq() {
+  if (sheet?.igTab === 'tagged') return taggedFor(albumRef());
+  const o = albumOwner(), ref = albumRef();
+  return o ? albumList(o.x, albumKey()).map(e => ({ ...e, ref })) : [];
+}
+const seqIndex = l => l.findIndex(e => e.ref === igPost.ref && e.wid === igPost.wid && e.g.id === igPost.id);
+function closePost() { igPost = null; $('#igpost')?.remove(); $('#mpop')?.remove(); }
 function stepPost(d) {
   const f = igFind(); if (!f) return;
   const imgs = postImgs(f.g);
   if (imgs.length > 1 && igPost.n + d >= 0 && igPost.n + d < imgs.length) { igPost.n += d; renderPost(); return; }
   // past the first/last photo of a post: go to the neighbouring post
-  const l = albumList(f.x, albumKey()), k = l.findIndex(e => e.wid === igPost.wid && e.g.id === igPost.id), nx = l[k + d];
+  const l = postSeq(), k = seqIndex(l), nx = k < 0 ? null : l[k + d];
   if (!nx) return;
-  igPost = { wid: nx.wid, id: nx.g.id, n: d < 0 ? postImgs(nx.g).length - 1 : 0 };
+  igPost = { ref: nx.ref, wid: nx.wid, id: nx.g.id, n: d < 0 ? postImgs(nx.g).length - 1 : 0 };
   renderPost();
 }
 /* Comments on a post, written as one of my characters or a world's cast: g.comments = [{ id, who: "char:<id>" | "cast:<world>:<id>", name, text, at }] */
@@ -1356,7 +1410,7 @@ function whoOf(ref) {
 // my characters, then the cast of the world(s) this album belongs to
 function commenters(x) {
   const out = sorted(S.characters, 'characters').map(c => ['char:' + c.id, c.name]);
-  const ref = albumRef(), wids = ref.startsWith('cast:') ? [ref.split(':')[1]] : igPost?.wid ? [igPost.wid] : worldIdsOf(x);
+  const ref = igPost?.ref || albumRef(), wids = ref.startsWith('cast:') ? [ref.split(':')[1]] : igPost?.wid ? [igPost.wid] : worldIdsOf(x);
   for (const wid of wids) { const w = byId('worlds', wid); for (const m of w?.cast || []) out.push([`cast:${wid}:${m.id}`, `${m.name} · ${w.name}`]); }
   return out;
 }
@@ -1379,18 +1433,19 @@ function renderPost() {
   igPost.n = n;
   let el = $('#igpost');
   if (!el) { el = document.createElement('div'); el.id = 'igpost'; el.className = 'igpost'; document.body.appendChild(el); }
-  const l = albumList(x, albumKey()), k = l.findIndex(e => e.wid === igPost.wid && e.g.id === igPost.id);
+  const l = postSeq(), k = seqIndex(l);
   const canPrev = n > 0 || k > 0, canNext = n < imgs.length - 1 || (k >= 0 && k < l.length - 1);
   setHtmlKeepImgs(el, `<div class="ig-post" role="dialog" aria-modal="true" aria-label="게시물">
     <div class="pic"><button class="ph" data-lightbox="${img(r)}" data-cap="${esc(g.caption || '')}" aria-label="크게 보기"><img src="${img(r)}" style="${pos(r)}" alt="${esc(g.caption || '')}"></button>
       ${canPrev ? '<button class="nav prev" data-pstep="-1" aria-label="이전">‹</button>' : ''}${canNext ? '<button class="nav next" data-pstep="1" aria-label="다음">›</button>' : ''}
       ${imgs.length > 1 ? `<div class="dots2">${imgs.map((_, j) => `<i class="${j === n ? 'on' : ''}"></i>`).join('')}</div><span class="cnt">${n + 1}/${imgs.length}</span>${canWrite ? `<div class="pmove"><button data-pop="mvL" ${n === 0 ? 'disabled' : ''} aria-label="이 사진을 앞으로">◀</button><span>순서</span><button data-pop="mvR" ${n === imgs.length - 1 ? 'disabled' : ''} aria-label="이 사진을 뒤로">▶</button></div>` : ''}` : ''}</div>
-    <div class="side"><div class="top"><span class="ig-mini">${headAva(x, igPost.wid)}</span><div><b>${esc(headOf(x, igPost.wid).name || x.name)}</b><small>${w ? esc(w.name) : '기본 앨범'}</small></div><button class="x" data-pclose aria-label="닫기">✕</button></div>
+    <div class="side"><div class="top"><span class="ig-mini">${headAva(x, igPost.wid)}</span><div><b>${esc(headOf(x, igPost.wid).name || x.name)}</b><small>${igPost.ref.startsWith('cast:') ? esc(byId('worlds', igPost.ref.split(':')[1])?.name || '') : w ? esc(w.name) : '기본 앨범'}</small></div><button class="x" data-pclose aria-label="닫기">✕</button></div>
       <div class="cap">${igPost.edit ? `<textarea id="pcap" rows="5" placeholder="설명을 적어 주세요. #태그도 쓸 수 있어요.">${esc(g.caption || '')}</textarea><div class="row"><button class="btn sm ghost" data-pop="capcancel">취소</button><button class="btn sm primary" data-pop="capsave">저장</button></div>`
         : g.caption ? `<p>${capHtml(g.caption)}</p>` : `<p class="none">${canWrite ? '✎를 눌러 설명을 달 수 있어요.' : '설명이 없어요.'}</p>`}
+        ${(g.people || []).length ? `<div class="ptags"><span>👤 함께</span>${g.people.map(r => accountOf(r)).filter(Boolean).map(a => `<button class="mention" data-mention="${a.ref}">@${esc(a.tag)}</button>`).join(' ')}</div>` : ''}
         ${(g.comments || []).length ? `<div class="cmts">${commentsHtml(g)}</div>` : ''}</div>
       <div class="act"><div class="ic"><button class="heart ${g.fav ? 'on' : ''}" ${canWrite ? 'data-pop="fav"' : 'disabled'} aria-label="좋아요">${g.fav ? '♥' : '♡'}</button>
-        ${canWrite ? `<button data-pop="pos" title="위치 조정" aria-label="위치 조정">✥</button><button data-pop="cap" title="설명 고치기" aria-label="설명 고치기">✎</button>
+        ${canWrite ? `<button data-pop="pos" title="위치 조정" aria-label="위치 조정">✥</button><button data-pop="cap" title="설명 고치기" aria-label="설명 고치기">✎</button><button data-pop="people" title="사람 태그" aria-label="사람 태그">👤</button>
         <button data-pop="pin" class="${g.pin ? 'on' : ''}" title="${g.pin ? '고정 풀기' : '맨 앞에 고정'}" aria-label="고정">📌</button><span class="grow"></span>
         ${assets ? `<label class="addm" title="이 게시물에 사진 추가">＋<input type="file" accept="image/*" multiple data-igmore="1"></label>` : ''}
         <button data-pop="del" class="del ${igPost.armed ? 'armed' : ''}" title="${imgs.length > 1 ? '이 사진 빼기' : '게시물 삭제'}">${igPost.armed ? (imgs.length > 1 ? '한 번 더 누르면 이 사진을 빼요' : '한 번 더 누르면 삭제') : '🗑'}</button>` : ''}</div>
@@ -1405,7 +1460,7 @@ function renderPost() {
 }
 // edits one post of the open character's album and saves the whole album list
 async function patchPost(fn) {
-  const f = igFind(), o = albumOwner(); if (!f || !o) return;
+  const f = igFind(), o = igPost && ownerOf(igPost.ref); if (!f || !o) return;
   const list = JSON.parse(JSON.stringify(f.list));
   const res = fn(list, f.i);
   try { await o.save(albumPatch(igPost.wid, list)); } catch (e) { toast(errMsg(e)); return; }
@@ -1438,6 +1493,7 @@ async function postOp(op) {
   if (op !== 'del') igPost.armed = false;
   if (op === 'fav' || op === 'pin') { await patchPost((l, i) => { l[i][op] = !l[i][op]; }); renderPost(); return; }
   if (op === 'cap') { igPost.edit = true; renderPost(); return; }
+  if (op === 'people') { openPeoplePicker(f.g.people || [], igPost.ref, async people => { await patchPost((l, i) => { l[i].people = people; }); renderPost(); }); return; }
   if (op === 'mvL' || op === 'mvR') {
     const n = igPost.n, to = n + (op === 'mvL' ? -1 : 1), imgs = postImgs(f.g).slice();
     if (to < 0 || to >= imgs.length) return;
@@ -1478,6 +1534,47 @@ async function postOp(op) {
     if (gone && !assetInUse(gone)) { try { await assets.delete(gone); } catch {} }
     toast('뺐어요'); if (igPost) renderPost(); renderSheet();
   }
+}
+// who is in this photo: pick accounts (not the album's own owner)
+function openPeoplePicker(cur, ownerRef, done) {
+  const sel = new Set(cur), list = accounts().filter(a => a.ref !== ownerRef);
+  const o = document.createElement('div'); o.className = 'postool';
+  o.innerHTML = `<div class="win c-pink" style="width:min(380px,100%)"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">사람 태그</span></div><div class="pt-body">
+    <input type="text" class="ppl-q" placeholder="이름으로 찾기" autocomplete="off"><div class="ppl"></div>
+    <div class="pt-btns"><span style="flex:1"></span><button type="button" class="btn sm" data-pp="cancel">취소</button><button type="button" class="btn sm primary" data-pp="ok">완료</button></div></div></div>`;
+  const draw = () => {
+    const q = o.querySelector('.ppl-q').value.trim().toLowerCase();
+    o.querySelector('.ppl').innerHTML = list.filter(a => !q || (a.name + a.tag).toLowerCase().includes(q)).map(a => `<button type="button" class="pp ${sel.has(a.ref) ? 'on' : ''}" data-ppick="${a.ref}"><span class="cav">${avHtml(a.avatar, a.name)}</span><span class="nm"><b>${esc(a.name)}</b><small>@${esc(a.tag)}${a.sub ? ' · ' + esc(a.sub) : ''}</small></span><span class="ck">${sel.has(a.ref) ? '✓' : ''}</span></button>`).join('') || '<p style="color:var(--muted);margin:8px 0">찾는 인물이 없어요.</p>';
+  };
+  draw(); document.body.appendChild(o); o.querySelector('.ppl-q').addEventListener('input', draw);
+  o.addEventListener('click', e => {
+    const p = e.target.closest('[data-ppick]'); if (p) { const r = p.dataset.ppick; sel.has(r) ? sel.delete(r) : sel.add(r); draw(); return; }
+    const b = e.target.closest('[data-pp]'); if (!b) { if (e.target === o) o.remove(); return; }
+    o.remove(); if (b.dataset.pp === 'ok') done(list.map(a => a.ref).filter(r => sel.has(r)));
+  });
+}
+// typing "@" in a comment or caption suggests accounts; picking one writes its @handle
+function mentionQuery(el) {
+  const m = el.value.slice(0, el.selectionStart).match(/(^|\s)@([^\s@#]*)$/);
+  return m ? m[2] : null;
+}
+function showMentions(el) {
+  let pop = $('#mpop');
+  const q = mentionQuery(el);
+  const list = q == null ? [] : accounts().filter(a => (a.name + a.tag).toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+  if (!list.length) { pop?.remove(); return; }
+  if (!pop) { pop = document.createElement('div'); pop.id = 'mpop'; pop.className = 'mpop'; document.body.appendChild(pop); }
+  pop.dataset.for = el.id;
+  pop.innerHTML = list.map((a, i) => `<button type="button" class="${i ? '' : 'on'}" data-mpick="${esc(a.tag)}"><span class="cav">${avHtml(a.avatar, a.name)}</span><span class="nm"><b>${esc(a.name)}</b><small>@${esc(a.tag)}${a.sub ? ' · ' + esc(a.sub) : ''}</small></span></button>`).join('');
+  const r = el.getBoundingClientRect(), h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.top = (r.top - h - 6 > 8 ? r.top - h - 6 : r.bottom + 6) + 'px';
+}
+function pickMention(tag) {
+  const pop = $('#mpop'), el = pop && document.getElementById(pop.dataset.for);
+  pop?.remove(); if (!el) return;
+  const pos = el.selectionStart, before = el.value.slice(0, pos).replace(/@([^\s@#]*)$/, '@' + tag + ' ');
+  el.value = before + el.value.slice(pos); el.focus(); el.setSelectionRange(before.length, before.length);
 }
 // header editor
 function openHeadEdit() {
@@ -2109,6 +2206,8 @@ document.addEventListener('click', async e => {
   const dock = $('#dock');
   if (dock.classList.contains('open') && !e.target.closest('#dock, [data-act="menu"]')) dock.classList.remove('open');
   if (e.target.closest('#strip')) { dock.classList.toggle('open'); return; }
+  const mp = e.target.closest('[data-mpick]'); if (mp) { pickMention(mp.dataset.mpick); return; }
+  if (!e.target.closest('#mpop')) $('#mpop')?.remove();
   if (e.target.id === 'igpost') { closePost(); return; }
   const sb2 = e.target.closest('[data-song], [data-bgm]');
   if (sb2?.dataset.song) { const [src, i] = sb2.dataset.song.split('|'); playSong(src, +i); return; }
@@ -2120,8 +2219,9 @@ document.addEventListener('click', async e => {
   }
   const t = e.target.closest('button, [data-open], [data-scrim]');
   if (!t) return;
-  if (t.dataset.igpost !== undefined) { const [w, id] = t.dataset.igpost.split(':'); openPost(w, id); return; }
-  if (t.dataset.igopen) { const [w, id] = t.dataset.igopen.split(':'); sheet.page = 2; sheet.albumWorld = '*'; sheet.flip = 'next'; renderSheet(); openPost(w, id); return; }
+  if (t.dataset.igpost !== undefined) { const [w, id] = t.dataset.igpost.split(':'); openPost(w, id, t.dataset.igref); return; }
+  if (t.dataset.mention) { openAccount(t.dataset.mention); return; }
+  if (t.dataset.igopen) { const [w, id] = t.dataset.igopen.split(':'); sheet.page = 2; sheet.albumWorld = '*'; sheet.igTab = 'grid'; sheet.flip = 'next'; renderSheet(); openPost(w, id); return; }
   if (t.dataset.igorder) {
     if (t.dataset.igorder === 'start') {
       const key = albumKey();
@@ -2257,6 +2357,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('input', e => {
   const el = e.target;
   if (el.id === 'q') { query = el.value; render(); return; }
+  if (el.id === 'ctext' || el.id === 'pcap') { showMentions(el); return; }
   if (sheet?.mode !== 'edit') return;
   const d = sheet.draft;
   if (el.dataset.k) d[el.dataset.k] = el.value;
@@ -2344,6 +2445,10 @@ document.addEventListener('change', async e => {
   }
 });
 document.addEventListener('keydown', e => {
+  if ($('#mpop') && (e.target.id === 'ctext' || e.target.id === 'pcap') && !e.isComposing) {
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pickMention($('#mpop .on')?.dataset.mpick); return; }
+    if (e.key === 'Escape') { $('#mpop').remove(); return; }
+  }
   if (e.target.id === 'ctext' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); postOp('cpost'); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('div[data-open]')) { e.preventDefault(); const [ty, id] = e.target.dataset.open.split(':'); openView(ty, id); return; }
   if (lbStep && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { lbStep(e.key === 'ArrowLeft' ? -1 : 1); return; }
