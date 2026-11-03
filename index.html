@@ -672,15 +672,22 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .npccard .nph { cursor: pointer; }
 .npccard .memo { position: absolute; right: 5px; bottom: 5px; font-size: 13px; background: rgba(255, 255, 255, .85); border-radius: 6px; padding: 1px 4px; }
 .npcsheet { width: min(560px, 100%) !important; max-height: calc(100dvh - 32px); display: flex; flex-direction: column; }
-.npcbody { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 18px; padding: 18px; overflow: auto; }
-.npcbody .nph { width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 1.3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); cursor: zoom-in; }
-.npcbody .nph img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.npcinfo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.npcinfo b { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 20px; }
-.npcinfo .role { align-self: flex-start; font-size: 13px; padding: 2px 10px; border-radius: 999px; background: var(--yellow); color: var(--fg); }
-.npcinfo .memo { margin: 6px 0 0; font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
-.npcinfo .memo.none { color: var(--muted); }
-@media (max-width: 560px) { .npcbody { grid-template-columns: 1fr; } .npcbody .nph { width: 60%; justify-self: center; } }
+.npcscroll { overflow: auto; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+.npchead { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 16px; align-items: end; }
+.npchead .nph { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 1.3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); cursor: zoom-in; box-shadow: 4px 4px 0 var(--yellow-s); }
+.npchead .nph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.npchead .nph .ini { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; color: var(--yellow-d); }
+.npcinfo { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; padding-bottom: 4px; }
+.npcinfo b { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 22px; line-height: 1.2; }
+.npcinfo .role { font-size: 13px; padding: 2px 10px; border-radius: 999px; background: var(--yellow); }
+.npcinfo .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.npcinfo .chips span { font-size: 12.5px; padding: 1px 9px; border: 1.2px solid var(--ink); border-radius: 999px; background: var(--win); }
+.npcblocks { display: flex; flex-direction: column; gap: 10px; }
+.nblk { border: 1.2px solid var(--line, #E6D3DA); border-radius: 12px; padding: 10px 14px; background: var(--win); }
+.nblk h6 { margin: 0 0 4px; font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 12px; letter-spacing: .08em; color: var(--yellow-d); }
+.nblk p { margin: 0; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
+.npcnone { margin: 0; color: var(--muted); font-size: 13.5px; }
+@media (max-width: 560px) { .npchead { grid-template-columns: 110px minmax(0, 1fr); } }
 .npccard small { margin-top: -4px; font-size: 12px; line-height: 1.35; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
 .npccard .cedit { position: absolute; top: 4px; right: 4px; background: rgba(255, 255, 255, .85) !important; padding: 0 6px; }
 .cphoto { aspect-ratio: 4 / 5; border: 1.3px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--checker); display: grid; place-items: center; }
@@ -1200,19 +1207,26 @@ function castIncoming(w, m) {
     .flatMap(o => (o.rels || []).filter(r => r.to === 'cast:' + m.id).map(r => [castTarget(w, 'cast:' + o.id), r.label]));
 }
 // an NPC's memo: written on one line with "/" between items, it is shown one item per line
-const memoLines = t => /\n/.test(t) ? t : String(t || '').split(/\s*\/\s*/).filter(Boolean).join('\n');
+const memoLines = t => /\n/.test(t) ? t : String(t || '').split(/\s*[\/+]\s*/).filter(Boolean).join('\n');
 function openNpc(wid, cid) {
   const w = byId('worlds', wid), m = w && castOf(w, cid); if (!m) return;
+  const age = String(m.age || '').trim(), chips = [age && (/^\d+$/.test(age) ? age + '세' : age), m.gender].filter(Boolean);
+  // "/" or "+" separated notes read better as short lines
+  const block = (t, v) => v ? `<div class="nblk"><h6>${t}</h6><p>${esc(memoLines(v))}</p></div>` : '';
+  const out = (m.rels || []).map(r => [castTarget(w, r.to), r.label]).filter(([t]) => t), inc = castIncoming(w, m);
+  const rels = out.length || inc.length ? `<div class="nblk"><h6>관계</h6><div class="crels flat">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div></div>` : '';
+  const body = block('외모', m.appearance) + block('성격', m.personality) + block('설정', m.backstory) + rels + block('기타', m.desc);
   const o = document.createElement('div'); o.className = 'postool';
   o.innerHTML = `<div class="win c-yellow npcsheet"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">NPC · ${esc(w.name)}</span><span class="wbtns"><button data-npcx aria-label="닫기">✕</button></span></div>
-    <div class="npcbody">${m.avatar ? `<button class="nph" data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}" aria-label="크게 보기"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt=""></button>` : ''}
-      <div class="npcinfo"><b>${esc(m.name)}</b>${m.tagline ? `<span class="role">${esc(m.tagline)}</span>` : ''}
-        ${m.desc ? `<p class="memo">${esc(memoLines(m.desc))}</p>` : `<p class="memo none">${canWrite ? '편집에서 설정 메모를 적을 수 있어요.' : '적어둔 설정이 없어요.'}</p>`}</div></div></div>`;
-  o.addEventListener('click', e => { if (e.target === o || e.target.closest('[data-npcx]')) o.remove(); });
+    <div class="npcscroll"><div class="npchead">${m.avatar ? `<button class="nph" data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}" aria-label="크게 보기"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt=""></button>` : `<span class="nph"><span class="ini">${esc(initial(m.name))}</span></span>`}
+      <div class="npcinfo"><span class="lbl-box">NPC</span><b>${esc(m.name)}</b>${m.tagline ? `<span class="role">${esc(m.tagline)}</span>` : ''}${chips.length ? `<span class="chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</span>` : ''}</div></div>
+      ${body ? `<div class="npcblocks">${body}</div>` : `<p class="npcnone">${canWrite ? '✎ 편집에서 외모·성격·설정·관계를 적을 수 있어요.' : '적어둔 설정이 없어요.'}</p>`}</div></div>`;
+  // a name inside opens that profile behind, so the little sheet steps aside
+  o.addEventListener('click', e => { if (e.target === o || e.target.closest('[data-npcx], [data-open], [data-castview]')) o.remove(); });
   document.body.appendChild(o);
 }
 function npcCard(m, i) {
-  return `<div class="npccard"><button class="nph" data-npc="${m.id}" aria-label="${esc(m.name)} 설정 보기">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${posC(m.avatar)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(m.name))}</span>`}${m.desc ? '<span class="memo" aria-hidden="true">📝</span>' : ''}</button>
+  return `<div class="npccard"><button class="nph" data-npc="${m.id}" aria-label="${esc(m.name)} 설정 보기">${m.avatar ? `<img src="${imgS(m.avatar)}" style="${posC(m.avatar)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(m.name))}</span>`}${m.desc || m.appearance || m.personality || m.backstory || (m.rels || []).length ? '<span class="memo" aria-hidden="true">📝</span>' : ''}</button>
     <b>${esc(m.name)}</b>${m.tagline ? `<small title="${esc(m.tagline)}">${esc(m.tagline)}</small>` : ''}${canWrite ? `<button class="btn sm ghost cedit" data-castedit="${i}" aria-label="${esc(m.name)} 편집">✎</button>` : ''}</div>`;
 }
 function castCard(w, m, i) {
@@ -2001,6 +2015,16 @@ const CAST_FIELDS = [
   { k: 'desc', t: 'area', l: '기타 설정', ph: '이 세계에서 맡은 역할, 좋아하는 것 등' },
   { k: 'rels', t: 'castrels', l: '관계 (내 캐릭터 · 다른 등장인물)' },
 ];
+const NPC_FIELDS = [
+  CAST_FIELDS[0], CAST_FIELDS[1],
+  { k: 'tagline', t: 'text', l: '역할', ph: '예: 아즈하르의 정비, 왕궁 시종장, 단골 술집 주인' },
+  { row: [{ k: 'age', t: 'text', l: '나이', ph: '예: 31' }, { k: 'gender', t: 'text', l: '성별', ph: '예: 여' }] },
+  { k: 'appearance', t: 'area', l: '외모', ph: '예: 흑발, 녹안, 냉미인' },
+  { k: 'personality', t: 'area', l: '성격', ph: '예: ENTJ, 8w7. 권력지향적, 통제욕 강함' },
+  { k: 'backstory', t: 'area', l: '설정', ph: '예: 아즈하르의 제1부인 / 명문가 바누 가문의 장녀 / 하렘 최대 파벌 수장' },
+  { k: 'rels', t: 'castrels', l: '관계 (내 캐릭터 · 다른 등장인물)' },
+  { k: 'desc', t: 'area', l: '기타 메모' },
+];
 function openCastEdit(wid, idx) {
   const w = byId('worlds', wid);
   const base = idx != null ? JSON.parse(JSON.stringify(w.cast[idx])) : { role: 'main', rels: [] };
@@ -2032,7 +2056,7 @@ async function saveCastEdit(removeIt) {
 }
 function editBody() {
   const { type, draft } = sheet;
-  if (sheet.castEdit) return `<form class="form" id="edform">${(isNpc(draft) ? [...CAST_FIELDS.slice(0, 2), { k: 'tagline', t: 'text', l: '역할', ph: '예: 왕궁 시종장, 단골 술집 주인, 하리의 경호원' }, { k: 'desc', t: 'area', l: '설정 메모', ph: '나이, 외모, 성격, 배경 등 자유롭게. / 로 나눠 써도 줄이 나뉘어 보여요.' }] : CAST_FIELDS).map(f => fieldHtml(f, draft)).join('')}${isNpc(draft) ? '<p class="hint" style="color:var(--muted);font-size:13px;margin:0">NPC 카드에는 사진·이름·역할만 보이고, 누르면 설정 메모가 열려요. 메인 캐릭터로 바꾸면 프로필·앨범을 쓸 수 있어요.</p>' : ''}</form>`;
+  if (sheet.castEdit) return `<form class="form" id="edform">${(isNpc(draft) ? NPC_FIELDS : CAST_FIELDS).map(f => fieldHtml(f, draft)).join('')}${isNpc(draft) ? '<p class="hint" style="color:var(--muted);font-size:13px;margin:0">세계관 페이지엔 사진·이름·역할만 작게 보이고, 누르면 나머지가 열려요. 메인 캐릭터로 바꾸면 프로필·앨범을 쓸 수 있어요.</p>' : ''}</form>`;
   if (sheet.albumEdit) { const w = byId('worlds', sheet.albumEdit.wid); return `<form class="form" id="edform">${fieldHtml({ k: 'list', t: 'gallery', l: `${esc(byId('characters', sheet.id)?.name || '')} · ${esc(w?.name || '')} 앨범`, hint: '사진마다 설명을 달거나 ✕로 뺄 수 있어요.' }, draft)}</form>`; }
   return `<form class="form" id="edform">${FIELDS[type].map(f => fieldHtml(f, draft)).join('')}</form>`;
 }
