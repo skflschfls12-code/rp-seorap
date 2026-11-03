@@ -663,6 +663,10 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 /* cards in one row share a height; the relation list sits on the bottom edge so the rows line up */
 .castcard { display: grid; grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: start; gap: 12px; padding: 10px; border: 1.5px solid var(--ink); border-radius: 12px; background: var(--win); box-shadow: 3px 3px 0 var(--yellow-s); }
 .castcard.npc { background: var(--bg); box-shadow: none; }
+.orgblk + .orgblk { margin-top: 14px; }
+.orgh { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 13.5px; }
+.orgh::after { content: ""; flex: 1; height: 1px; background: var(--line, #E6D3DA); }
+.orgh small { font-size: 11px; color: var(--muted); }
 .npcgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 .npccard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
 .npccard .nph { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 1.3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); }
@@ -1208,6 +1212,7 @@ function castIncoming(w, m) {
 }
 // an NPC's memo: written on one line with "/" between items, it is shown one item per line
 const memoLines = t => /\n/.test(t) ? t : String(t || '').split(/\s*[\/+]\s*/).filter(Boolean).join('\n');
+const npcOrgs = w => [...new Set((w?.cast || []).map(m => String(m.org || '').trim()).filter(Boolean))];
 function openNpc(wid, cid) {
   const w = byId('worlds', wid), m = w && castOf(w, cid); if (!m) return;
   const age = String(m.age || '').trim(), chips = [age && (/^\d+$/.test(age) ? age + '세' : age), m.gender].filter(Boolean);
@@ -1219,7 +1224,7 @@ function openNpc(wid, cid) {
   const o = document.createElement('div'); o.className = 'postool';
   o.innerHTML = `<div class="win c-yellow npcsheet"><div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">NPC · ${esc(w.name)}</span><span class="wbtns"><button data-npcx aria-label="닫기">✕</button></span></div>
     <div class="npcscroll"><div class="npchead">${m.avatar ? `<button class="nph" data-lightbox="${img(m.avatar)}" data-cap="${esc(m.name)}" aria-label="크게 보기"><img src="${img(m.avatar)}" style="${pos(m.avatar)}" alt=""></button>` : `<span class="nph"><span class="ini">${esc(initial(m.name))}</span></span>`}
-      <div class="npcinfo"><span class="lbl-box">NPC</span><b>${esc(m.name)}</b>${m.tagline ? `<span class="role">${esc(m.tagline)}</span>` : ''}${chips.length ? `<span class="chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</span>` : ''}</div></div>
+      <div class="npcinfo"><span class="lbl-box">NPC${m.org ? ' · ' + esc(m.org) : ''}</span><b>${esc(m.name)}</b>${m.tagline ? `<span class="role">${esc(m.tagline)}</span>` : ''}${chips.length ? `<span class="chips">${chips.map(c => `<span>${esc(c)}</span>`).join('')}</span>` : ''}</div></div>
       ${body ? `<div class="npcblocks">${body}</div>` : `<p class="npcnone">${canWrite ? '✎ 편집에서 외모·성격·설정·관계를 적을 수 있어요.' : '적어둔 설정이 없어요.'}</p>`}</div></div>`;
   // a name inside opens that profile behind, so the little sheet steps aside
   o.addEventListener('click', e => { if (e.target === o || e.target.closest('[data-npcx], [data-open], [data-castview]')) o.remove(); });
@@ -1299,7 +1304,11 @@ function castText(w, m) {
 function castWin(w) {
   const cast = (w.cast || []).map((m, i) => [m, i]);
   if (!cast.length && !canWrite) return '';
-  const group = (role, title) => { const list = cast.filter(([m]) => (m.role || 'main') === role); return list.length ? `<div class="castgroup"><h5><span class="lbl-box">${title}</span></h5>${role === 'npc' ? `<div class="npcgrid">${list.map(([m, i]) => npcCard(m, i)).join('')}</div>` : `<div class="castgrid">${list.map(([m, i]) => castCard(w, m, i)).join('')}</div>`}</div>` : ''; };
+  const npcBlock = list => {
+    const orgs = [...new Set(list.map(([m]) => String(m.org || '').trim()))].sort((a, b) => (a === '') - (b === ''));
+    return orgs.map(o => `<div class="orgblk">${orgs.length > 1 || o ? `<h6 class="orgh"><span>${o ? esc(o) : '소속 없음'}</span><small>${list.filter(([m]) => String(m.org || '').trim() === o).length}</small></h6>` : ''}<div class="npcgrid">${list.filter(([m]) => String(m.org || '').trim() === o).map(([m, i]) => npcCard(m, i)).join('')}</div></div>`).join('');
+  };
+  const group = (role, title) => { const list = cast.filter(([m]) => (m.role || 'main') === role); return list.length ? `<div class="castgroup"><h5><span class="lbl-box">${title}</span></h5>${role === 'npc' ? npcBlock(list) : `<div class="castgrid">${list.map(([m, i]) => castCard(w, m, i)).join('')}</div>`}</div>` : ''; };
   return subWin('CAST · 이 세계의 등장인물', 'yellow', `${cast.length ? group('main', 'MAIN · 메인 캐릭터') + group('npc', 'NPC') : '<p style="color:var(--muted);margin:0">이 세계관에만 나오는 메인 캐릭터나 NPC를 넣어 보세요. 내 캐릭터와 어떤 관계인지도 적을 수 있어요.</p>'}
     ${canWrite ? '<div style="margin-top:12px"><button class="btn sm primary" data-castadd="1">＋ 등장인물 추가</button></div>' : ''}`);
 }
@@ -1943,7 +1952,7 @@ function fieldHtml(f, d) {
   const lab = `<label for="${id}">${f.l}${f.req ? ' *' : ''}</label>`;
   const hint = f.hint ? `<span class="hint">${f.hint}</span>` : '';
   switch (f.t) {
-    case 'text': return `<div class="fld">${lab}<input type="text" id="${id}" data-k="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph || '')}">${hint}</div>`;
+    case 'text': return `<div class="fld">${lab}<input type="text" id="${id}" data-k="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph || '')}"${f.list ? ` list="${id}_l" autocomplete="off"` : ''}>${f.list ? `<datalist id="${id}_l">${f.list().map(o => `<option value="${esc(o)}">`).join('')}</datalist>` : ''}${hint}</div>`;
     case 'date': return `<div class="fld">${lab}<input type="date" id="${id}" data-k="${f.k}" value="${esc(v)}"></div>`;
     case 'area': return `<div class="fld">${lab}<textarea id="${id}" data-k="${f.k}" class="${f.cls || ''}" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>${hint}</div>`;
     case 'select': return `<div class="fld">${lab}<select id="${id}" data-k="${f.k}">${f.opts.map(([a, b]) => `<option value="${esc(a)}" ${v === a ? 'selected' : ''}>${esc(b)}</option>`).join('')}</select></div>`;
@@ -2017,6 +2026,7 @@ const CAST_FIELDS = [
 ];
 const NPC_FIELDS = [
   CAST_FIELDS[0], CAST_FIELDS[1],
+  { k: 'org', t: 'text', l: '조직', ph: '예: 황금하렘, 신하, 마녀 (같은 이름끼리 묶여요)', list: () => npcOrgs(byId('worlds', sheet.id)) },
   { k: 'tagline', t: 'text', l: '역할', ph: '예: 아즈하르의 정비, 왕궁 시종장, 단골 술집 주인' },
   { row: [{ k: 'age', t: 'text', l: '나이', ph: '예: 31' }, { k: 'gender', t: 'text', l: '성별', ph: '예: 여' }] },
   { k: 'appearance', t: 'area', l: '외모', ph: '예: 흑발, 녹안, 냉미인' },
