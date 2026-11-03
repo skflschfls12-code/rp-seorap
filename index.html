@@ -471,8 +471,10 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .awardcard .desc { margin: 0 0 6px; color: var(--muted); font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .awardcard .more { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 14px 0 0; padding-top: 10px; border-top: 1px dashed #F2C6D3; width: 100%; font-size: 13px; color: var(--muted); }
 .awardcard .more i { font-style: italic; font-family: "Cormorant Garamond", serif; color: #D98AA5; margin-right: 4px; }
-.podium { display: grid; grid-template-columns: 1fr 1.22fr 1fr; align-items: end; gap: clamp(12px, 3.5vw, 36px); max-width: 680px; margin: 34px auto 18px; width: 100%; }
-.pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; color: var(--fg); text-align: center; }
+.podium { display: grid; grid-template-columns: 1fr 1.22fr 1fr; grid-template-rows: auto auto; column-gap: clamp(12px, 3.5vw, 36px); row-gap: 0; max-width: 680px; margin: 34px auto 18px; width: 100%; }
+.pod { position: relative; display: grid; grid-row: span 2; grid-template-rows: subgrid; justify-items: center; row-gap: 8px; min-width: 0; color: var(--fg); text-align: center; }
+.pod > :first-child { align-self: end; }
+.pod > .plate, .pod > b { align-self: start; }
 .pod .pfx { position: relative; width: 100%; }
 .pod.p2 .pfx, .pod.p3 .pfx, .pod.p2 > .pav, .pod.p3 > .pav { width: 88%; }
 /* white mat with a pink double border; the photo keeps its own framing */
@@ -512,9 +514,9 @@ button.pav { cursor: zoom-in; }
 @media (max-width: 760px) {
   .pod b { font-size: 13.5px; } .pod .pav { border-width: 6px; }
   /* phones: the winner on top at full size, 2nd and 3rd side by side below */
-  .podium:not(.mini) { grid-template-columns: 1fr 1fr; grid-template-areas: "a a" "b c"; row-gap: 26px; max-width: 360px; }
-  .podium:not(.mini) .p1 { grid-area: a; width: 72%; justify-self: center; }
-  .podium:not(.mini) .p2 { grid-area: b; } .podium:not(.mini) .p3 { grid-area: c; }
+  .podium:not(.mini) { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto; max-width: 360px; }
+  .podium:not(.mini) .p1 { grid-column: 1 / -1; grid-row: 1 / span 2; width: 72%; justify-self: center; margin-bottom: 26px; }
+  .podium:not(.mini) .p2 { grid-column: 1; grid-row: 3 / span 2; } .podium:not(.mini) .p3 { grid-column: 2; grid-row: 3 / span 2; }
   .podium:not(.mini) .p2 .pfx, .podium:not(.mini) .p3 .pfx { width: 100%; }
 }
 .awardhead { text-align: center; display: grid; gap: 6px; justify-items: center; }
