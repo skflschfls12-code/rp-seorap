@@ -498,11 +498,17 @@ button.pod:hover b { color: var(--pink-d); }
 .aw .t b { font-weight: 600; font-size: 14px; }
 .aw .r { flex: none; font-family: "Orbit", var(--f-body); font-size: 13px; color: var(--yellow-d); }
 .rankrows { display: flex; flex-direction: column; gap: 8px; }
-.rankrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 6px; align-items: center; }
+.rimg { position: relative; width: 40px; height: 40px; flex: none; }
+.rimg img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.3px solid var(--ink); display: block; }
+.rimg .radd { width: 40px; height: 40px; border-radius: 50%; border: 1.5px dashed var(--ink); display: grid; place-items: center; cursor: pointer; font-size: 16px; background: var(--checker); }
+.rimg .radd input { display: none; }
+.rimg .rx, .rimg .rp { position: absolute; width: 18px; height: 18px; padding: 0; border: 1.2px solid var(--ink); border-radius: 50%; background: #fff; font-size: 9px; line-height: 1; display: grid; place-items: center; }
+.rimg .rx { top: -4px; right: -6px; } .rimg .rp { bottom: -4px; right: -6px; }
+.rankrow { display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 6px; align-items: center; }
 .rankrow .rno { font-size: 20px; text-align: center; font-family: "Orbit", var(--f-body); }
 .rankrow select, .rankrow input { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); }
 .rankrow .rbtns { display: flex; }
-@media (max-width: 760px) { .rankrow { grid-template-columns: 34px minmax(0, 1fr) auto; } .rankrow input { grid-column: 2 / -1; grid-row: 2; } .pod .pav { width: 60px; height: 60px; } .pod.p1 .pav { width: 80px; height: 80px; } .pod b { font-size: 14px; } }
+@media (max-width: 760px) { .rankrow { grid-template-columns: 34px 40px minmax(0, 1fr) auto; } .rankrow input[data-rankk] { grid-column: 3 / -1; grid-row: 2; } .pod .pav { width: 60px; height: 60px; } .pod.p1 .pav { width: 80px; height: 80px; } .pod b { font-size: 14px; } }
 .songs { display: flex; flex-direction: column; gap: 6px; }
 .song { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 7px 10px; border: 1.3px solid var(--line, #E6D3DA); border-radius: 10px; background: var(--win); }
 .song:hover { background: var(--mint); }
@@ -871,7 +877,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -1039,7 +1045,7 @@ function cardFor(type, x) {
   }
   if (type === 'awards') {
     const r = x.ranks || [], at = i => r[i] && accountOf(r[i].ref);
-    const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pav">${avHtml(a.avatar, a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(a.name)}</b><span class="pno">${i + 1}</span></span>` : `<span class="pod ${cls} empty"><span class="pav">?</span><b>&nbsp;</b><span class="pno">${i + 1}</span></span>`; };
+    const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pav">${avHtml(r[i].img || a.avatar, a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(a.name)}</b><span class="pno">${i + 1}</span></span>` : `<span class="pod ${cls} empty"><span class="pav">?</span><b>&nbsp;</b><span class="pno">${i + 1}</span></span>`; };
     return `<button class="win card c-yellow awardcard" ${open}>${winbar(`🏆 ${x.year ? esc(x.year) + ' · ' : ''}${T.file}`)}<div class="wbody">
       <h3>${star}${esc(x.title || '이름 없는 상')}</h3>${x.desc ? `<p class="desc">${esc(x.desc)}</p>` : ''}
       <div class="podium mini">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
@@ -1193,10 +1199,10 @@ const openAttr = ref => { const [k, a, b] = String(ref).split(':'); return k ===
 function awardView(x) {
   const r = (x.ranks || []).map((it, i) => ({ ...it, i, a: accountOf(it.ref) })).filter(it => it.a);
   const spot = (i, cls) => { const it = r[i]; if (!it) return `<div class="pod ${cls} empty"><span class="pav">?</span><b>아직 없음</b><span class="step"><span class="pno">${i + 1}</span></span></div>`;
-    return `<button class="pod ${cls}" ${openAttr(it.ref)}><span class="pav">${avHtml(it.a.avatar, it.a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}<span class="step"><span class="pno">${i + 1}</span></span></button>`; };
+    return `<button class="pod ${cls}" ${openAttr(it.ref)}><span class="pav">${avHtml(it.img || it.a.avatar, it.a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}<span class="step"><span class="pno">${i + 1}</span></span></button>`; };
   return `<div class="awardhead"><span class="lbl-box fill" style="--cd:var(--yellow-d)">🏆 ${esc(x.year || '')} HALL OF FAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 상')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
     <div class="podium">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
-    ${r.length > 3 ? subWin('RANKING · 그 밖의 순위', 'yellow', `<div class="rankrest">${r.slice(3).map((it, j) => `<button class="rk" ${openAttr(it.ref)}><span class="no">${j + 4}</span><span class="cav">${avHtml(it.a.avatar, it.a.name)}</span><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button>`).join('')}</div>`) : ''}
+    ${r.length > 3 ? subWin('RANKING · 그 밖의 순위', 'yellow', `<div class="rankrest">${r.slice(3).map((it, j) => `<button class="rk" ${openAttr(it.ref)}><span class="no">${j + 4}</span><span class="cav">${avHtml(it.img || it.a.avatar, it.a.name)}</span><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button>`).join('')}</div>`) : ''}
     ${!r.length ? `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집을 눌러 순위를 매겨 보세요.</p></div>` : ''}
     ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
 }
@@ -1876,8 +1882,10 @@ function fieldHtml(f, d) {
     case 'ranks': {
       const acc = accounts();
       if (!acc.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">캐릭터나 세계관 등장인물이 있어야 순위를 매길 수 있어요.</span></div>`;
-      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">위에서부터 1위예요. ↑↓로 순서를 바꿔요. 내 캐릭터와 세계관 등장인물 모두 올릴 수 있어요.</span>
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">위에서부터 1위예요. ↑↓로 순서를 바꿔요. 📷로 이 상에서만 쓸 수상 사진을 올릴 수 있어요. 안 올리면 프로필 사진이 나와요.</span>
         <div class="rankrows">${(v || []).map((r, i) => `<div class="rankrow"><span class="rno">${MEDAL[i] || i + 1}</span>
+          <span class="rimg">${r.img ? `<img src="${imgS(r.img)}" style="${posT(r.img)}" alt=""><button type="button" class="rx" data-unrankimg="${i}" aria-label="수상 사진 빼기">✕</button><button type="button" class="rp" data-rankpos="${i}" aria-label="위치 조정">✥</button>`
+            : assets ? `<label class="radd" title="수상 사진 올리기">📷<input type="file" accept="image/*" data-rankimg="${i}"></label>` : ''}</span>
           <select id="rank_r_${i}" data-rankk="${i}:ref" aria-label="${i + 1}위">${acc.map(a => `<option value="${a.ref}" ${a.ref === r.ref ? 'selected' : ''}>${esc(a.name)}${a.sub ? ' · ' + esc(a.sub) : ''}</option>`).join('')}</select>
           <input type="text" id="rank_n_${i}" data-rankk="${i}:note" value="${esc(r.note || '')}" placeholder="한 줄 코멘트 (선택)">
           <span class="rbtns"><button type="button" class="btn sm ghost" data-rankmv="${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button type="button" class="btn sm ghost" data-rankmv="${i}:1" ${i === (v || []).length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button><button type="button" class="btn sm ghost" data-unrank="${i}" aria-label="빼기">✕</button></span></div>`).join('')}</div>
@@ -2127,7 +2135,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -2245,6 +2253,7 @@ const POS_TABS = {
   wcover: [['', '세계관 페이지', '21/8', false, '세계관을 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '16/9', false, '세계관 목록 카드에 보이는 사진이에요.']],
   album: [['', '게시물', '4/5', false, '사진을 눌러 열었을 때 보이는 모습이에요.'], ['t', '격자', '1/1', false, '앨범 격자와 프로필 미리보기에 보이는 모습이에요.']],
   ighead: [['t', '앨범 헤더', '1/1', true, '앨범 맨 위 동그란 사진이에요.']],
+  award: [['t', '시상대', '1/1', true, '명예의 전당 시상대와 순위에 보이는 동그란 사진이에요.']],
   gallery: [['t', '갤러리', '1/1', false, '세계관 갤러리에 보이는 사진이에요.']],
 };
 function openPosTool(ref, tabsKey, done) {
@@ -2405,7 +2414,9 @@ document.addEventListener('click', async e => {
     if (t.dataset.uncrel) { d.rels.splice(+t.dataset.uncrel, 1); rerenderEdit(); return; }
     if (t.dataset.addrank) { const used = new Set((d.ranks || []).map(r => r.ref)), a = accounts().find(a => !used.has(a.ref)) || accounts()[0]; (d.ranks = d.ranks || []).push({ ref: a.ref, note: '' }); rerenderEdit(); document.getElementById('rank_r_' + (d.ranks.length - 1))?.focus(); return; }
     if (t.dataset.rankmv) { const [i, dd] = t.dataset.rankmv.split(':').map(Number), j = i + dd; if (j >= 0 && j < d.ranks.length) { [d.ranks[i], d.ranks[j]] = [d.ranks[j], d.ranks[i]]; rerenderEdit(); } return; }
-    if (t.dataset.unrank) { d.ranks.splice(+t.dataset.unrank, 1); rerenderEdit(); return; }
+    if (t.dataset.unrank) { const [g] = d.ranks.splice(+t.dataset.unrank, 1); if (g?.img?.id) sheet.removed.push(g.img.id); rerenderEdit(); return; }
+    if (t.dataset.unrankimg) { const g = d.ranks[+t.dataset.unrankimg]; if (g?.img?.id) sheet.removed.push(g.img.id); delete g.img; rerenderEdit(); return; }
+    if (t.dataset.rankpos) { const i = +t.dataset.rankpos; openPosTool(d.ranks[i].img, 'award', p => { d.ranks[i].img = { ...d.ranks[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
     if (t.dataset.unsong) { const [g] = d.songs.splice(+t.dataset.unsong, 1); if (g?.file?.id) sheet.removed.push(g.file.id); rerenderEdit(); return; }
     if (t.dataset.unsongfile) { const g = d.songs[+t.dataset.unsongfile]; if (g?.file?.id) sheet.removed.push(g.file.id); delete g.file; rerenderEdit(); return; }
@@ -2526,6 +2537,13 @@ document.addEventListener('change', async e => {
       const [r] = await uploadFiles(files);
       if (sheet.draft[k]) sheet.removed.push(sheet.draft[k].id);
       sheet.draft[k] = r;
+    });
+  } else if (el.dataset.rankimg) {
+    const i = +el.dataset.rankimg;
+    await withBusy('사진 올리는 중…', async () => {
+      const [r] = await uploadFiles(files.slice(0, 1)), g = sheet.draft.ranks[i];
+      if (g.img?.id) sheet.removed.push(g.img.id);
+      g.img = r;
     });
   } else if (el.dataset.songup) {
     const i = +el.dataset.songup;
