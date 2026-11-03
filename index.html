@@ -456,6 +456,53 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-post .ic .grow { flex: 1; }
 .ig-post .ic .del { font-size: 17px; }
 .ig-post .ic .del.armed { font-size: 12px; color: #fff; background: #D9667E; border-radius: 999px; padding: 4px 10px; }
+/* hall of fame */
+.awardcard h3 { margin-bottom: 2px; }
+.awardcard .desc { margin: 0 0 6px; color: var(--muted); font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.awardcard .more { margin: 6px 0 0; text-align: center; font-size: 12.5px; color: var(--muted); }
+.podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; align-items: end; gap: 10px; max-width: 620px; margin: 10px auto 0; width: 100%; }
+.pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; border: 0; background: none; text-align: center; min-width: 0; color: var(--fg); }
+.pod .pav { width: 76px; height: 76px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--ring, #D9C27A), 0 4px 10px rgba(90, 60, 75, .2); background: var(--pink); font-size: 26px; font-weight: 700; color: var(--pink-d); }
+.pod .pav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pod.p1 .pav { width: 104px; height: 104px; --ring: #E8B93C; }
+.pod.p2 { --ring: #B9C2CF; } .pod.p3 { --ring: #D39A6A; }
+.pod .crown { position: absolute; top: -22px; font-size: 28px; transform: rotate(-12deg); filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .15)); }
+.pod b { font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pod small { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.pod .step { width: 100%; margin-top: 6px; border: 1.5px solid var(--ink); border-bottom: 0; border-radius: 10px 10px 0 0; display: grid; place-items: center; background: var(--stepc, #F3EEF1); }
+.pod.p1 .step { height: 96px; --stepc: #F7E3A3; } .pod.p2 .step { height: 66px; --stepc: #E4E8EF; } .pod.p3 .step { height: 46px; --stepc: #F1D6C2; }
+.pod .pno { font-family: "Orbit", var(--f-body); font-size: 26px; color: var(--ink); }
+.pod.empty { opacity: .45; }
+.podium:not(.mini) { border-bottom: 3px solid var(--ink); padding-bottom: 0; margin-bottom: 14px; }
+button.pod:hover b { color: var(--pink-d); }
+.podium.mini { gap: 6px; margin-top: 12px; }
+.podium.mini .pod .pav { width: 52px; height: 52px; font-size: 18px; }
+.podium.mini .pod.p1 .pav { width: 68px; height: 68px; }
+.podium.mini .pod .crown { top: -18px; font-size: 22px; }
+.podium.mini .pod b { font-size: 13.5px; }
+.podium.mini .pno { position: absolute; top: 0; right: calc(50% - 38px); width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 11px; display: grid; place-items: center; }
+.podium.mini .p1 .pno { right: calc(50% - 44px); background: #C9A12E; }
+.awardhead { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.awardhead h2 { font-size: 30px; }
+.awardhead .prose { color: var(--muted); }
+.rankrest, .awlist { display: flex; flex-direction: column; gap: 6px; }
+.rk, .aw { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border: 1.2px solid var(--line, #E6D3DA); border-radius: 10px; background: var(--win); text-align: left; }
+.rk:hover, .aw:hover { background: var(--yellow); }
+.rk .no, .aw .no { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--checker); font-family: "Orbit", var(--f-body); font-size: 13px; }
+.rk .cav { flex: none; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--pink); border: 1.2px solid var(--ink); font-size: 12px; font-weight: 700; color: var(--pink-d); }
+.rk .cav img { width: 100%; height: 100%; object-fit: cover; }
+.rk b { font-weight: 600; } .rk small { color: var(--muted); font-size: 12.5px; margin-left: auto; text-align: right; }
+.aw .md { flex: none; font-size: 22px; width: 28px; text-align: center; }
+.aw .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.aw .t small { font-size: 11.5px; color: var(--muted); }
+.aw .t b { font-weight: 600; font-size: 14px; }
+.aw .r { flex: none; font-family: "Orbit", var(--f-body); font-size: 13px; color: var(--yellow-d); }
+.rankrows { display: flex; flex-direction: column; gap: 8px; }
+.rankrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 6px; align-items: center; }
+.rankrow .rno { font-size: 20px; text-align: center; font-family: "Orbit", var(--f-body); }
+.rankrow select, .rankrow input { width: 100%; padding: 8px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); }
+.rankrow .rbtns { display: flex; }
+@media (max-width: 760px) { .rankrow { grid-template-columns: 34px minmax(0, 1fr) auto; } .rankrow input { grid-column: 2 / -1; grid-row: 2; } .pod .pav { width: 60px; height: 60px; } .pod.p1 .pav { width: 80px; height: 80px; } .pod b { font-size: 14px; } }
 .songs { display: flex; flex-direction: column; gap: 6px; }
 .song { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 7px 10px; border: 1.3px solid var(--line, #E6D3DA); border-radius: 10px; background: var(--win); }
 .song:hover { background: var(--mint); }
@@ -679,12 +726,14 @@ const TYPES = {
   scenes:     { label: '명장면', en: 'BEST SCENES', sub: '마음에 든 채팅 조각', add: '장면 저장', color: 'mint', file: 'CHAT.log' },
   worlds:     { label: '세계관', en: 'WORLDS', sub: '설정과 이미지', add: '세계관 만들기', color: 'blue', file: 'WORLD' },
   prompts:    { label: '프롬프트', en: 'PROMPTS', sub: '자주 쓰는 문구', add: '프롬프트 추가', color: 'yellow', file: 'MEMO.txt' },
+  awards:     { label: '명예의 전당', en: 'HALL OF FAME', sub: '내가 매기는 순위', add: '상 만들기', color: 'yellow', file: 'AWARD' },
 };
 const COLOR = { pink: ['var(--pink)', 'var(--pink-d)'], mint: ['var(--mint)', 'var(--mint-d)'], blue: ['var(--blue)', 'var(--blue-d)'], yellow: ['var(--yellow)', 'var(--yellow-d)'] };
 const GLYPH = {
   characters: '<path d="M16 21.5s-5-3-5-6.2c0-1.8 1.4-3 2.9-3 1 0 1.7.5 2.1 1.2.4-.7 1.1-1.2 2.1-1.2 1.5 0 2.9 1.2 2.9 3 0 3.2-5 6.2-5 6.2z" fill="var(--pink-d)"/>',
   scenes: '<path d="M10 12h12a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 22 20h-7l-3 2.5V20h-2a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 10 12z" fill="#fff" stroke="var(--ink)" stroke-width="1.2"/><circle cx="13" cy="16" r="1" fill="var(--mint-d)"/><circle cx="16" cy="16" r="1" fill="var(--mint-d)"/><circle cx="19" cy="16" r="1" fill="var(--mint-d)"/>',
   worlds: '<path d="M16 10.5l1.7 3.6 3.9.5-2.9 2.7.8 3.9-3.5-1.9-3.5 1.9.8-3.9-2.9-2.7 3.9-.5z" fill="var(--blue-d)"/>',
+  awards: '<path d="M12 11h8v3.2a4 4 0 0 1-8 0z" fill="#F7D774" stroke="var(--ink)" stroke-width="1.1"/><path d="M12 12.2h-1.6a1.6 1.6 0 0 0 1.8 2.6M20 12.2h1.6a1.6 1.6 0 0 1-1.8 2.6" fill="none" stroke="var(--ink)" stroke-width="1"/><path d="M16 18.2v1.8M13.6 21.4h4.8" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round"/>',
   prompts: '<path d="M10.5 16c0-2 2.3-2.4 3.6-.9L16 17l1.9-1.9c1.3-1.5 3.6-1.1 3.6.9s-2.3 2.4-3.6.9L16 15l-1.9 1.9c-1.3 1.5-3.6 1.1-3.6-.9z" fill="var(--yellow-d)"/><circle cx="16" cy="16" r="1.4" fill="var(--yellow-d)"/>',
 };
 const folder = t => {
@@ -702,8 +751,8 @@ const ICO = {
 const winbar = (title, extra = '') => `<div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">${title}</span>${extra}<span class="wbtns" aria-hidden="true"><span>♡</span><span>✕</span></span></div>`;
 
 const PROMPT_CATS = ['시스템 프롬프트', '첫 메시지', '페르소나', 'OOC · 지시문', '이미지 생성', '기타'];
-const S = { characters: [], scenes: [], worlds: [], prompts: [] };
-const loaded = { characters: false, scenes: false, worlds: false, prompts: false };
+const S = { characters: [], scenes: [], worlds: [], prompts: [], awards: [] };
+const loaded = { characters: false, scenes: false, worlds: false, prompts: false, awards: false };
 let db = null, assets = null, user = null, canWrite = true, status = 'connecting';
 let view = 'characters', query = '', filter = { tag: null, sub: 'all' };
 let site = {}, coverEdit = null, coverDrag = null, coverArmed = null;
@@ -775,6 +824,7 @@ async function flushUrls() {
 const byId = (t, id) => S[t].find(x => x.id === id);
 // characters: favourites first, then oldest-created first; everything else: favourites, then most recently edited
 const sorted = (list, t) => [...list].sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) ||
+  (t === 'awards' ? String(b.year || '').localeCompare(String(a.year || '')) || (a.createdAt || 0) - (b.createdAt || 0) : 0) ||
   (t === 'characters' ? (a.createdAt || 0) - (b.createdAt || 0) || String(a.id).localeCompare(String(b.id)) : (b.updatedAt || 0) - (a.updatedAt || 0)));
 const initial = s => (String(s || '?').trim()[0] || '?');
 const tagsHtml = tags => (tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
@@ -909,6 +959,7 @@ function renderNav() {
 }
 function subFilters() {
   if (view === 'characters') return [['all', '전체'], ...allKinds().map(k => ['k:' + k, k]), ['fav', '★ 즐겨찾기']];
+  if (view === 'awards') return [['all', '전체'], ...[...new Set(S.awards.map(a => String(a.year || '').trim()).filter(Boolean))].sort().reverse().map(y => ['y:' + y, y + '년']), ['fav', '★ 즐겨찾기']];
   if (view === 'prompts') return [['all', '전체'], ...PROMPT_CATS.filter(c => S.prompts.some(p => p.category === c)).map(c => [c, c]), ['fav', '★ 즐겨찾기']];
   return [['all', '전체'], ['fav', '★ 즐겨찾기']];
 }
@@ -930,6 +981,7 @@ function applyFilter(list) {
     if (filter.sub === 'fav') return x.fav;
     if (view === 'characters') return kindOf(x) === filter.sub.slice(2);
     if (view === 'prompts') return x.category === filter.sub;
+    if (view === 'awards') return String(x.year || '').trim() === filter.sub.slice(2);
     return true;
   });
 }
@@ -985,6 +1037,14 @@ function cardFor(type, x) {
       ${x.summary ? `<p class="desc">${esc(x.summary)}</p>` : ''}
       <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span>${(x.cast || []).length ? `<span class="lbl-box">CAST ${x.cast.length}</span>` : ''}<span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
   }
+  if (type === 'awards') {
+    const r = x.ranks || [], at = i => r[i] && accountOf(r[i].ref);
+    const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pav">${avHtml(a.avatar, a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(a.name)}</b><span class="pno">${i + 1}</span></span>` : `<span class="pod ${cls} empty"><span class="pav">?</span><b>&nbsp;</b><span class="pno">${i + 1}</span></span>`; };
+    return `<button class="win card c-yellow awardcard" ${open}>${winbar(`🏆 ${x.year ? esc(x.year) + ' · ' : ''}${T.file}`)}<div class="wbody">
+      <h3>${star}${esc(x.title || '이름 없는 상')}</h3>${x.desc ? `<p class="desc">${esc(x.desc)}</p>` : ''}
+      <div class="podium mini">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
+      ${r.length > 3 ? `<p class="more">+ ${r.length - 3}명 더</p>` : ''}</div></button>`;
+  }
   return `<div class="win card c-yellow" ${open} role="button" tabindex="0">${winbar(T.file)}<div class="wbody">
       <div class="row"><span class="lbl-box fill">${esc(x.category || '기타')}</span>${exPill(x)}</div>
       <h3>${star}${esc(x.title || '제목 없음')}</h3>
@@ -1003,13 +1063,14 @@ function emptyFor(t) {
     characters: ['아직 캐릭터가 없어요', '내 페르소나나 마음에 드는 봇의 프로필을 저장해 두세요. 외모, 성격, 말투를 정리하고 한 번에 복사할 수 있어요.'],
     scenes: ['저장한 장면이 없어요', '채팅하다 좋았던 부분을 그대로 붙여넣으세요. “이름: 대사” 형식은 말풍선으로, *별표*는 지문으로 보여줘요.'],
     worlds: ['세계관을 만들어 보세요', '대표 이미지와 갤러리, 지역·세력·역사 같은 설정 항목을 자유롭게 추가할 수 있어요.'],
+    awards: ['아직 상이 없어요', '「올해의 최애」, 「미모 부문」처럼 상을 만들고 내 캐릭터와 등장인물에게 순위를 매겨 보세요.'],
     prompts: ['모아둔 프롬프트가 없어요', '시스템 프롬프트, 첫 메시지, OOC 지시문처럼 자주 쓰는 문구를 저장하고 바로 복사하세요.'],
   }[t];
   return `<div class="win empty c-${TYPES[t].color}">${winbar('EMPTY FOLDER')}<div class="wbody">${folder(t).replace('<svg', '<svg style="width:72px;height:58px"')}<h3>${copy[0]}</h3><p>${copy[1]}</p>${canWrite ? `<button class="btn primary" data-act="new">＋ ${TYPES[t].add}</button>` : ''}</div></div>`;
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
+    x.desc, x.year, ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -1122,7 +1183,28 @@ function castProfile(w, m) {
     <div class="sub-grid">${section('APPEARANCE · 외모', m.appearance, 'pink')}${section('PERSONALITY · 성격', m.personality, 'mint')}${section('VOICE · 말투', m.speech, 'yellow')}${section('STORY · 배경', m.backstory, 'blue')}</div>
     ${section('ETC · 기타 설정', m.desc, 'pink')}
     ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(m, '').length})</span>`, 'pink', igTeaser(m))}
+    ${awardsWin(`cast:${w.id}:${m.id}`)}
     ${out.length || inc.length ? subWin('RELATIONS · 관계', 'blue', `<div class="crels flat">${out.map(([t, l]) => castRelRow(t, l, false)).join('')}${inc.map(([t, l]) => castRelRow(t, l, true)).join('')}</div>`) : ''}`;
+}
+/* ---------- Hall of fame: awards = [{ title, year, desc, ranks: [{ ref: account, note }] }] ---------- */
+const MEDAL = ['🥇', '🥈', '🥉'];
+// a ranked name opens that character's (or cast member's) profile
+const openAttr = ref => { const [k, a, b] = String(ref).split(':'); return k === 'char' ? `data-open="characters:${a}"` : `data-castopen="${a}:${b}"`; };
+function awardView(x) {
+  const r = (x.ranks || []).map((it, i) => ({ ...it, i, a: accountOf(it.ref) })).filter(it => it.a);
+  const spot = (i, cls) => { const it = r[i]; if (!it) return `<div class="pod ${cls} empty"><span class="pav">?</span><b>아직 없음</b><span class="step"><span class="pno">${i + 1}</span></span></div>`;
+    return `<button class="pod ${cls}" ${openAttr(it.ref)}><span class="pav">${avHtml(it.a.avatar, it.a.name)}</span>${i === 0 ? '<span class="crown" aria-hidden="true">👑</span>' : ''}<b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}<span class="step"><span class="pno">${i + 1}</span></span></button>`; };
+  return `<div class="awardhead"><span class="lbl-box fill" style="--cd:var(--yellow-d)">🏆 ${esc(x.year || '')} HALL OF FAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 상')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
+    <div class="podium">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
+    ${r.length > 3 ? subWin('RANKING · 그 밖의 순위', 'yellow', `<div class="rankrest">${r.slice(3).map((it, j) => `<button class="rk" ${openAttr(it.ref)}><span class="no">${j + 4}</span><span class="cav">${avHtml(it.a.avatar, it.a.name)}</span><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button>`).join('')}</div>`) : ''}
+    ${!r.length ? `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집을 눌러 순위를 매겨 보세요.</p></div>` : ''}
+    ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
+}
+// on a profile: every award this account placed in
+function awardsWin(ref) {
+  const wins = sorted(S.awards, 'awards').flatMap(a => (a.ranks || []).map((r, i) => r.ref === ref ? { a, i } : null).filter(Boolean));
+  if (!wins.length) return '';
+  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${wins.map(({ a, i }) => `<button class="aw" data-open="awards:${a.id}"><span class="md">${MEDAL[i] || `<span class="no">${i + 1}</span>`}</span><span class="t">${a.year ? `<small>${esc(a.year)}</small>` : ''}<b>${esc(a.title || '이름 없는 상')}</b></span><span class="r">${i + 1}위</span></button>`).join('')}</div>`);
 }
 function castText(w, m) {
   return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
@@ -1676,6 +1758,7 @@ function viewBody(type, x) {
       ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}
+      ${awardsWin('char:' + x.id)}
       ${songsWin('characters:' + x.id)}</div>`;
   }
   if (type === 'scenes') {
@@ -1701,6 +1784,7 @@ function viewBody(type, x) {
       ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}
       ${songsWin('worlds:' + x.id)}</div>`;
   }
+  if (type === 'awards') return awardView(x);
   return `<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
     <div class="notepad full">${esc(x.body)}</div>
     ${x.note ? section('NOTE · 메모', x.note, 'mint') : ''}
@@ -1753,7 +1837,15 @@ const FIELDS = {
     { k: 'tags', t: 'tags', l: '태그' },
   ],
 };
+FIELDS.awards = [
+  { k: 'title', t: 'text', l: '상 이름', req: 1, ph: '예: 올해의 최애, 미모 부문, 올해의 커플' },
+  { k: 'year', t: 'text', l: '연도', ph: '예: 2026' },
+  { k: 'desc', t: 'area', l: '한마디', ph: '어떤 상인지, 심사평 같은 것' },
+  { k: 'ranks', t: 'ranks', l: '순위' },
+  { k: 'tags', t: 'tags', l: '태그' },
+];
 const DEFAULTS = {
+  awards: () => ({ year: String(new Date().getFullYear()), ranks: [], tags: [] }),
   characters: () => ({ kind: allKinds()[0] || '내 캐릭터', album: [], rels: [], tags: [] }),
   scenes: () => ({ date: new Date().toISOString().slice(0, 10), characterIds: [], tags: [] }),
   worlds: () => ({ sections: [{ title: '지역', body: '' }, { title: '세력', body: '' }, { title: '역사', body: '' }], gallery: [], tags: [] }),
@@ -1780,6 +1872,16 @@ function fieldHtml(f, d) {
           <input type="text" id="crel_l_${i}" data-crelk="${i}:label" value="${esc(r.label || '')}" placeholder="관계 (예: 소꿉친구, 스승, 라이벌)">
           <button type="button" class="btn sm ghost" data-uncrel="${i}" aria-label="관계 빼기">✕</button></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addcrel="1">＋ 관계 추가</button></div></div>`;
+    }
+    case 'ranks': {
+      const acc = accounts();
+      if (!acc.length) return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">캐릭터나 세계관 등장인물이 있어야 순위를 매길 수 있어요.</span></div>`;
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">위에서부터 1위예요. ↑↓로 순서를 바꿔요. 내 캐릭터와 세계관 등장인물 모두 올릴 수 있어요.</span>
+        <div class="rankrows">${(v || []).map((r, i) => `<div class="rankrow"><span class="rno">${MEDAL[i] || i + 1}</span>
+          <select id="rank_r_${i}" data-rankk="${i}:ref" aria-label="${i + 1}위">${acc.map(a => `<option value="${a.ref}" ${a.ref === r.ref ? 'selected' : ''}>${esc(a.name)}${a.sub ? ' · ' + esc(a.sub) : ''}</option>`).join('')}</select>
+          <input type="text" id="rank_n_${i}" data-rankk="${i}:note" value="${esc(r.note || '')}" placeholder="한 줄 코멘트 (선택)">
+          <span class="rbtns"><button type="button" class="btn sm ghost" data-rankmv="${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button type="button" class="btn sm ghost" data-rankmv="${i}:1" ${i === (v || []).length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button><button type="button" class="btn sm ghost" data-unrank="${i}" aria-label="빼기">✕</button></span></div>`).join('')}</div>
+        <div><button type="button" class="btn sm" data-addrank="1">＋ ${((v || []).length || 0) + 1}위 추가</button></div></div>`;
     }
     case 'songs': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">유튜브 링크를 붙여넣거나 음악 파일(mp3 등)을 올려요. 프로필에서 ▶를 누르면 화면 아래에서 재생돼요.</span>
         <div class="songrows">${(v || []).map((s, i) => `<div class="songrow">
@@ -2263,6 +2365,7 @@ document.addEventListener('click', async e => {
     return;
   }
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
+  if (t.dataset.castopen) { const [wid, cid] = t.dataset.castopen.split(':'); sheet = { mode: 'view', type: 'worlds', id: wid, page: 1, castView: cid }; renderSheet(); return; }
   if (t.dataset.castview && sheet) { sheet = { mode: 'view', type: 'worlds', id: sheet.id, page: 1, castView: t.dataset.castview, flip: 'next' }; renderSheet(); $('#layer .sheet')?.scrollTo(0, 0); return; }
   if (t.dataset.castedit && sheet) { openCastEdit(sheet.id, +t.dataset.castedit); return; }
   if (t.dataset.page && sheet) { const n = +t.dataset.page; if (n !== sheet.page) { sheet.flip = n > (sheet.page || 1) ? 'next' : 'prev'; sheet.page = n; renderSheet(); } return; }
@@ -2300,6 +2403,9 @@ document.addEventListener('click', async e => {
     const d = sheet.draft;
     if (t.dataset.addcrel) { const w = byId('worlds', sheet.id), oc = (w?.cast || []).find(c => c.id !== d.id); (d.rels = d.rels || []).push({ to: S.characters[0]?.id || (oc ? 'cast:' + oc.id : ''), label: '' }); rerenderEdit(); document.getElementById('crel_l_' + (d.rels.length - 1))?.focus(); return; }
     if (t.dataset.uncrel) { d.rels.splice(+t.dataset.uncrel, 1); rerenderEdit(); return; }
+    if (t.dataset.addrank) { const used = new Set((d.ranks || []).map(r => r.ref)), a = accounts().find(a => !used.has(a.ref)) || accounts()[0]; (d.ranks = d.ranks || []).push({ ref: a.ref, note: '' }); rerenderEdit(); document.getElementById('rank_r_' + (d.ranks.length - 1))?.focus(); return; }
+    if (t.dataset.rankmv) { const [i, dd] = t.dataset.rankmv.split(':').map(Number), j = i + dd; if (j >= 0 && j < d.ranks.length) { [d.ranks[i], d.ranks[j]] = [d.ranks[j], d.ranks[i]]; rerenderEdit(); } return; }
+    if (t.dataset.unrank) { d.ranks.splice(+t.dataset.unrank, 1); rerenderEdit(); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
     if (t.dataset.unsong) { const [g] = d.songs.splice(+t.dataset.unsong, 1); if (g?.file?.id) sheet.removed.push(g.file.id); rerenderEdit(); return; }
     if (t.dataset.unsongfile) { const g = d.songs[+t.dataset.unsongfile]; if (g?.file?.id) sheet.removed.push(g.file.id); delete g.file; rerenderEdit(); return; }
@@ -2363,6 +2469,7 @@ document.addEventListener('input', e => {
   if (el.dataset.k) d[el.dataset.k] = el.value;
   else if (el.dataset.tags) d[el.dataset.tags] = el.value.split(/[,，]/).map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); d.rels[+i][f] = el.value; }
+  else if (el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); d.ranks[+i][f] = el.value; }
   else if (el.dataset.songk) { const [i, f] = el.dataset.songk.split(':'); d.songs[+i][f] = el.value; }
   else if (el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.gcap) { const [k, i] = el.dataset.gcap.split(':'); d[k][+i].caption = el.value; }
@@ -2373,6 +2480,7 @@ document.addEventListener('change', async e => {
   const el = e.target;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.k) sheet.draft[el.dataset.k] = el.value;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); sheet.draft.rels[+i][f] = el.value; }
+  if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); sheet.draft.ranks[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); sheet.draft.rels[+i][f] = el.value; }
   if (el.dataset.restore && el.files?.length) { const f = el.files[0]; el.value = ''; restore(f); return; }
   if (!el.files || !el.files.length || !assets) return;
