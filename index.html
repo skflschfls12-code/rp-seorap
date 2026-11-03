@@ -1211,7 +1211,7 @@ function awardView(x) {
       <button class="plate" ${openAttr(it.ref)}><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button><span class="step"><span class="pno">${i + 1}</span></span></div>`; };
   return `<div class="awardhead"><span class="lbl-box fill" style="--cd:var(--yellow-d)">🏆 ${esc(x.year || '')} HALL OF FAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 상')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
     <div class="podium">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
-    ${r.length > 3 ? subWin('RANKING · 그 밖의 순위', 'yellow', `<div class="rankrest">${r.slice(3).map((it, j) => `<button class="rk" ${openAttr(it.ref)}><span class="no">${j + 4}</span><span class="cav tall">${awardPic(it, it.a, true)}</span><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button>`).join('')}</div>`) : ''}
+    ${r.length > 3 ? subWin('RANKING · 그 밖의 순위', 'yellow', `<div class="rankrest">${r.slice(3).map((it, j) => `<button class="rk" ${openAttr(it.ref)}><span class="no">${j + 4}</span><span class="cav">${avHtml(it.img || it.a.avatar, it.a.name)}</span><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button>`).join('')}</div>`) : ''}
     ${!r.length ? `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집을 눌러 순위를 매겨 보세요.</p></div>` : ''}
     ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
 }
