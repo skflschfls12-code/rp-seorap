@@ -531,6 +531,9 @@ button.pav { cursor: zoom-in; }
 .aw .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .aw .t small { font-size: 11.5px; color: var(--muted); }
 .aw .t b { font-weight: 600; font-size: 14px; }
+.aw .t { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
+.aw .streak { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--pink-d); border-radius: 999px; padding: 1px 8px; }
+.aw .yrs { flex: none; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .aw .r { flex: none; font-family: "Orbit", var(--f-body); font-size: 13px; color: var(--yellow-d); }
 .rankrows { display: flex; flex-direction: column; gap: 8px; }
 .rimg { position: relative; width: 40px; min-height: 40px; flex: none; }
@@ -1311,10 +1314,19 @@ function awardView(x) {
     ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
 }
 // on a profile: every award this account placed in
+// on a profile: one row per award and medal, with the years it was won and the longest run of consecutive years
 function awardsWin(ref) {
-  const wins = sorted(S.awards, 'awards').flatMap(a => (a.ranks || []).map((r, i) => r.ref === ref ? { a, i } : null).filter(Boolean));
+  const wins = S.awards.flatMap(a => (a.ranks || []).map((r, i) => r.ref === ref ? { a, i } : null).filter(Boolean));
   if (!wins.length) return '';
-  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${wins.map(({ a, i }) => `<button class="aw" data-open="awards:${a.id}"><span class="md">${MEDAL[i] || `<span class="no">${i + 1}</span>`}</span><span class="t">${a.year ? `<small>${esc(a.year)}</small>` : ''}<b>${esc(a.title || '이름 없는 상')}</b></span><span class="r">${i + 1}위</span></button>`).join('')}</div>`);
+  const groups = new Map();
+  for (const w of wins) { const k = `${Math.min(w.i, 3)}|${String(w.a.title || '이름 없는 상').trim()}`; (groups.get(k) || groups.set(k, []).get(k)).push(w); }
+  const streak = ys => { const n = [...new Set(ys.map(Number).filter(Number.isFinite))].sort((x, y) => x - y); let best = n.length ? 1 : 0, run = 1; for (let j = 1; j < n.length; j++) { run = n[j] === n[j - 1] + 1 ? run + 1 : 1; best = Math.max(best, run); } return best; };
+  const rows = [...groups.values()].map(list => {
+    list.sort((x, y) => String(x.a.year || '').localeCompare(String(y.a.year || '')));
+    const i = list[0].i, last = list[list.length - 1];
+    return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
+  }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
+  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${MEDAL[r.i] || `<span class="no">${r.i + 1}</span>`}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
 }
 function castText(w, m) {
   return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
