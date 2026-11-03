@@ -532,7 +532,8 @@ button.pav { cursor: zoom-in; }
 .aw .t small { font-size: 11.5px; color: var(--muted); }
 .aw .t b { font-weight: 600; font-size: 14px; }
 .aw .t { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
-.aw .streak { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--pink-d); border-radius: 999px; padding: 1px 8px; }
+.aw .streak { font-size: 11.5px; font-weight: 500; color: #F07AA0; }
+.aw .md .medal { width: 30px; height: auto; display: block; }
 .aw .yrs { flex: none; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .aw .r { flex: none; font-family: "Orbit", var(--f-body); font-size: 13px; color: var(--yellow-d); }
 .rankrows { display: flex; flex-direction: column; gap: 8px; }
@@ -1314,6 +1315,27 @@ function awardView(x) {
     ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
 }
 // on a profile: every award this account placed in
+// ribbon + scalloped medal for 1st-3rd (bright pastel pink / lavender / peach ribbons; gold / silver / rose-gold medals)
+const MEDAL_TONES = [
+  { rib: ['#FFD3E2', '#FFB1CB'], m: ['#FFF4C7', '#FFD86E', '#E9B746'], c: '#FFB1CB', t: '#F07AA0' },
+  { rib: ['#E9E2FF', '#D2C4FF'], m: ['#FFFFFF', '#E3E8F0', '#B9C3D2'], c: '#D2C4FF', t: '#9B85E6' },
+  { rib: ['#FFE0D3', '#FFC4AE'], m: ['#FFEADF', '#FBC3A6', '#E39A78'], c: '#FFC4AE', t: '#EA8E6C' },
+];
+function medalSvg(i) {
+  const r = MEDAL_TONES[i]; if (!r) return `<span class="no">${i + 1}</span>`;
+  const id = 'mdl' + i;
+  let bumps = ''; for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; bumps += `<circle cx="${(30 + Math.cos(a) * 15.5).toFixed(2)}" cy="${(62 + Math.sin(a) * 15.5).toFixed(2)}" r="4.6"/>`; }
+  return `<svg class="medal" viewBox="0 0 60 84" aria-label="${i + 1}위"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${r.m[0]}"/><stop offset=".6" stop-color="${r.m[1]}"/><stop offset="1" stop-color="${r.m[2]}"/></linearGradient></defs>
+    <rect x="10" y="3" width="40" height="5" rx="2" fill="url(#${id})"/><rect x="12" y="6" width="36" height="26" fill="${r.rib[0]}"/><rect x="25" y="6" width="10" height="26" fill="${r.rib[1]}"/>
+    <rect x="22.4" y="6" width="1.6" height="26" fill="#fff"/><rect x="36" y="6" width="1.6" height="26" fill="#fff"/>
+    <path d="M30 24 c-1.6-1.6-3.6-.2-2.3 1.4 L30 28 l2.3-2.6 c1.3-1.6-.7-3-2.3-1.4z" fill="#fff" opacity=".9"/>
+    <path d="M10 31 h40 v4 c-3 0-3 3-6 3s-3-3-6-3-3 3-6 3-3-3-6-3-3 3-6 3-3-3-6-3-3 3-4 3z" fill="url(#${id})"/>
+    <circle cx="30" cy="43" r="3" fill="none" stroke="${r.m[1]}" stroke-width="1.6"/>
+    <g fill="url(#${id})">${bumps}<circle cx="30" cy="62" r="15.5"/></g>
+    <path d="M19.5 55.5 a12 12 0 0 1 8 -6.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+    <circle cx="30" cy="62" r="11.8" fill="#fff"/><circle cx="30" cy="62" r="9" fill="#fff" stroke="${r.c}" stroke-width="1.4"/>
+    <text x="30" y="67" text-anchor="middle" font-family="Diphylleia,serif" font-size="14" fill="${r.t}">${i + 1}</text></svg>`;
+}
 // on a profile: one row per award and medal, with the years it was won and the longest run of consecutive years
 function awardsWin(ref) {
   const wins = S.awards.flatMap(a => (a.ranks || []).map((r, i) => r.ref === ref ? { a, i } : null).filter(Boolean));
@@ -1326,7 +1348,7 @@ function awardsWin(ref) {
     const i = list[0].i, last = list[list.length - 1];
     return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
   }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
-  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${MEDAL[r.i] || `<span class="no">${r.i + 1}</span>`}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
+  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${medalSvg(r.i)}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}년 연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
 }
 function castText(w, m) {
   return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
