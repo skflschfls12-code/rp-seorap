@@ -532,7 +532,12 @@ button.pav { cursor: zoom-in; }
 .aw .t small { font-size: 11.5px; color: var(--muted); }
 .aw .t b { font-weight: 600; font-size: 14px; }
 .aw .t { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
-.aw .streak { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--pink-d); border-radius: 999px; padding: 1px 8px; }
+.aw .streak { font-size: 11.5px; font-weight: 500; color: #B08A3E; letter-spacing: .02em; }
+.rk-disc { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: "Cormorant Garamond", "Diphylleia", serif; font-style: italic; font-weight: 500; font-size: 18px; line-height: 1; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, .18); }
+.rk-disc.d1 { background: linear-gradient(145deg, #F3DC9A, #C99B3C); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .45); }
+.rk-disc.d2 { background: linear-gradient(145deg, #E4E8EE, #A3ACB9); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .5); }
+.rk-disc.d3 { background: linear-gradient(145deg, #EBC4A6, #B27B55); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .45); }
+.rk-disc.d4 { background: var(--checker); color: var(--muted); text-shadow: none; box-shadow: inset 0 0 0 1.2px var(--line, #E6D3DA); }
 .aw .yrs { flex: none; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .aw .r { flex: none; font-family: "Orbit", var(--f-body); font-size: 13px; color: var(--yellow-d); }
 .rankrows { display: flex; flex-direction: column; gap: 8px; }
@@ -1326,7 +1331,7 @@ function awardsWin(ref) {
     const i = list[0].i, last = list[list.length - 1];
     return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
   }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
-  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${MEDAL[r.i] || `<span class="no">${r.i + 1}</span>`}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
+  return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="rk-disc d${Math.min(r.i + 1, 4)}">${r.i + 1}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}년 연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
 }
 function castText(w, m) {
   return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
