@@ -9,7 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbit&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&family=Diphylleia&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbit&family=Cormorant+Garamond:ital,wght@1,500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&family=Diphylleia&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
 /* Layout: a pastel Y2K desktop — every record is a little program window on polka-dot wallpaper; the folder dock hides at the left edge and slides out on hover */
 :root {
@@ -457,10 +457,21 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .ig-post .ic .del { font-size: 17px; }
 .ig-post .ic .del.armed { font-size: 12px; color: #fff; background: #D9667E; border-radius: 999px; padding: 4px 10px; }
 /* hall of fame */
-.awardcard h3 { margin-bottom: 2px; }
+.aw-year { margin-bottom: 30px; }
+.aw-yh { display: flex; align-items: center; gap: 14px; margin: 6px 0 18px; font-family: "Cormorant Garamond", "Diphylleia", serif; font-style: italic; font-weight: 500; color: var(--pink-d); }
+.aw-yh::before, .aw-yh::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--pink-d) 50%, transparent); opacity: .5; }
+.aw-yh span { font-size: 34px; line-height: 1; }
+.aw-yh small { font-family: "Orbit", var(--f-body); font-style: normal; font-size: 12px; letter-spacing: .3em; color: var(--muted); }
+.aw-grid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); align-items: start; }
+.awardcard { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; padding: 22px 18px 18px; text-align: center; color: var(--fg); border: 1.5px solid #F2C6D3; border-radius: 22px; background: radial-gradient(120% 70% at 50% 0%, #FFF0F5, #FFFBFC 60%, #fff); box-shadow: 0 0 0 5px #FFF5F8, 0 12px 28px rgba(217, 124, 156, .16); overflow: hidden; }
+.awardcard::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(236, 143, 175, .35) 1px, transparent 1.6px); background-size: 22px 22px; mask-image: linear-gradient(#000, transparent 45%); -webkit-mask-image: linear-gradient(#000, transparent 45%); }
+.awardcard:hover { box-shadow: 0 0 0 5px #FFEAF1, 0 14px 32px rgba(217, 124, 156, .26); }
+.aw-kicker { position: relative; font-family: "Orbit", var(--f-body); font-size: 10.5px; letter-spacing: .28em; color: #D98AA5; }
+.awardcard h3 { position: relative; margin: 6px 0 2px; font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 24px; }
 .awardcard .desc { margin: 0 0 6px; color: var(--muted); font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.awardcard .more { margin: 6px 0 0; text-align: center; font-size: 12.5px; color: var(--muted); }
-.podium { display: grid; grid-template-columns: 1fr 1.22fr 1fr; align-items: end; gap: clamp(12px, 3.5vw, 36px); max-width: 680px; margin: 26px auto 18px; width: 100%; }
+.awardcard .more { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin: 14px 0 0; padding-top: 10px; border-top: 1px dashed #F2C6D3; width: 100%; font-size: 13px; color: var(--muted); }
+.awardcard .more i { font-style: italic; font-family: "Cormorant Garamond", serif; color: #D98AA5; margin-right: 4px; }
+.podium { display: grid; grid-template-columns: 1fr 1.22fr 1fr; align-items: end; gap: clamp(12px, 3.5vw, 36px); max-width: 680px; margin: 34px auto 18px; width: 100%; }
 .pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; color: var(--fg); text-align: center; }
 .pod .pfx { position: relative; width: 100%; }
 .pod.p2 .pfx, .pod.p3 .pfx, .pod.p2 > .pav, .pod.p3 > .pav { width: 88%; }
@@ -469,7 +480,12 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .pod .pav img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 9px; }
 .pod .pav .ini { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 700; color: var(--pink-d); }
 button.pav { cursor: zoom-in; }
-.pod .sash { position: absolute; top: 9%; right: -34%; rotate: 45deg; width: 100%; text-align: center; white-space: nowrap; background: linear-gradient(90deg, #F7C6D6, #EFA3BD); color: #fff; font-family: "Orbit", var(--f-body); font-size: clamp(8px, 1.3vw, 11px); letter-spacing: .16em; padding: .35em 0; box-shadow: 0 2px 6px rgba(217, 124, 156, .4); pointer-events: none; }
+.pod .pfx { display: block; position: relative; }
+.pod .sash { position: absolute; z-index: 3; top: 0; left: 50%; translate: -50% -55%; white-space: nowrap; background: linear-gradient(90deg, #F7C6D6, #EFA3BD 50%, #F7C6D6); color: #fff; font-family: "Orbit", var(--f-body); font-size: clamp(9px, 1.3vw, 11.5px); letter-spacing: .16em; padding: .45em 1.3em; border-radius: 3px; box-shadow: 0 2px 6px rgba(217, 124, 156, .4); pointer-events: none; }
+.pod .sash::before, .pod .sash::after { content: ""; position: absolute; top: 55%; z-index: -1; border: .75em solid #E994B0; }
+.pod .sash::before { left: -.9em; border-left-color: transparent; }
+.pod .sash::after { right: -.9em; border-right-color: transparent; }
+.pod.p1 .sash { font-size: clamp(10px, 1.5vw, 13px); background: linear-gradient(90deg, #F5B9CC, #EC8FAF 50%, #F5B9CC); }
 .pod .plate { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 0; border: 0; background: none; max-width: 100%; }
 .pod b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 16px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pod small { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
@@ -487,10 +503,10 @@ button.pav { cursor: zoom-in; }
 @keyframes aw-twinkle { 0%, 100% { opacity: 0; transform: scale(.4) rotate(0); } 45% { opacity: 1; transform: scale(1) rotate(20deg); } }
 @media (prefers-reduced-motion: reduce) { .pod .shine, .spk, .pod.p1 .pav { animation: none; } .spk { opacity: .8; } }
 /* list cards: same frame, smaller, still */
-.podium.mini { gap: 10px; margin: 16px auto 4px; }
+.podium.mini { gap: 12px; margin: 26px auto 4px; max-width: 420px; }
 .podium.mini .pod .pav { border-width: 5px; border-radius: 12px; box-shadow: 0 0 0 2px #F2B5C8, 0 0 0 5px #FBE3EB; animation: none; }
 .podium.mini .pod .pav img { border-radius: 7px; }
-.podium.mini .pod .sash { font-size: 8.5px; letter-spacing: .1em; }
+.podium.mini .pod .sash { font-size: 8.5px; letter-spacing: .1em; padding: .35em .9em; }
 .podium.mini .pod b { font-size: 13px; }
 .rk .cav.tall { width: 32px; height: 48px; border-radius: 6px; }
 @media (max-width: 760px) {
@@ -500,7 +516,6 @@ button.pav { cursor: zoom-in; }
   .podium:not(.mini) .p1 { grid-area: a; width: 72%; justify-self: center; }
   .podium:not(.mini) .p2 { grid-area: b; } .podium:not(.mini) .p3 { grid-area: c; }
   .podium:not(.mini) .p2 .pfx, .podium:not(.mini) .p3 .pfx { width: 100%; }
-  .podium:not(.mini) .pod .sash { font-size: 9px; }
 }
 .awardhead { text-align: center; display: grid; gap: 6px; justify-items: center; }
 .awardhead h2 { font-size: 30px; }
@@ -1065,11 +1080,12 @@ function cardFor(type, x) {
   }
   if (type === 'awards') {
     const r = x.ranks || [], at = i => r[i] && accountOf(r[i].ref);
-    const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pav">${awardPic(r[i], a, true)}${awardSash(i, true)}</span><b>${esc(a.name)}</b></span>` : `<span class="pod ${cls} empty"><span class="pav"><span class="ini">?</span></span><b>&nbsp;</b></span>`; };
-    return `<button class="win card c-yellow awardcard" ${open}>${winbar(`🏆 ${x.year ? esc(x.year) + ' · ' : ''}${T.file}`)}<div class="wbody">
+    const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pfx"><span class="pav">${awardPic(r[i], a, true)}</span>${awardSash(i, true)}</span><b>${esc(a.name)}</b></span>` : `<span class="pod ${cls} empty"><span class="pav"><span class="ini">?</span></span><b>&nbsp;</b></span>`; };
+    const rest = r.slice(3).map((it, j) => { const a = accountOf(it.ref); return a ? `<span><i>${j + 4}</i>${esc(a.name)}</span>` : ''; }).join('');
+    return `<button class="awardcard" ${open}><span class="aw-kicker">✦ ${x.year ? esc(x.year) + ' ' : ''}HALL OF FAME ✦</span>
       <h3>${star}${esc(x.title || '이름 없는 상')}</h3>${x.desc ? `<p class="desc">${esc(x.desc)}</p>` : ''}
       <div class="podium mini">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
-      ${r.length > 3 ? `<p class="more">+ ${r.length - 3}명 더</p>` : ''}</div></button>`;
+      ${rest ? `<p class="more">${rest}</p>` : ''}</button>`;
   }
   return `<div class="win card c-yellow" ${open} role="button" tabindex="0">${winbar(T.file)}<div class="wbody">
       <div class="row"><span class="lbl-box fill">${esc(x.category || '기타')}</span>${exPill(x)}</div>
@@ -1081,6 +1097,10 @@ function renderList() {
   const all = S[view], list = sorted(applyFilter(all), view);
   if (!all.length) return emptyFor(view);
   if (!list.length) return `<div class="win empty c-${TYPES[view].color}">${winbar('NO RESULT')}<div class="wbody"><p>이 조건에 맞는 항목이 없어요.</p></div></div>`;
+  if (view === 'awards') {
+    const years = [...new Set(list.map(a => String(a.year || '').trim()))];
+    return years.map(y => `<section class="aw-year"><h3 class="aw-yh"><span>${y ? esc(y) : '연도 없음'}</span><small>AWARDS</small></h3><div class="aw-grid">${list.filter(a => String(a.year || '').trim() === y).map(x => cardFor('awards', x)).join('')}</div></section>`).join('');
+  }
   return `<div class="grid ${view === 'characters' ? 'chars' : ''}">${list.map(x => cardFor(view, x)).join('')}</div>`;
 }
 function emptyFor(t) {
@@ -1215,7 +1235,7 @@ function castProfile(w, m) {
 /* ---------- Hall of fame: awards = [{ title, year, desc, ranks: [{ ref: account, note }] }] ---------- */
 const MEDAL = ['🥇', '🥈', '🥉'];
 // an award photo fills a tall frame with its own framing; without one, the profile photo stands in
-const awardSash = (i, mini) => `<span class="sash" aria-label="${i + 1}위">${mini ? ['1st', '2nd', '3rd'][i] : ['1st WINNER', '2nd', '3rd'][i]}</span>`;
+const awardSash = (i, mini) => `<span class="sash" aria-label="${i + 1}위">${mini ? ['1st', '2nd', '3rd'][i] : ['1st WINNER', '2nd PLACE', '3rd PLACE'][i]}</span>`;
 // little stars that twinkle on the frame edge (never over the face): 1st gets the most
 const SPARK_AT = [[[1, 10, 1.1, 0], [99, 6, .9, .6], [101, 42, 1.2, 1.2], [-1, 58, .8, 1.8], [98, 86, 1, .4], [3, 96, .85, 1.5], [28, 1, .7, 2.1], [74, 99, .75, .9]], [[0, 22, .85, .3], [100, 48, .8, 1.1], [97, 94, .8, 1.9]], []];
 const sparkles = i => (SPARK_AT[i] || []).map(([x, y, s, d]) => `<i class="spk" aria-hidden="true" style="left:${x}%;top:${y}%;--s:${s};--d:${d}s">✦</i>`).join('');
@@ -1227,7 +1247,7 @@ function awardView(x) {
   const spot = (i, cls) => { const it = r[i]; if (!it) return `<div class="pod ${cls} empty"><span class="pav"><span class="ini">?</span></span><b>아직 없음</b></div>`;
     const ph = it.img || it.a.avatar;
     // the picture opens large (these are made for the award); the name goes to the profile
-    return `<div class="pod ${cls}"><div class="pfx">${ph ? `<button class="pav" data-lightbox="${img(ph)}" data-cap="${esc(`${MEDAL[i]} ${it.a.name}${it.note ? ' — ' + it.note : ''}`)}" aria-label="크게 보기">${awardPic(it, it.a)}<span class="shine" aria-hidden="true"></span>${awardSash(i)}</button>` : `<span class="pav">${awardPic(it, it.a)}${awardSash(i)}</span>`}${sparkles(i)}</div>
+    return `<div class="pod ${cls}"><div class="pfx">${ph ? `<button class="pav" data-lightbox="${img(ph)}" data-cap="${esc(`${MEDAL[i]} ${it.a.name}${it.note ? ' — ' + it.note : ''}`)}" aria-label="크게 보기">${awardPic(it, it.a)}<span class="shine" aria-hidden="true"></span></button>` : `<span class="pav">${awardPic(it, it.a)}</span>`}${awardSash(i)}${sparkles(i)}</div>
       <button class="plate" ${openAttr(it.ref)}><b>${esc(it.a.name)}</b>${it.note ? `<small>${esc(it.note)}</small>` : ''}</button></div>`; };
   return `<div class="awardhead"><span class="lbl-box fill" style="--cd:var(--yellow-d)">🏆 ${esc(x.year || '')} HALL OF FAME</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 상')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
     <div class="podium">${spot(1, 'p2')}${spot(0, 'p1')}${spot(2, 'p3')}</div>
