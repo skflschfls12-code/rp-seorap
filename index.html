@@ -502,11 +502,11 @@ button.pav { cursor: zoom-in; }
 .pod .plate:hover b { color: var(--pink-d); }
 .pod.empty { opacity: .45; }
 /* rank effects: 1st glows, shines and twinkles; 2nd softer; 3rd plain */
-.pod .shine { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .55) 48%, rgba(255, 240, 248, .2) 52%, transparent 62%); background-size: 250% 100%; background-position: 150% 0; mix-blend-mode: screen; display: none; }
+.pod .shine { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, .55) 48%, rgba(255, 240, 248, .2) 53%, transparent 68%) no-repeat; transform: translateX(-130%); mix-blend-mode: screen; display: none; }
 .pod.p1 .shine { display: block; animation: aw-sweep 3.2s ease-in-out infinite; }
 .pod.p2 .shine { display: block; animation: aw-sweep 5.5s ease-in-out infinite; opacity: .7; }
 .pod.p3 .shine { display: block; animation: aw-sweep 7.5s ease-in-out infinite; opacity: .5; }
-@keyframes aw-sweep { 0%, 25% { background-position: 150% 0; } 75%, 100% { background-position: -60% 0; } }
+@keyframes aw-sweep { 0%, 25% { transform: translateX(-130%); } 75%, 100% { transform: translateX(130%); } }
 .pod.p1 .pav { animation: aw-glow 2.6s ease-in-out infinite; box-shadow: 0 0 0 3px #F2B5C8, 0 0 0 8px #FBE3EB, 0 0 26px 8px rgba(255, 190, 215, .75), 0 10px 22px rgba(217, 124, 156, .3); }
 @keyframes aw-glow { 50% { box-shadow: 0 0 0 3px #F2B5C8, 0 0 0 8px #FBE3EB, 0 0 40px 14px rgba(255, 190, 215, .95), 0 10px 22px rgba(217, 124, 156, .3); } }
 .pod.p2 .pav { box-shadow: 0 0 0 3px #F2B5C8, 0 0 0 8px #FBE3EB, 0 0 18px 4px rgba(255, 200, 220, .55), 0 10px 22px rgba(217, 124, 156, .3); }
