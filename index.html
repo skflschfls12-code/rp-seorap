@@ -218,6 +218,12 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 
 .coverbox { aspect-ratio: 16 / 9; width: 100%; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--blue); }
 .coverbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.iplist { display: flex; flex-direction: column; gap: 12px; }
+.ip .notepad { max-height: none; margin-top: 6px; }
+.coverbox.pcover { aspect-ratio: 2 / 1; background: var(--yellow); margin-bottom: 4px; }
+.pbanner { aspect-ratio: 2 / 1; max-height: 50vh; width: 100%; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--yellow); }
+.pbanner button { padding: 0; border: 0; width: 100%; height: 100%; display: block; cursor: zoom-in; }
+.pbanner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .coverbox .ph { font-family: var(--f-display); font-weight: var(--dw); font-size: 48px; color: var(--blue-d); }
 .desc { font-size: 14px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
 .notepad { font-family: var(--f-body); font-size: 13.5px; line-height: 26px; padding: 0 12px; border: 1.3px solid var(--ink); border-radius: 8px; background: #fff linear-gradient(transparent 25px, var(--yellow-s) 25px) 0 0 / 100% 26px; white-space: pre-wrap; word-break: break-word; max-height: 158px; overflow: hidden; }
@@ -1128,6 +1134,7 @@ function cardFor(type, x) {
       ${rest ? `<p class="more">${rest}</p>` : ''}</button>`;
   }
   return `<div class="win card c-yellow" ${open} role="button" tabindex="0">${winbar(T.file)}<div class="wbody">
+      ${x.cover ? `<div class="coverbox pcover"><img src="${imgS(x.cover)}" style="${posC(x.cover)}" alt="" loading="lazy"></div>` : ''}
       <div class="row"><span class="lbl-box fill">${esc(x.category || '기타')}</span>${exPill(x)}</div>
       <h3>${star}${esc(x.title || '제목 없음')}</h3>
       <div class="notepad">${esc(x.body || '')}</div>
@@ -1156,7 +1163,7 @@ function emptyFor(t) {
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    x.desc, x.year, ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
+    x.desc, x.year, ...(x.iprompts || []).flatMap(p => [p.title, p.body]), ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -1354,6 +1361,12 @@ function awardsWin(ref) {
     return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
   }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
   return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${medalSvg(r.i)}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}년 연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
+}
+// character image-generation prompts, each with its own copy button
+function iPromptsWin(x) {
+  const list = (x.iprompts || []).filter(p => String(p.body || '').trim());
+  if (!list.length) return '';
+  return subWin('✎ PROMPT · 캐프롬', 'yellow', `<div class="iplist">${list.map((p, i) => `<div class="ip"><div class="row" style="gap:8px">${p.title ? `<b>${esc(p.title)}</b>` : '<b style="color:var(--muted)">프롬프트</b>'}<span class="grow"></span><button class="btn sm mint" data-copyip="${x.id}:${(x.iprompts || []).indexOf(p)}">복사</button></div><div class="notepad mono">${esc(p.body)}</div></div>`).join('')}</div>`);
 }
 function castText(w, m) {
   return [`[${m.name}] (${w.name} · ${ROLE[m.role] || ROLE.main})`, m.tagline, m.birthday && `생일: ${m.birthday}`, m.gender && `성별: ${m.gender}`,
@@ -1909,6 +1922,7 @@ function viewBody(type, x) {
         ${loadbar(completeness(x), 'Profile')}</div></div></div></div>
       <div class="sub-grid">${section('APPEARANCE · 외모', x.appearance, 'pink')}${section('PERSONALITY · 성격', x.personality, 'mint')}${section('VOICE · 말투', x.speech, 'yellow')}${section('STORY · 배경', x.backstory, 'blue')}</div>
       ${section('ETC · 기타 설정', x.extra, 'pink')}
+      ${iPromptsWin(x)}
       ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}
@@ -1939,7 +1953,7 @@ function viewBody(type, x) {
       ${songsWin('worlds:' + x.id)}</div>`;
   }
   if (type === 'awards') return awardView(x);
-  return `<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
+  return `${x.cover ? `<div class="pbanner"><button data-lightbox="${img(x.cover)}" data-cap="${esc(x.title || '')}" aria-label="크게 보기"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt=""></button></div>` : ''}<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
     <div class="notepad full">${esc(x.body)}</div>
     ${x.note ? section('NOTE · 메모', x.note, 'mint') : ''}
     ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
@@ -1957,6 +1971,7 @@ const FIELDS = {
     { k: 'worldIds', t: 'worlds', l: '세계관 (여러 개 고를 수 있어요)' },
     { k: 'rels', t: 'rels', l: '관계' },
     { k: 'songs', t: 'songs', l: '테마곡' },
+    { k: 'iprompts', t: 'iprompts', l: '이미지 생성 프롬프트 (캐프롬)' },
     { k: 'appearance', t: 'area', l: '외모' },
     { k: 'personality', t: 'area', l: '성격' },
     { k: 'speech', t: 'area', l: '말투 · 대사 예시' },
@@ -1984,6 +1999,7 @@ const FIELDS = {
     { k: 'tags', t: 'tags', l: '태그' },
   ],
   prompts: [
+    { k: 'cover', t: 'image', l: '예시 이미지 (가로로 긴 사진이 잘 어울려요)', wide: 1 },
     { k: 'title', t: 'text', l: '제목', req: 1 },
     { k: 'category', t: 'select', l: '분류', opts: PROMPT_CATS.map(c => [c, c]) },
     { k: 'body', t: 'area', l: '프롬프트 본문', cls: 'tall mono' },
@@ -2064,9 +2080,12 @@ function fieldHtml(f, d) {
         <div style="display:flex;gap:6px;max-width:420px"><input type="text" id="f_newkind" placeholder="새 종류 만들기 (예: 오너캐, 드림주, NPC)"><button type="button" class="btn sm" data-act="addkind">＋ 추가</button></div></div>`;
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
     case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${imgS(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
-        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? 'wcover' : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
+        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? (sheet.type === 'prompts' ? 'pcover' : 'wcover') : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
     case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt="">${g.more?.length ? `<span class="nmore">+${g.more.length}</span>` : ''}<button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
+    case 'iprompts': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">외모 고정용, 의상별, 표정별처럼 여러 개 넣을 수 있어요. 프로필에서 바로 복사돼요.</span>
+        <div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="ip_t_${i}" data-ipk="${i}:title" value="${esc(s.title || '')}" placeholder="이름 (예: 기본 외모, 교복, 드레스)" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unip="${i}">삭제</button></div><textarea id="ip_b_${i}" data-ipk="${i}:body" class="mono" placeholder="1girl, long black hair, green eyes, ...">${esc(s.body || '')}</textarea></div>`).join('')}</div>
+        <div><button type="button" class="btn sm" data-addip="1">＋ 프롬프트 추가</button></div></div>`;
     case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
   }
@@ -2412,6 +2431,7 @@ const POS_TABS = {
   wcover: [['', '세계관 페이지', '21/8', false, '세계관을 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '16/9', false, '세계관 목록 카드에 보이는 사진이에요.']],
   album: [['', '게시물', '4/5', false, '사진을 눌러 열었을 때 보이는 모습이에요.'], ['t', '격자', '1/1', false, '앨범 격자와 프로필 미리보기에 보이는 모습이에요.']],
   ighead: [['t', '앨범 헤더', '1/1', true, '앨범 맨 위 동그란 사진이에요.']],
+  pcover: [['', '프롬프트 페이지', '2/1', false, '프롬프트를 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '2/1', false, '프롬프트 목록 카드에 보이는 사진이에요.']],
   award: [['', '시상대', '2/3', false, '명예의 전당 시상대에 서는 세로 사진이에요.']],
   gallery: [['t', '갤러리', '1/1', false, '세계관 갤러리에 보이는 사진이에요.']],
 };
@@ -2562,6 +2582,7 @@ document.addEventListener('click', async e => {
       });
     }
   }
+  if (t.dataset.copyip) { const [cid, i] = t.dataset.copyip.split(':'); copy(byId('characters', cid)?.iprompts?.[+i]?.body || '', '프롬프트를 복사했어요'); return; }
   if (t.dataset.copyprompt) { copy(byId('prompts', t.dataset.copyprompt)?.body || ''); return; }
   if (t.dataset.lightbox && suppressClick) { suppressClick = false; return; }
   if (t.dataset.lightbox) {
@@ -2578,6 +2599,8 @@ document.addEventListener('click', async e => {
     if (t.dataset.unrank) { const [g] = d.ranks.splice(+t.dataset.unrank, 1); if (g?.img?.id) sheet.removed.push(g.img.id); rerenderEdit(); return; }
     if (t.dataset.unrankimg) { const g = d.ranks[+t.dataset.unrankimg]; if (g?.img?.id) sheet.removed.push(g.img.id); delete g.img; rerenderEdit(); return; }
     if (t.dataset.rankpos) { const i = +t.dataset.rankpos; openPosTool(d.ranks[i].img, 'award', p => { d.ranks[i].img = { ...d.ranks[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
+    if (t.dataset.addip) { (d.iprompts = d.iprompts || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('ip_t_' + (d.iprompts.length - 1))?.focus(); return; }
+    if (t.dataset.unip) { d.iprompts.splice(+t.dataset.unip, 1); rerenderEdit(); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
     if (t.dataset.unsong) { const [g] = d.songs.splice(+t.dataset.unsong, 1); if (g?.file?.id) sheet.removed.push(g.file.id); rerenderEdit(); return; }
     if (t.dataset.unsongfile) { const g = d.songs[+t.dataset.unsongfile]; if (g?.file?.id) sheet.removed.push(g.file.id); delete g.file; rerenderEdit(); return; }
@@ -2642,6 +2665,7 @@ document.addEventListener('input', e => {
   else if (el.dataset.tags) d[el.dataset.tags] = el.value.split(/[,，]/).map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); d.ranks[+i][f] = el.value; }
+  else if (el.dataset.ipk) { const [i, f] = el.dataset.ipk.split(':'); d.iprompts[+i][f] = el.value; }
   else if (el.dataset.songk) { const [i, f] = el.dataset.songk.split(':'); d.songs[+i][f] = el.value; }
   else if (el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.gcap) { const [k, i] = el.dataset.gcap.split(':'); d[k][+i].caption = el.value; }
