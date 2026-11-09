@@ -9,7 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbit&family=Cormorant+Garamond:ital,wght@1,500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&family=Diphylleia&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbit&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&family=Diphylleia&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
 /* Layout: a pastel Y2K desktop — every record is a little program window on polka-dot wallpaper; the folder dock hides at the left edge and slides out on hover */
 :root {
@@ -218,6 +218,25 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 
 .coverbox { aspect-ratio: 16 / 9; width: 100%; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--blue); }
 .coverbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.magrack { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); align-items: start; }
+.magrack > .shootcard { min-height: 0; }
+.magcard { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none; border-radius: 4px; box-shadow: 0 2px 0 #fff, 0 12px 24px rgba(90, 60, 75, .25); transition: transform .2s; }
+.magcard:hover { transform: translateY(-3px) rotate(-.6deg); }
+.magcard .mstar { position: absolute; z-index: 2; left: 8px; bottom: 8px; color: #F7D774; text-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+.magcard .mcount { position: absolute; z-index: 2; right: 8px; bottom: 8px; font-family: "Orbit", var(--f-body); font-size: 10px; letter-spacing: .12em; color: #fff; background: rgba(40, 30, 36, .45); padding: 2px 8px; border-radius: 999px; }
+.mag { position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 4px; background: var(--checker); container-type: inline-size; --mc: #fff; --ms: 0 2px 10px rgba(0, 0, 0, .35); text-align: left; }
+.mag.dark { --mc: #2E2428; --ms: 0 1px 8px rgba(255, 255, 255, .5); }
+.mag.pink { --mc: #FFD0DF; --ms: 0 2px 10px rgba(120, 30, 70, .45); }
+.mag img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.mag::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(rgba(0, 0, 0, .18), transparent 28%, transparent 68%, rgba(0, 0, 0, .28)); }
+.mag.dark::after { background: linear-gradient(rgba(255, 255, 255, .28), transparent 28%, transparent 72%, rgba(255, 255, 255, .3)); }
+.mag .mast { position: absolute; z-index: 1; top: 3cqw; left: 0; right: 0; text-align: center; font-family: "Cormorant Garamond", "Diphylleia", serif; font-weight: 700; font-size: 17cqw; line-height: 1; letter-spacing: .04em; color: var(--mc); text-shadow: var(--ms); white-space: nowrap; overflow: hidden; }
+.mag .iss { position: absolute; z-index: 1; top: 21cqw; left: 0; right: 0; text-align: center; font-family: "Orbit", var(--f-body); font-size: 3.2cqw; letter-spacing: .3em; color: var(--mc); text-shadow: var(--ms); }
+.mag .cl { position: absolute; z-index: 1; left: 6cqw; right: 6cqw; bottom: 6cqw; display: flex; flex-direction: column; gap: 1.5cqw; color: var(--mc); text-shadow: var(--ms); }
+.mag .cl b { font-family: "Cormorant Garamond", "Diphylleia", serif; font-style: italic; font-weight: 500; font-size: 9cqw; line-height: 1.05; word-break: keep-all; }
+.mag .cl small { font-family: "IBM Plex Sans KR", var(--f-body); font-size: 3.6cqw; letter-spacing: .08em; }
+.magwrap { display: flex; justify-content: center; }
+.magbtn { width: min(380px, 80%); padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 4px; box-shadow: 0 2px 0 #fff, 0 16px 32px rgba(90, 60, 75, .28); }
 .shootcard h3 { margin-bottom: 2px; }
 .shootcard .desc { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
 .shstrip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
@@ -1152,6 +1171,7 @@ function cardFor(type, x) {
   }
   if (type === 'shoots') {
     const sh = (x.shots || []).filter(g => g.img), show = sh.slice(0, 5), rest = sh.length - show.length;
+    if (magImg(x)) return `<button class="magcard" ${open} aria-label="${esc(x.title || '화보')}">${magCover(x, true)}${star ? '<span class="mstar">★</span>' : ''}<span class="mcount">${sh.length} PHOTOS</span></button>`;
     return `<button class="win card c-pink shootcard" ${open}>${winbar(`📷 ${T.file}`)}<div class="wbody">
       <h3>${star}${esc(x.title || '이름 없는 화보')}</h3>${x.desc ? `<p class="desc">${esc(x.desc)}</p>` : ''}
       ${sh.length ? `<div class="shstrip">${show.map(g => `<span><img src="${imgS(g.img)}" style="${posC(g.img)}" alt="" loading="lazy"></span>`).join('')}${rest > 0 ? `<span class="more">+${rest}</span>` : ''}</div>` : '<p class="desc">아직 사진이 없어요.</p>'}
@@ -1177,6 +1197,7 @@ function renderList() {
   const all = S[view], list = sorted(applyFilter(all), view);
   if (!all.length) return emptyFor(view);
   if (!list.length) return `<div class="win empty c-${TYPES[view].color}">${winbar('NO RESULT')}<div class="wbody"><p>이 조건에 맞는 항목이 없어요.</p></div></div>`;
+  if (view === 'shoots') return `<div class="magrack">${list.map(x => cardFor('shoots', x)).join('')}</div>`;
   if (view === 'awards') {
     const years = [...new Set(list.map(a => String(a.year || '').trim()))];
     return years.map(y => `<section class="aw-year"><h3 class="aw-yh"><span>${y ? esc(y) : '연도 없음'}</span><small>AWARDS</small></h3><div class="aw-grid">${list.filter(a => String(a.year || '').trim() === y).map(x => cardFor('awards', x)).join('')}</div></section>`).join('');
@@ -1197,7 +1218,7 @@ function emptyFor(t) {
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    x.desc, x.year, ...(x.iprompts || []).flatMap(p => [p.title, p.body]), ...(x.shots || []).flatMap(g => [g.caption, accountOf(g.ref)?.name]), ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
+    x.desc, x.year, ...(x.iprompts || []).flatMap(p => [p.title, p.body]), ...(x.shots || []).flatMap(g => [g.caption, accountOf(g.ref)?.name]), x.memo, ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -1395,6 +1416,14 @@ function awardsWin(ref) {
     return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
   }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
   return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${medalSvg(r.i)}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}년 연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
+}
+// magazine cover: the photo with a masthead on top and the shoot's name as the cover line
+const magImg = x => x.cover || (x.shots || []).find(g => g.img)?.img;
+function magCover(x, small) {
+  const ci = magImg(x), names = (x.shots || []).map(g => accountOf(g.ref)?.name).filter(Boolean), uniq = [...new Set(names)];
+  return `<div class="mag ${x.magColor || 'light'} ${small ? 'sm' : ''}">${ci ? `<img src="${small ? imgS(ci) : img(ci)}" style="${pos(ci)}" alt="" ${small ? 'loading="lazy"' : ''}>` : ''}
+    <span class="mast">${esc(x.mag || 'SEORAP')}</span>${x.issue ? `<span class="iss">${esc(x.issue)}</span>` : ''}
+    <span class="cl"><b>${esc(x.title || '')}</b>${uniq.length ? `<small>${uniq.slice(0, 4).map(esc).join(' · ')}${uniq.length > 4 ? ' 외' : ''}</small>` : ''}</span></div>`;
 }
 // on a profile: every photo-shoot picture of this character, newest shoot first
 function shootsWin(ref) {
@@ -1996,9 +2025,10 @@ function viewBody(type, x) {
   if (type === 'awards') return awardView(x);
   if (type === 'shoots') {
     const sh = (x.shots || []).filter(g => g.img);
-    return `<div class="awardhead"><span class="lbl-box fill">📷 PHOTO SHOOT</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 화보')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
+    return `${magImg(x) ? `<div class="magwrap"><button class="magbtn" data-lightbox="${img(magImg(x))}" data-cap="${esc(x.title || '')}" aria-label="표지 크게 보기">${magCover(x)}</button></div>` : ''}<div class="awardhead"><span class="lbl-box fill">📷 PHOTO SHOOT</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 화보')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
       ${sh.length ? `<div class="shootgrid">${sh.map(g => { const a = accountOf(g.ref); return `<figure><button class="sph" data-group="shoot-${x.id}" data-lightbox="${img(g.img)}" data-cap="${esc([a?.name, g.caption].filter(Boolean).join(' — '))}" aria-label="크게 보기"><img src="${img(g.img)}" style="${pos(g.img)}" alt="" loading="lazy"></button>
         <figcaption>${a ? `<button class="snm" ${openAttr(g.ref)}>${esc(a.name)}</button>` : ''}${g.caption ? `<small>${esc(g.caption)}</small>` : ''}</figcaption></figure>`; }).join('')}</div>` : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집에서 사진을 올려 보세요.</p></div>`}
+      ${x.memo ? subWin('✎ MEMO · 기타 메모', 'yellow', `<div class="row" style="justify-content:flex-end;margin-bottom:6px"><button class="btn sm mint" data-copymemo="${x.id}">복사</button></div><div class="notepad full">${esc(x.memo)}</div>`) : ''}
       ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
   }
   return `${x.cover ? `<div class="pbanner"><button data-lightbox="${img(x.cover)}" data-cap="${esc(x.title || '')}" aria-label="크게 보기"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt=""></button></div>` : ''}<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
@@ -2056,9 +2086,13 @@ const FIELDS = {
   ],
 };
 FIELDS.shoots = [
+  { k: 'cover', t: 'image', l: '잡지 표지 사진 (세로 사진 · 비워두면 첫 번째 사진)' },
+  { row: [{ k: 'mag', t: 'text', l: '잡지 이름', ph: 'SEORAP' }, { k: 'issue', t: 'text', l: '호수 · 날짜', ph: '예: DECEMBER 2026 · VOL.12' }] },
+  { k: 'magColor', t: 'select', l: '표지 글씨 색', opts: [['light', '흰색'], ['dark', '진한 색'], ['pink', '핑크']] },
   { k: 'title', t: 'text', l: '화보 이름', req: 1, ph: '예: 2026 크리스마스, 여름 바다, 교복 화보' },
   { k: 'desc', t: 'area', l: '한마디', ph: '어떤 테마인지, 컨셉 메모 등' },
   { k: 'shots', t: 'shots', l: '사진' },
+  { k: 'memo', t: 'area', l: '기타 메모', cls: 'tall', ph: '썼던 프롬프트, 컨셉, 다음엔 이런 거 해보자 같은 메모' },
   { k: 'tags', t: 'tags', l: '태그' },
 ];
 FIELDS.awards = [
@@ -2135,7 +2169,7 @@ function fieldHtml(f, d) {
         <div style="display:flex;gap:6px;max-width:420px"><input type="text" id="f_newkind" placeholder="새 종류 만들기 (예: 오너캐, 드림주, NPC)"><button type="button" class="btn sm" data-act="addkind">＋ 추가</button></div></div>`;
     case 'chars': return `<div class="fld"><span class="lbl">${f.l}</span>${S.characters.length ? `<div class="picks">${sorted(S.characters, 'characters').map(c => `<button type="button" class="chip" data-pick="${c.id}" aria-pressed="${(v || []).includes(c.id)}">${esc(c.name)}</button>`).join('')}</div>` : `<span class="hint">캐릭터 서랍에 캐릭터를 먼저 추가하면 연결할 수 있어요.</span>`}</div>`;
     case 'image': return `<div class="fld"><span class="lbl">${f.l}</span><div class="imgfld"><div class="prev ${f.wide ? 'wide' : ''}">${v ? `<img src="${imgS(v)}" style="${pos(v)}" alt="">` : '없음'}</div>
-        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? (sheet.type === 'prompts' ? 'pcover' : 'wcover') : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
+        ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? (sheet.type === 'prompts' ? 'pcover' : sheet.type === 'shoots' ? 'mag' : 'wcover') : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
     case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt="">${g.more?.length ? `<span class="nmore">+${g.more.length}</span>` : ''}<button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'shots': {
@@ -2495,6 +2529,7 @@ const POS_TABS = {
   album: [['', '게시물', '4/5', false, '사진을 눌러 열었을 때 보이는 모습이에요.'], ['t', '격자', '1/1', false, '앨범 격자와 프로필 미리보기에 보이는 모습이에요.']],
   ighead: [['t', '앨범 헤더', '1/1', true, '앨범 맨 위 동그란 사진이에요.']],
   pcover: [['', '프롬프트 페이지', '2/1', false, '프롬프트를 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '2/1', false, '프롬프트 목록 카드에 보이는 사진이에요.']],
+  mag: [['', '잡지 표지', '3/4', false, '잡지 표지에 보이는 사진이에요. 위쪽에 잡지 이름이 올라가요.']],
   shot: [['', '화보', '2/3', false, '화보 페이지에 보이는 세로 사진이에요.']],
   award: [['', '시상대', '2/3', false, '명예의 전당 시상대에 서는 세로 사진이에요.']],
   gallery: [['t', '갤러리', '1/1', false, '세계관 갤러리에 보이는 사진이에요.']],
@@ -2646,6 +2681,7 @@ document.addEventListener('click', async e => {
       });
     }
   }
+  if (t.dataset.copymemo) { copy(byId('shoots', t.dataset.copymemo)?.memo || '', '메모를 복사했어요'); return; }
   if (t.dataset.copyip) { const [cid, i] = t.dataset.copyip.split(':'); copy(byId('characters', cid)?.iprompts?.[+i]?.body || '', '프롬프트를 복사했어요'); return; }
   if (t.dataset.copyprompt) { copy(byId('prompts', t.dataset.copyprompt)?.body || ''); return; }
   if (t.dataset.lightbox && suppressClick) { suppressClick = false; return; }
