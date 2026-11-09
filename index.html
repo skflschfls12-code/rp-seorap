@@ -234,8 +234,47 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .mag .iss { position: absolute; z-index: 1; top: 21cqw; left: 0; right: 0; text-align: center; font-family: "Orbit", var(--f-body); font-size: 3.2cqw; letter-spacing: .3em; color: var(--mc); text-shadow: var(--ms); }
 .mag .cl { position: absolute; z-index: 1; left: 6cqw; right: 6cqw; bottom: 6cqw; display: flex; flex-direction: column; gap: 1.5cqw; color: var(--mc); text-shadow: var(--ms); }
 .mag .cl b { font-family: "Cormorant Garamond", "Diphylleia", serif; font-style: italic; font-weight: 500; font-size: 9cqw; line-height: 1.05; word-break: keep-all; }
-.mag .cl small { font-family: "IBM Plex Sans KR", var(--f-body); font-size: 3.6cqw; letter-spacing: .08em; }
-.magwrap { display: flex; justify-content: center; }
+.mag .cl small { font-family: "Cormorant Garamond", "IBM Plex Sans KR", serif; font-style: italic; font-size: 5.2cqw; letter-spacing: .03em; line-height: 1.25; word-break: keep-all; }
+.magwrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.bookv { position: fixed; inset: 0; z-index: 58; background: rgba(40, 30, 36, .84); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px; touch-action: pan-y; }
+.bkbar { display: flex; align-items: center; gap: 14px; color: #fff; width: min(1100px, 100%); }
+.bkbar b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 18px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bkn { font-family: "Orbit", var(--f-body); font-size: 12px; letter-spacing: .12em; opacity: .8; }
+.bkx { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .7); background: none; color: #fff; padding: 0; }
+.bkstage { display: flex; align-items: center; gap: clamp(4px, 1.5vw, 16px); }
+.bknav { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .9); color: #4D3F47; font-size: 24px; line-height: 1; padding: 0; }
+.bknav:disabled { opacity: .25; }
+.bk { --ph: min(80dvh, calc((100vw - 150px) * 2 / 3)); position: relative; height: var(--ph); width: calc(var(--ph) * 1.5); display: flex; perspective: 2600px; transition: transform .5s; }
+.bk.closed { transform: translateX(-25%); }
+.bk.single { --ph: min(72dvh, calc((100vw - 32px) * 4 / 3)); width: calc(var(--ph) * .75); }
+.side { position: relative; width: 50%; height: 100%; }
+.bk.single .side { width: 100%; }
+.pg { position: absolute; inset: 0; overflow: hidden; background: #FFFDFB; }
+.side.l .pg, .leaf .b .pg { border-radius: 6px 0 0 6px; }
+.side.r .pg, .leaf .f .pg { border-radius: 0 6px 6px 0; }
+.bk.single .pg { border-radius: 6px; }
+.side .pg { box-shadow: 0 18px 40px rgba(0, 0, 0, .35); }
+.pg::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.side.l .pg::after, .leaf .b .pg::after { background: linear-gradient(270deg, rgba(0, 0, 0, .22), rgba(0, 0, 0, 0) 9%); }
+.side.r .pg::after, .leaf .f .pg::after { background: linear-gradient(90deg, rgba(0, 0, 0, .22), rgba(0, 0, 0, 0) 9%); }
+.bk.single .pg::after { background: linear-gradient(90deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, 0) 5%); }
+.pg.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pg .pcap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 20px 16px; background: linear-gradient(transparent, rgba(0, 0, 0, .45)); color: #fff; display: flex; flex-direction: column; gap: 2px; }
+.pg .pcap b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: clamp(16px, 2.2vw, 24px); }
+.pg .pcap small { font-size: 13px; opacity: .9; }
+.pg .pno { position: absolute; top: 12px; right: 14px; z-index: 1; font-family: "Orbit", var(--f-body); font-size: 11px; letter-spacing: .12em; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.pg.cov .mag { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; }
+.leaf { position: absolute; top: 0; height: 100%; width: 50%; z-index: 5; transform-style: preserve-3d; }
+.bk.single .leaf { width: 100%; left: 0; }
+.leaf > div { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.leaf > .b { transform: rotateY(180deg); }
+.leaf.fwd { left: 50%; transform-origin: left center; animation: bk-fwd .9s cubic-bezier(.45, .05, .25, 1) forwards; }
+.leaf.back { left: 0; transform-origin: right center; animation: bk-back .9s cubic-bezier(.45, .05, .25, 1) forwards; }
+.leaf.unturn { transform-origin: left center; animation: bk-un .9s cubic-bezier(.45, .05, .25, 1) forwards; }
+@keyframes bk-fwd { from { transform: rotateY(0); } to { transform: rotateY(-180deg); } }
+@keyframes bk-back { from { transform: rotateY(0); } to { transform: rotateY(180deg); } }
+@keyframes bk-un { from { transform: rotateY(-180deg); } to { transform: rotateY(0); } }
+@media (max-width: 759px) { .bknav { position: absolute; bottom: 18px; } .bknav[data-bk="-1"] { left: 24%; } .bknav[data-bk="1"] { right: 24%; } .bookv { padding-bottom: 70px; } }
 .magbtn { width: min(380px, 80%); padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 4px; box-shadow: 0 2px 0 #fff, 0 16px 32px rgba(90, 60, 75, .28); }
 .shootcard h3 { margin-bottom: 2px; }
 .shootcard .desc { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
@@ -1420,10 +1459,67 @@ function awardsWin(ref) {
 // magazine cover: the photo with a masthead on top and the shoot's name as the cover line
 const magImg = x => x.cover || (x.shots || []).find(g => g.img)?.img;
 function magCover(x, small) {
-  const ci = magImg(x), names = (x.shots || []).map(g => accountOf(g.ref)?.name).filter(Boolean), uniq = [...new Set(names)];
+  const ci = magImg(x);
   return `<div class="mag ${x.magColor || 'light'} ${small ? 'sm' : ''}">${ci ? `<img src="${small ? imgS(ci) : img(ci)}" style="${pos(ci)}" alt="" ${small ? 'loading="lazy"' : ''}>` : ''}
     <span class="mast">${esc(x.mag || 'SEORAP')}</span>${x.issue ? `<span class="iss">${esc(x.issue)}</span>` : ''}
-    <span class="cl">${uniq.length ? `<small>${uniq.slice(0, 4).map(esc).join(' · ')}${uniq.length > 4 ? ' 외' : ''}</small>` : ''}</span></div>`;
+    ${x.coverLine ? `<span class="cl"><small>${esc(x.coverLine)}</small></span>` : ''}</div>`;
+}
+// photo book: the cover, then one photo per page; two-page spreads on wide screens, single pages on phones
+function openBook(id) {
+  const x = byId('shoots', id); if (!x) return;
+  const P = [{ cover: true }, ...(x.shots || []).filter(g => g.img)], n = P.length;
+  const o = document.createElement('div'); o.className = 'bookv';
+  o.innerHTML = `<div class="bkbar"><b>${esc(x.title || '화보')}</b><span class="bkn"></span><button class="bkx" data-bk="x" aria-label="닫기">✕</button></div>
+    <div class="bkstage"><button class="bknav" data-bk="-1" aria-label="이전 장">‹</button><div class="bk"></div><button class="bknav" data-bk="1" aria-label="다음 장">›</button></div>`;
+  const bk = o.querySelector('.bk'), lab = o.querySelector('.bkn');
+  const spread = innerWidth >= 760;
+  bk.classList.toggle('single', !spread);
+  let k = 0, busy = false;
+  const kmax = spread ? Math.floor(n / 2) : n - 1;
+  const page = j => {
+    const g = P[j]; if (!g) return '<div class="pg blank"></div>';
+    if (g.cover) return `<div class="pg cov">${magCover(x)}</div>`;
+    const a = accountOf(g.ref);
+    return `<div class="pg ph"><img src="${img(g.img)}" style="${pos(g.img)}" alt=""><div class="pcap"><b>${esc(a?.name || '')}</b>${g.caption ? `<small>${esc(g.caption)}</small>` : ''}</div><span class="pno">${String(j).padStart(2, '0')}</span></div>`;
+  };
+  const sides = () => spread ? [`<div class="side l">${k > 0 ? page(2 * k - 1) : ''}</div>`, `<div class="side r">${2 * k < n ? page(2 * k) : ''}</div>`] : [`<div class="side r">${page(k)}</div>`];
+  const draw = () => {
+    bk.innerHTML = sides().join('');
+    bk.classList.toggle('closed', spread && k === 0);
+    lab.textContent = `${k + 1} / ${kmax + 1}`;
+    o.querySelector('[data-bk="-1"]').disabled = k === 0; o.querySelector('[data-bk="1"]').disabled = k === kmax;
+  };
+  const turn = d => {
+    const to = k + d;
+    if (busy || to < 0 || to > kmax) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { k = to; draw(); return; }
+    const leaf = document.createElement('div');
+    if (spread && d > 0) { leaf.className = 'leaf fwd'; leaf.innerHTML = `<div class="f">${page(2 * k)}</div><div class="b">${page(2 * k + 1)}</div>`; bk.querySelector('.side.r').innerHTML = 2 * k + 2 < n ? page(2 * k + 2) : ''; }
+    else if (spread) { leaf.className = 'leaf back'; leaf.innerHTML = `<div class="f">${page(2 * k - 1)}</div><div class="b">${page(2 * k - 2)}</div>`; bk.querySelector('.side.l').innerHTML = k - 1 > 0 ? page(2 * k - 3) : ''; }
+    else if (d > 0) { leaf.className = 'leaf fwd'; leaf.innerHTML = `<div class="f">${page(k)}</div><div class="b"><div class="pg blank"></div></div>`; bk.querySelector('.side.r').innerHTML = page(k + 1); }
+    else { leaf.className = 'leaf unturn'; leaf.innerHTML = `<div class="f">${page(k - 1)}</div><div class="b"><div class="pg blank"></div></div>`; }
+    busy = true; bk.classList.remove('closed'); bk.appendChild(leaf);
+    leaf.addEventListener('animationend', () => { k = to; busy = false; draw(); }, { once: true });
+  };
+  const close = () => { o.remove(); document.removeEventListener('keydown', key, true); };
+  const key = e => {
+    if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); close(); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.stopPropagation(); e.preventDefault(); turn(e.key === 'ArrowRight' ? 1 : -1); }
+  };
+  o.addEventListener('click', e => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-bk]');
+    if (b) { b.dataset.bk === 'x' ? close() : turn(+b.dataset.bk); return; }
+    if (e.target === o) { close(); return; }
+    // a tap on a page: right half turns forward, left half back
+    const r = bk.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) turn(e.clientX > r.left + r.width / 2 ? 1 : -1);
+  });
+  let sx = null;
+  o.addEventListener('pointerdown', e => { sx = e.clientX; });
+  o.addEventListener('pointerup', e => { if (sx != null && Math.abs(e.clientX - sx) > 50) turn(e.clientX < sx ? 1 : -1); sx = null; });
+  document.addEventListener('keydown', key, true);
+  document.body.appendChild(o); draw();
 }
 // on a profile: every photo-shoot picture of this character, newest shoot first
 function shootsWin(ref) {
@@ -2025,7 +2121,7 @@ function viewBody(type, x) {
   if (type === 'awards') return awardView(x);
   if (type === 'shoots') {
     const sh = (x.shots || []).filter(g => g.img);
-    return `${magImg(x) ? `<div class="magwrap"><button class="magbtn" data-lightbox="${img(magImg(x))}" data-cap="${esc(x.title || '')}" aria-label="표지 크게 보기">${magCover(x)}</button></div>` : ''}<div class="awardhead"><span class="lbl-box fill">📷 PHOTO SHOOT</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 화보')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
+    return `${magImg(x) ? `<div class="magwrap"><button class="magbtn" data-book="${x.id}" aria-label="화보집 넘겨보기">${magCover(x)}</button><button class="btn primary" data-book="${x.id}">📖 화보집 넘겨보기</button></div>` : ''}<div class="awardhead"><span class="lbl-box fill">📷 PHOTO SHOOT</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 화보')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
       ${sh.length ? `<div class="shootgrid">${sh.map(g => { const a = accountOf(g.ref); return `<figure><button class="sph" data-group="shoot-${x.id}" data-lightbox="${img(g.img)}" data-cap="${esc([a?.name, g.caption].filter(Boolean).join(' — '))}" aria-label="크게 보기"><img src="${img(g.img)}" style="${pos(g.img)}" alt="" loading="lazy"></button>
         <figcaption>${a ? `<button class="snm" ${openAttr(g.ref)}>${esc(a.name)}</button>` : ''}${g.caption ? `<small>${esc(g.caption)}</small>` : ''}</figcaption></figure>`; }).join('')}</div>` : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집에서 사진을 올려 보세요.</p></div>`}
       ${x.memo ? subWin('✎ MEMO · 기타 메모', 'yellow', `<div class="row" style="justify-content:flex-end;margin-bottom:6px"><button class="btn sm mint" data-copymemo="${x.id}">복사</button></div><div class="notepad full">${esc(x.memo)}</div>`) : ''}
@@ -2088,7 +2184,7 @@ const FIELDS = {
 FIELDS.shoots = [
   { k: 'cover', t: 'image', l: '잡지 표지 사진 (세로 사진 · 비워두면 첫 번째 사진)' },
   { row: [{ k: 'mag', t: 'text', l: '잡지 이름', ph: 'SEORAP' }, { k: 'issue', t: 'text', l: '호수 · 날짜', ph: '예: DECEMBER 2026 · VOL.12' }] },
-  { k: 'magColor', t: 'select', l: '표지 글씨 색', opts: [['light', '흰색'], ['dark', '진한 색'], ['pink', '핑크']] },
+  { row: [{ k: 'coverLine', t: 'text', l: '표지 하단 문구', ph: '예: Merry Christmas from SEORAP' }, { k: 'magColor', t: 'select', l: '표지 글씨 색', opts: [['light', '흰색'], ['dark', '진한 색'], ['pink', '핑크']] }] },
   { k: 'title', t: 'text', l: '화보 이름', req: 1, ph: '예: 2026 크리스마스, 여름 바다, 교복 화보' },
   { k: 'desc', t: 'area', l: '한마디', ph: '어떤 테마인지, 컨셉 메모 등' },
   { k: 'shots', t: 'shots', l: '사진' },
@@ -2681,6 +2777,7 @@ document.addEventListener('click', async e => {
       });
     }
   }
+  if (t.dataset.book) { openBook(t.dataset.book); return; }
   if (t.dataset.copymemo) { copy(byId('shoots', t.dataset.copymemo)?.memo || '', '메모를 복사했어요'); return; }
   if (t.dataset.copyip) { const [cid, i] = t.dataset.copyip.split(':'); copy(byId('characters', cid)?.iprompts?.[+i]?.body || '', '프롬프트를 복사했어요'); return; }
   if (t.dataset.copyprompt) { copy(byId('prompts', t.dataset.copyprompt)?.body || ''); return; }
