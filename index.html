@@ -293,6 +293,8 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .myshots { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 .myshots .sph { border-width: 4px; border-radius: 10px; }
 .myshots .snm { font-size: 13px; }
+.shotup { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.shotup select { flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); font: inherit; font-size: 13.5px; }
 .shotedit { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .shotedit .it { display: flex; flex-direction: column; gap: 4px; }
 .shotedit .th { aspect-ratio: 2 / 3; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; position: relative; background: var(--checker); }
@@ -1465,6 +1467,8 @@ function magCover(x, small) {
     ${x.coverLine ? `<span class="cl"><small>${esc(x.coverLine)}</small></span>` : ''}</div>`;
 }
 // photo book: the cover, then one photo per page; two-page spreads on wide screens, single pages on phones
+// whose photos the next upload in a shoot belongs to ('' = one per character, in turn)
+let shotWho = '';
 function openBook(id) {
   const x = byId('shoots', id); if (!x) return;
   const P = [{ cover: true }, ...(x.shots || []).filter(g => g.img)], n = P.length;
@@ -2270,11 +2274,12 @@ function fieldHtml(f, d) {
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
     case 'shots': {
       const acc = accounts();
-      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">여러 장을 한 번에 올리고, 사진마다 누구인지 골라요. 세로로 긴 사진이 잘 어울려요.</span>
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">한 캐릭터 사진을 여러 장 올릴 땐, 아래에서 그 캐릭터를 먼저 고르고 올리면 전부 그 캐릭터로 들어가요.</span>
         <div class="shotedit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g.img)}" style="${pos(g.img)}" alt=""><button type="button" data-unshot="${i}" aria-label="사진 빼기">✕</button><button type="button" class="posb" data-shotpos="${i}" aria-label="위치 조정">✥</button></div>
           <select id="shot_r_${i}" data-shotk="${i}:ref" aria-label="누구 사진인지">${acc.map(a => `<option value="${a.ref}" ${a.ref === g.ref ? 'selected' : ''}>${esc(a.name)}${a.sub ? ' · ' + esc(a.sub) : ''}</option>`).join('')}</select>
           <input type="text" id="shot_c_${i}" data-shotk="${i}:caption" value="${esc(g.caption || '')}" placeholder="한 줄 (선택)"></div>`).join('')}</div>
-        ${assets ? `<label class="btn sm filebtn">＋ 사진 올리기 (여러 장 가능)<input type="file" accept="image/*" multiple data-shotup="1"></label>` : ''}</div>`;
+        ${assets ? `<div class="shotup"><select id="shot_who" aria-label="누구 사진을 올릴지"><option value="">한 장씩 다른 캐릭터로 (차례대로)</option>${acc.map(a => `<option value="${a.ref}" ${a.ref === shotWho ? 'selected' : ''}>${esc(a.name)}${a.sub ? ' · ' + esc(a.sub) : ''} 사진만</option>`).join('')}</select>
+          <label class="btn sm filebtn">＋ 사진 올리기 (여러 장 가능)<input type="file" accept="image/*" multiple data-shotup="1"></label></div>` : ''}</div>`;
     }
     case 'iprompts': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">외모 고정용, 의상별, 표정별처럼 여러 개 넣을 수 있어요. 프로필에서 바로 복사돼요.</span>
         <div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="ip_t_${i}" data-ipk="${i}:title" value="${esc(s.title || '')}" placeholder="이름 (예: 기본 외모, 교복, 드레스)" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unip="${i}">삭제</button></div><textarea id="ip_b_${i}" data-ipk="${i}:body" class="mono" placeholder="1girl, long black hair, green eyes, ...">${esc(s.body || '')}</textarea></div>`).join('')}</div>
@@ -2876,6 +2881,7 @@ document.addEventListener('change', async e => {
   const el = e.target;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.k) { sheet.draft[el.dataset.k] = el.value; if (sheet.castEdit && el.dataset.k === 'role') rerenderEdit(); }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); sheet.draft.rels[+i][f] = el.value; }
+  if (el.id === 'shot_who') shotWho = el.value;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.shotk) { const [i, f] = el.dataset.shotk.split(':'); sheet.draft.shots[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); sheet.draft.ranks[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); sheet.draft.rels[+i][f] = el.value; }
@@ -2927,6 +2933,7 @@ document.addEventListener('change', async e => {
   } else if (el.dataset.shotup) {
     await withBusy(`사진 ${files.length}장 올리는 중…`, async () => {
       const rs = await uploadFiles(files), d = sheet.draft, acc = accounts();
+      if (shotWho) { d.shots = [...(d.shots || []), ...rs.map(r => ({ img: r, ref: shotWho, caption: '' }))]; return; }
       // each new photo starts on the next character not in the shoot yet, so picking faces is mostly done already
       const used = new Set((d.shots || []).map(g => g.ref));
       d.shots = [...(d.shots || []), ...rs.map(r => { const a = acc.find(a => !used.has(a.ref)) || acc[0]; if (a) used.add(a.ref); return { img: r, ref: a?.ref || '', caption: '' }; })];
