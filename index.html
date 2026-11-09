@@ -1423,7 +1423,7 @@ function magCover(x, small) {
   const ci = magImg(x), names = (x.shots || []).map(g => accountOf(g.ref)?.name).filter(Boolean), uniq = [...new Set(names)];
   return `<div class="mag ${x.magColor || 'light'} ${small ? 'sm' : ''}">${ci ? `<img src="${small ? imgS(ci) : img(ci)}" style="${pos(ci)}" alt="" ${small ? 'loading="lazy"' : ''}>` : ''}
     <span class="mast">${esc(x.mag || 'SEORAP')}</span>${x.issue ? `<span class="iss">${esc(x.issue)}</span>` : ''}
-    <span class="cl"><b>${esc(x.title || '')}</b>${uniq.length ? `<small>${uniq.slice(0, 4).map(esc).join(' · ')}${uniq.length > 4 ? ' 외' : ''}</small>` : ''}</span></div>`;
+    <span class="cl">${uniq.length ? `<small>${uniq.slice(0, 4).map(esc).join(' · ')}${uniq.length > 4 ? ' 외' : ''}</small>` : ''}</span></div>`;
 }
 // on a profile: every photo-shoot picture of this character, newest shoot first
 function shootsWin(ref) {
