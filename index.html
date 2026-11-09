@@ -218,6 +218,30 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 
 .coverbox { aspect-ratio: 16 / 9; width: 100%; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; display: grid; place-items: center; background: var(--blue); }
 .coverbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shootcard h3 { margin-bottom: 2px; }
+.shootcard .desc { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
+.shstrip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
+.shstrip span { aspect-ratio: 2 / 3; border-radius: 6px; overflow: hidden; background: var(--checker); position: relative; }
+.shstrip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shstrip .more { display: grid; place-items: center; font-weight: 700; color: var(--ink); }
+.shootgrid { display: grid; gap: clamp(12px, 2vw, 22px); grid-template-columns: repeat(auto-fill, minmax(min(46%, 200px), 1fr)); }
+.shootgrid figure, .myshots figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.sph { width: 100%; aspect-ratio: 2 / 3; padding: 0; border: 6px solid #fff; border-radius: 14px; overflow: hidden; background: var(--checker); box-shadow: 0 0 0 1.5px #F2C6D3, 0 8px 18px rgba(217, 124, 156, .18); cursor: zoom-in; }
+.sph img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 8px; }
+.shootgrid figcaption, .myshots figcaption { display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; max-width: 100%; }
+.snm { border: 0; background: none; padding: 0; font-family: "Diphylleia", var(--f-display); font-size: 16px; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.snm:hover { color: var(--pink-d); }
+.shootgrid figcaption small { font-size: 12.5px; color: var(--muted); }
+.myshots { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.myshots .sph { border-width: 4px; border-radius: 10px; }
+.myshots .snm { font-size: 13px; }
+.shotedit { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.shotedit .it { display: flex; flex-direction: column; gap: 4px; }
+.shotedit .th { aspect-ratio: 2 / 3; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; position: relative; background: var(--checker); }
+.shotedit .th img { width: 100%; height: 100%; object-fit: cover; }
+.shotedit .th button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; border: 1.2px solid var(--ink); border-radius: 50%; background: #fff; font-size: 11px; }
+.shotedit .th .posb { right: auto; left: 4px; }
+.shotedit select, .shotedit input { width: 100%; padding: 6px 8px; border-radius: 8px; border: 1.5px solid var(--ink); background: var(--win); font: inherit; font-size: 13px; }
 .iplist { display: flex; flex-direction: column; gap: 12px; }
 .ip .notepad { max-height: none; margin-top: 6px; }
 .coverbox.pcover { aspect-ratio: 2 / 1; background: var(--yellow); margin-bottom: 4px; }
@@ -813,6 +837,7 @@ const TYPES = {
   scenes:     { label: '명장면', en: 'BEST SCENES', sub: '마음에 든 채팅 조각', add: '장면 저장', color: 'mint', file: 'CHAT.log' },
   worlds:     { label: '세계관', en: 'WORLDS', sub: '설정과 이미지', add: '세계관 만들기', color: 'blue', file: 'WORLD' },
   prompts:    { label: '프롬프트', en: 'PROMPTS', sub: '자주 쓰는 문구', add: '프롬프트 추가', color: 'yellow', file: 'MEMO.txt' },
+  shoots:     { label: '화보', en: 'PHOTO SHOOT', sub: '같은 테마로 모아보기', add: '화보 만들기', color: 'pink', file: 'SHOOT' },
   awards:     { label: '명예의 전당', en: 'HALL OF FAME', sub: '내가 매기는 순위', add: '상 만들기', color: 'yellow', file: 'AWARD' },
 };
 const COLOR = { pink: ['var(--pink)', 'var(--pink-d)'], mint: ['var(--mint)', 'var(--mint-d)'], blue: ['var(--blue)', 'var(--blue-d)'], yellow: ['var(--yellow)', 'var(--yellow-d)'] };
@@ -820,6 +845,7 @@ const GLYPH = {
   characters: '<path d="M16 21.5s-5-3-5-6.2c0-1.8 1.4-3 2.9-3 1 0 1.7.5 2.1 1.2.4-.7 1.1-1.2 2.1-1.2 1.5 0 2.9 1.2 2.9 3 0 3.2-5 6.2-5 6.2z" fill="var(--pink-d)"/>',
   scenes: '<path d="M10 12h12a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 22 20h-7l-3 2.5V20h-2a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 10 12z" fill="#fff" stroke="var(--ink)" stroke-width="1.2"/><circle cx="13" cy="16" r="1" fill="var(--mint-d)"/><circle cx="16" cy="16" r="1" fill="var(--mint-d)"/><circle cx="19" cy="16" r="1" fill="var(--mint-d)"/>',
   worlds: '<path d="M16 10.5l1.7 3.6 3.9.5-2.9 2.7.8 3.9-3.5-1.9-3.5 1.9.8-3.9-2.9-2.7 3.9-.5z" fill="var(--blue-d)"/>',
+  shoots: '<rect x="10" y="12.5" width="12" height="9" rx="1.6" fill="#fff" stroke="var(--ink)" stroke-width="1.1"/><path d="M13.5 12.5l1-1.6h3l1 1.6" fill="#fff" stroke="var(--ink)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="16" cy="17" r="2.4" fill="var(--pink-d)"/>',
   awards: '<path d="M12 11h8v3.2a4 4 0 0 1-8 0z" fill="#F7D774" stroke="var(--ink)" stroke-width="1.1"/><path d="M12 12.2h-1.6a1.6 1.6 0 0 0 1.8 2.6M20 12.2h1.6a1.6 1.6 0 0 1-1.8 2.6" fill="none" stroke="var(--ink)" stroke-width="1"/><path d="M16 18.2v1.8M13.6 21.4h4.8" stroke="var(--ink)" stroke-width="1.2" stroke-linecap="round"/>',
   prompts: '<path d="M10.5 16c0-2 2.3-2.4 3.6-.9L16 17l1.9-1.9c1.3-1.5 3.6-1.1 3.6.9s-2.3 2.4-3.6.9L16 15l-1.9 1.9c-1.3 1.5-3.6 1.1-3.6-.9z" fill="var(--yellow-d)"/><circle cx="16" cy="16" r="1.4" fill="var(--yellow-d)"/>',
 };
@@ -838,8 +864,8 @@ const ICO = {
 const winbar = (title, extra = '') => `<div class="wbar"><span class="dots"><i></i><i></i><i></i></span><span class="wt">${title}</span>${extra}<span class="wbtns" aria-hidden="true"><span>♡</span><span>✕</span></span></div>`;
 
 const PROMPT_CATS = ['시스템 프롬프트', '첫 메시지', '페르소나', 'OOC · 지시문', '이미지 생성', '기타'];
-const S = { characters: [], scenes: [], worlds: [], prompts: [], awards: [] };
-const loaded = { characters: false, scenes: false, worlds: false, prompts: false, awards: false };
+const S = { characters: [], scenes: [], worlds: [], prompts: [], shoots: [], awards: [] };
+const loaded = { characters: false, scenes: false, worlds: false, prompts: false, shoots: false, awards: false };
 let db = null, assets = null, user = null, canWrite = true, status = 'connecting';
 let view = 'characters', query = '', filter = { tag: null, sub: 'all' };
 let site = {}, coverEdit = null, coverDrag = null, coverArmed = null;
@@ -958,7 +984,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -1124,6 +1150,13 @@ function cardFor(type, x) {
       ${x.summary ? `<p class="desc">${esc(x.summary)}</p>` : ''}
       <div class="row"><div class="tags"><span class="lbl-box">IMG ${(x.gallery || []).length + (x.cover ? 1 : 0)}</span><span class="lbl-box">CHARA ${n}</span>${(x.cast || []).length ? `<span class="lbl-box">CAST ${x.cast.length}</span>` : ''}<span class="lbl-box">NOTE ${(x.sections || []).length}</span></div>${exPill(x)}</div></div></button>`;
   }
+  if (type === 'shoots') {
+    const sh = (x.shots || []).filter(g => g.img), show = sh.slice(0, 5), rest = sh.length - show.length;
+    return `<button class="win card c-pink shootcard" ${open}>${winbar(`📷 ${T.file}`)}<div class="wbody">
+      <h3>${star}${esc(x.title || '이름 없는 화보')}</h3>${x.desc ? `<p class="desc">${esc(x.desc)}</p>` : ''}
+      ${sh.length ? `<div class="shstrip">${show.map(g => `<span><img src="${imgS(g.img)}" style="${posC(g.img)}" alt="" loading="lazy"></span>`).join('')}${rest > 0 ? `<span class="more">+${rest}</span>` : ''}</div>` : '<p class="desc">아직 사진이 없어요.</p>'}
+      <div class="row"><div class="tags"><span class="lbl-box">${sh.length} PHOTOS</span>${tagsHtml(x.tags)}</div></div></div></button>`;
+  }
   if (type === 'awards') {
     const r = x.ranks || [], at = i => r[i] && accountOf(r[i].ref);
     const spot = (i, cls) => { const a = at(i); return a ? `<span class="pod ${cls}"><span class="pfx"><span class="pav">${awardPic(r[i], a, true)}</span>${awardSash(i, true)}</span><b>${esc(a.name)}</b></span>` : `<span class="pod ${cls} empty"><span class="pav"><span class="ini">?</span></span><b>&nbsp;</b></span>`; };
@@ -1156,6 +1189,7 @@ function emptyFor(t) {
     characters: ['아직 캐릭터가 없어요', '내 페르소나나 마음에 드는 봇의 프로필을 저장해 두세요. 외모, 성격, 말투를 정리하고 한 번에 복사할 수 있어요.'],
     scenes: ['저장한 장면이 없어요', '채팅하다 좋았던 부분을 그대로 붙여넣으세요. “이름: 대사” 형식은 말풍선으로, *별표*는 지문으로 보여줘요.'],
     worlds: ['세계관을 만들어 보세요', '대표 이미지와 갤러리, 지역·세력·역사 같은 설정 항목을 자유롭게 추가할 수 있어요.'],
+    shoots: ['아직 화보가 없어요', '「2026 크리스마스」처럼 테마를 하나 만들고, 같은 분위기로 뽑은 캐릭터들 이미지를 한곳에 모아 보세요.'],
     awards: ['아직 상이 없어요', '「올해의 최애」, 「미모 부문」처럼 상을 만들고 내 캐릭터와 등장인물에게 순위를 매겨 보세요.'],
     prompts: ['모아둔 프롬프트가 없어요', '시스템 프롬프트, 첫 메시지, OOC 지시문처럼 자주 쓰는 문구를 저장하고 바로 복사하세요.'],
   }[t];
@@ -1163,7 +1197,7 @@ function emptyFor(t) {
 }
 function textOf(type, x) {
   return [x.name, x.nick, x.title, x.tagline, x.summary, x.body, x.note, x.personality, x.appearance, x.backstory, x.speech, x.extra, x.platform, x.bot, x.category,
-    x.desc, x.year, ...(x.iprompts || []).flatMap(p => [p.title, p.body]), ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
+    x.desc, x.year, ...(x.iprompts || []).flatMap(p => [p.title, p.body]), ...(x.shots || []).flatMap(g => [g.caption, accountOf(g.ref)?.name]), ...(x.ranks || []).map(r => accountOf(r.ref)?.name), ...(x.tags || []), ...(x.sections || []).flatMap(s => [s.title, s.body]), ...(x.gallery || []).map(g => g.caption), ...(x.album || []).map(g => g.caption), ...(x.cast || []).flatMap(c => [c.name, c.tagline, c.appearance, c.personality, c.backstory, c.desc])].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSearch() {
   const q = query.toLowerCase().trim();
@@ -1361,6 +1395,12 @@ function awardsWin(ref) {
     return { i, title: list[0].a.title || '이름 없는 상', list, last, run: streak(list.map(w => w.a.year)) };
   }).sort((x, y) => x.i - y.i || y.list.length - x.list.length || String(y.last.a.year || '').localeCompare(String(x.last.a.year || '')));
   return subWin('🏆 AWARDS · 수상 내역', 'yellow', `<div class="awlist">${rows.map(r => `<button class="aw" data-open="awards:${r.last.a.id}"><span class="md">${medalSvg(r.i)}</span><span class="t"><b>${esc(r.title)}</b>${r.run > 1 ? `<span class="streak">${r.run}년 연속</span>` : ''}</span><span class="yrs">${r.list.map(w => esc(w.a.year || '—')).join(' · ')}</span></button>`).join('')}</div>`);
+}
+// on a profile: every photo-shoot picture of this character, newest shoot first
+function shootsWin(ref) {
+  const mine = sorted(S.shoots, 'shoots').flatMap(sh => (sh.shots || []).filter(g => g.ref === ref && g.img).map(g => ({ sh, g })));
+  if (!mine.length) return '';
+  return subWin(`📷 PHOTO SHOOT · 화보 <span style="opacity:.7">(${mine.length})</span>`, 'pink', `<div class="myshots">${mine.map(({ sh, g }) => `<figure><button class="sph" data-group="myshots-${ref}" data-lightbox="${img(g.img)}" data-cap="${esc([sh.title, g.caption].filter(Boolean).join(' — '))}" aria-label="크게 보기"><img src="${imgS(g.img)}" style="${posC(g.img)}" alt="" loading="lazy"></button><figcaption><button class="snm" data-open="shoots:${sh.id}">${esc(sh.title || '화보')}</button></figcaption></figure>`).join('')}</div>`);
 }
 // character image-generation prompts, each with its own copy button
 function iPromptsWin(x) {
@@ -1926,6 +1966,7 @@ function viewBody(type, x) {
       ${subWin(`ALBUM · 앨범 <span style="opacity:.7">(${albumEntries(x, '*').length})</span>`, 'pink', igTeaser(x))}
       ${relationsOfChar(x)}
       ${sc.length ? subWin('APPEARS IN · 등장한 장면', 'mint', `<div class="links">${sc.map(s => `<button class="link-chip plain" data-open="scenes:${s.id}">${esc(s.title || '제목 없는 장면')}</button>`).join('')}</div>`) : ''}
+      ${shootsWin('char:' + x.id)}
       ${awardsWin('char:' + x.id)}
       ${songsWin('characters:' + x.id)}</div>`;
   }
@@ -1953,6 +1994,13 @@ function viewBody(type, x) {
       ${songsWin('worlds:' + x.id)}</div>`;
   }
   if (type === 'awards') return awardView(x);
+  if (type === 'shoots') {
+    const sh = (x.shots || []).filter(g => g.img);
+    return `<div class="awardhead"><span class="lbl-box fill">📷 PHOTO SHOOT</span><h2>${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title || '이름 없는 화보')}</h2>${x.desc ? `<p class="prose">${esc(x.desc)}</p>` : ''}</div>
+      ${sh.length ? `<div class="shootgrid">${sh.map(g => { const a = accountOf(g.ref); return `<figure><button class="sph" data-group="shoot-${x.id}" data-lightbox="${img(g.img)}" data-cap="${esc([a?.name, g.caption].filter(Boolean).join(' — '))}" aria-label="크게 보기"><img src="${img(g.img)}" style="${pos(g.img)}" alt="" loading="lazy"></button>
+        <figcaption>${a ? `<button class="snm" ${openAttr(g.ref)}>${esc(a.name)}</button>` : ''}${g.caption ? `<small>${esc(g.caption)}</small>` : ''}</figcaption></figure>`; }).join('')}</div>` : `<div class="ap-empty">${SPARK('spark', '#F3DDA0')}<p>편집에서 사진을 올려 보세요.</p></div>`}
+      ${(x.tags || []).length ? `<div class="tags">${tagsHtml(x.tags)}</div>` : ''}`;
+  }
   return `${x.cover ? `<div class="pbanner"><button data-lightbox="${img(x.cover)}" data-cap="${esc(x.title || '')}" aria-label="크게 보기"><img src="${img(x.cover)}" style="${pos(x.cover)}" alt=""></button></div>` : ''}<div><div class="row" style="justify-content:flex-start;margin-bottom:6px"><span class="lbl-box fill" style="--cd:var(--yellow-d)">${esc(x.category || '기타')}</span>${exPill(x)}</div><h2 style="font-size:30px">${x.fav ? '<span class="star">★</span>' : ''}${esc(x.title)}</h2></div>
     <div class="notepad full">${esc(x.body)}</div>
     ${x.note ? section('NOTE · 메모', x.note, 'mint') : ''}
@@ -2007,6 +2055,12 @@ const FIELDS = {
     { k: 'tags', t: 'tags', l: '태그' },
   ],
 };
+FIELDS.shoots = [
+  { k: 'title', t: 'text', l: '화보 이름', req: 1, ph: '예: 2026 크리스마스, 여름 바다, 교복 화보' },
+  { k: 'desc', t: 'area', l: '한마디', ph: '어떤 테마인지, 컨셉 메모 등' },
+  { k: 'shots', t: 'shots', l: '사진' },
+  { k: 'tags', t: 'tags', l: '태그' },
+];
 FIELDS.awards = [
   { k: 'title', t: 'text', l: '상 이름', req: 1, ph: '예: 올해의 최애, 미모 부문, 올해의 커플' },
   { k: 'year', t: 'text', l: '연도', ph: '예: 2026' },
@@ -2020,6 +2074,7 @@ const DEFAULTS = {
   scenes: () => ({ date: new Date().toISOString().slice(0, 10), characterIds: [], tags: [] }),
   worlds: () => ({ sections: [{ title: '지역', body: '' }, { title: '세력', body: '' }, { title: '역사', body: '' }], gallery: [], tags: [] }),
   prompts: () => ({ category: PROMPT_CATS[0], tags: [] }),
+  shoots: () => ({ shots: [], tags: [] }),
 };
 function fieldHtml(f, d) {
   if (f.row) return `<div class="row2">${f.row.map(g => fieldHtml(g, d)).join('')}</div>`;
@@ -2083,6 +2138,14 @@ function fieldHtml(f, d) {
         ${assets ? `<label class="btn sm filebtn">${v ? '바꾸기' : '이미지 올리기'}<input type="file" accept="image/*" id="${id}" data-img="${f.k}"></label>${v && !f.noPos ? `<button type="button" class="btn sm" data-imgpos="${f.k}" data-tabs="${f.k === 'cover' ? (sheet.type === 'prompts' ? 'pcover' : 'wcover') : sheet.castEdit ? 'cast' : 'avatar'}">위치 조정</button>` : ''}${v ? `<button type="button" class="btn sm ghost" data-unimg="${f.k}">지우기</button>` : ''}` : '<span class="hint">이미지는 이 페이지의 편집 권한이 있을 때만 올릴 수 있어요.</span>'}</div></div>`;
     case 'gallery': return `<div class="fld"><span class="lbl">${f.l}</span>${f.hint ? hint : ''}<div class="gal-edit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g)}" style="${posT(g)}" alt="">${g.more?.length ? `<span class="nmore">+${g.more.length}</span>` : ''}<button type="button" data-ungal="${f.k}:${i}" aria-label="이미지 빼기">✕</button><button type="button" class="posb" data-galpos="${f.k}:${i}" data-tabs="${f.k === 'gallery' ? 'gallery' : 'album'}" aria-label="위치 조정">✥</button></div><input type="text" id="gcap_${f.k}_${i}" data-gcap="${f.k}:${i}" value="${esc(g.caption || '')}" placeholder="설명"></div>`).join('')}</div>
         ${assets ? `<div><label class="btn sm filebtn">＋ 이미지 추가 (여러 장 가능)<input type="file" accept="image/*" multiple id="${id}" data-gal="${f.k}"></label></div>` : ''}</div>`;
+    case 'shots': {
+      const acc = accounts();
+      return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">여러 장을 한 번에 올리고, 사진마다 누구인지 골라요. 세로로 긴 사진이 잘 어울려요.</span>
+        <div class="shotedit">${(v || []).map((g, i) => `<div class="it"><div class="th"><img src="${imgS(g.img)}" style="${pos(g.img)}" alt=""><button type="button" data-unshot="${i}" aria-label="사진 빼기">✕</button><button type="button" class="posb" data-shotpos="${i}" aria-label="위치 조정">✥</button></div>
+          <select id="shot_r_${i}" data-shotk="${i}:ref" aria-label="누구 사진인지">${acc.map(a => `<option value="${a.ref}" ${a.ref === g.ref ? 'selected' : ''}>${esc(a.name)}${a.sub ? ' · ' + esc(a.sub) : ''}</option>`).join('')}</select>
+          <input type="text" id="shot_c_${i}" data-shotk="${i}:caption" value="${esc(g.caption || '')}" placeholder="한 줄 (선택)"></div>`).join('')}</div>
+        ${assets ? `<label class="btn sm filebtn">＋ 사진 올리기 (여러 장 가능)<input type="file" accept="image/*" multiple data-shotup="1"></label>` : ''}</div>`;
+    }
     case 'iprompts': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">외모 고정용, 의상별, 표정별처럼 여러 개 넣을 수 있어요. 프로필에서 바로 복사돼요.</span>
         <div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="ip_t_${i}" data-ipk="${i}:title" value="${esc(s.title || '')}" placeholder="이름 (예: 기본 외모, 교복, 드레스)" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unip="${i}">삭제</button></div><textarea id="ip_b_${i}" data-ipk="${i}:body" class="mono" placeholder="1girl, long black hair, green eyes, ...">${esc(s.body || '')}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addip="1">＋ 프롬프트 추가</button></div></div>`;
@@ -2313,7 +2376,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -2432,6 +2495,7 @@ const POS_TABS = {
   album: [['', '게시물', '4/5', false, '사진을 눌러 열었을 때 보이는 모습이에요.'], ['t', '격자', '1/1', false, '앨범 격자와 프로필 미리보기에 보이는 모습이에요.']],
   ighead: [['t', '앨범 헤더', '1/1', true, '앨범 맨 위 동그란 사진이에요.']],
   pcover: [['', '프롬프트 페이지', '2/1', false, '프롬프트를 열었을 때 맨 위에 보이는 사진이에요.'], ['c', '목록 카드', '2/1', false, '프롬프트 목록 카드에 보이는 사진이에요.']],
+  shot: [['', '화보', '2/3', false, '화보 페이지에 보이는 세로 사진이에요.']],
   award: [['', '시상대', '2/3', false, '명예의 전당 시상대에 서는 세로 사진이에요.']],
   gallery: [['t', '갤러리', '1/1', false, '세계관 갤러리에 보이는 사진이에요.']],
 };
@@ -2599,6 +2663,8 @@ document.addEventListener('click', async e => {
     if (t.dataset.unrank) { const [g] = d.ranks.splice(+t.dataset.unrank, 1); if (g?.img?.id) sheet.removed.push(g.img.id); rerenderEdit(); return; }
     if (t.dataset.unrankimg) { const g = d.ranks[+t.dataset.unrankimg]; if (g?.img?.id) sheet.removed.push(g.img.id); delete g.img; rerenderEdit(); return; }
     if (t.dataset.rankpos) { const i = +t.dataset.rankpos; openPosTool(d.ranks[i].img, 'award', p => { d.ranks[i].img = { ...d.ranks[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
+    if (t.dataset.unshot) { const [g] = d.shots.splice(+t.dataset.unshot, 1); if (g?.img?.id) sheet.removed.push(g.img.id); rerenderEdit(); return; }
+    if (t.dataset.shotpos) { const i = +t.dataset.shotpos; openPosTool(d.shots[i].img, 'shot', p => { d.shots[i].img = { ...d.shots[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.addip) { (d.iprompts = d.iprompts || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('ip_t_' + (d.iprompts.length - 1))?.focus(); return; }
     if (t.dataset.unip) { d.iprompts.splice(+t.dataset.unip, 1); rerenderEdit(); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
@@ -2665,6 +2731,7 @@ document.addEventListener('input', e => {
   else if (el.dataset.tags) d[el.dataset.tags] = el.value.split(/[,，]/).map(s => s.trim().replace(/^#/, '')).filter(Boolean);
   else if (el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); d.rels[+i][f] = el.value; }
   else if (el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); d.ranks[+i][f] = el.value; }
+  else if (el.dataset.shotk) { const [i, f] = el.dataset.shotk.split(':'); d.shots[+i][f] = el.value; }
   else if (el.dataset.ipk) { const [i, f] = el.dataset.ipk.split(':'); d.iprompts[+i][f] = el.value; }
   else if (el.dataset.songk) { const [i, f] = el.dataset.songk.split(':'); d.songs[+i][f] = el.value; }
   else if (el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); d.rels[+i][f] = el.value; }
@@ -2676,6 +2743,7 @@ document.addEventListener('change', async e => {
   const el = e.target;
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.k) { sheet.draft[el.dataset.k] = el.value; if (sheet.castEdit && el.dataset.k === 'role') rerenderEdit(); }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.crelk) { const [i, f] = el.dataset.crelk.split(':'); sheet.draft.rels[+i][f] = el.value; }
+  if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.shotk) { const [i, f] = el.dataset.shotk.split(':'); sheet.draft.shots[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.rankk) { const [i, f] = el.dataset.rankk.split(':'); sheet.draft.ranks[+i][f] = el.value; }
   if (sheet?.mode === 'edit' && el.tagName === 'SELECT' && el.dataset.relk) { const [i, f] = el.dataset.relk.split(':'); sheet.draft.rels[+i][f] = el.value; }
   if (el.dataset.restore && el.files?.length) { const f = el.files[0]; el.value = ''; restore(f); return; }
@@ -2722,6 +2790,13 @@ document.addEventListener('change', async e => {
       const [r] = await uploadFiles(files);
       if (sheet.draft[k]) sheet.removed.push(sheet.draft[k].id);
       sheet.draft[k] = r;
+    });
+  } else if (el.dataset.shotup) {
+    await withBusy(`사진 ${files.length}장 올리는 중…`, async () => {
+      const rs = await uploadFiles(files), d = sheet.draft, acc = accounts();
+      // each new photo starts on the next character not in the shoot yet, so picking faces is mostly done already
+      const used = new Set((d.shots || []).map(g => g.ref));
+      d.shots = [...(d.shots || []), ...rs.map(r => { const a = acc.find(a => !used.has(a.ref)) || acc[0]; if (a) used.add(a.ref); return { img: r, ref: a?.ref || '', caption: '' }; })];
     });
   } else if (el.dataset.rankimg) {
     const i = +el.dataset.rankimg;
