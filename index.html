@@ -808,8 +808,14 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 @media (max-width: 560px) { .npchead { grid-template-columns: 110px minmax(0, 1fr); } }
 .minetag { position: absolute; left: 5px; top: 5px; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--pink-d); border-radius: 999px; padding: 1px 7px; }
 .corg { font-size: 11.5px; color: var(--muted); margin-left: 2px; }
-.orgrow { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.orgrow span { flex: none; font-size: 13px; color: var(--muted); min-width: 6em; }
+.orgrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 6px 0 6px 2px; }
+.orgrow .wimg { position: relative; flex: none; width: 36px; height: 45px; min-width: 0; border-radius: 6px; overflow: visible; }
+.orgrow .wimg img { width: 36px; height: 45px; object-fit: cover; border-radius: 6px; border: 1.3px solid var(--ink); display: block; }
+.orgrow .wimg label { width: 36px; height: 45px; border: 1.5px dashed var(--ink); border-radius: 6px; display: grid; place-items: center; cursor: pointer; background: var(--checker); font-size: 14px; }
+.orgrow .wimg input { display: none; }
+.orgrow .wimg .rx, .orgrow .wimg .rp { position: absolute; width: 18px; height: 18px; padding: 0; border: 1.2px solid var(--ink); border-radius: 50%; background: #fff; font-size: 9px; line-height: 1; display: grid; place-items: center; }
+.orgrow .wimg .rx { top: -6px; right: -7px; } .orgrow .wimg .rp { bottom: -6px; right: -7px; }
+.orgrow span:not(.wimg) { flex: none; font-size: 13px; color: var(--muted); min-width: 6em; }
 .orgrow input { flex: 1; min-width: 0; padding: 7px 10px; border-radius: 10px; border: 1.5px solid var(--ink); background: var(--win); font: inherit; font-size: 13.5px; }
 .npccard small { margin-top: -4px; font-size: 12px; line-height: 1.35; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
 .npccard .cedit { position: absolute; top: 4px; right: 4px; background: rgba(255, 255, 255, .85) !important; padding: 0 6px; }
@@ -1049,7 +1055,7 @@ function coverOf(key) {
 }
 function assetInUse(aid) {
   return Object.values(site.covers || {}).some(c => c?.img?.id === aid) || (site.stickers || []).includes(aid) ||
-    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
+    Object.values(S).some(list => list.some(x => [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...Object.values(x.worldImgs || {}), ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].some(r => r?.id === aid)));
 }
 async function setCover(key, val) {
   const [kind, id] = key.split(':');
@@ -1548,8 +1554,9 @@ function castText(w, m) {
     m.appearance && `\n외모:\n${m.appearance}`, m.personality && `\n성격:\n${m.personality}`, m.speech && `\n말투:\n${m.speech}`,
     m.backstory && `\n배경:\n${m.backstory}`, m.desc && `\n기타:\n${m.desc}`].filter(Boolean).join('\n');
 }
-function mineCard(c) {
-  return `<div class="npccard mine"><button class="nph" data-open="characters:${c.id}" aria-label="${esc(c.name)} 프로필">${c.avatar ? `<img src="${imgS(c.avatar)}" style="${posC(c.avatar)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(c.name))}</span>`}</button><b>${esc(c.name)}</b>${c.tagline ? `<small title="${esc(c.tagline)}">${esc(c.tagline)}</small>` : ''}</div>`;
+function mineCard(c, wid) {
+  const ph = c.worldImgs?.[wid] || c.avatar;
+  return `<div class="npccard mine"><button class="nph" data-open="characters:${c.id}" aria-label="${esc(c.name)} 프로필">${ph ? `<img src="${imgS(ph)}" style="${posC(ph)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(c.name))}</span>`}</button><b>${esc(c.name)}</b>${c.tagline ? `<small title="${esc(c.tagline)}">${esc(c.tagline)}</small>` : ''}</div>`;
 }
 function castWin(w) {
   const cast = (w.cast || []).map((m, i) => [m, i]);
@@ -1560,7 +1567,7 @@ function castWin(w) {
     const orgOf = ([m]) => String(m.org || '').trim();
     const orgs = [...new Set([...mine.map(c => charOrg(c, w.id)), ...list.map(orgOf)])].sort((a, b) => (a === '') - (b === ''));
     return orgs.map(o => { const ms = mine.filter(c => charOrg(c, w.id) === o), ns = list.filter(e => orgOf(e) === o);
-      return `<div class="orgblk">${orgs.length > 1 || o ? `<h6 class="orgh"><span>${o ? esc(o) : '소속 없음'}</span><small>${ms.length + ns.length}</small></h6>` : ''}<div class="npcgrid">${ms.map(mineCard).join('')}${ns.map(([m, i]) => npcCard(m, i)).join('')}</div></div>`; }).join('');
+      return `<div class="orgblk">${orgs.length > 1 || o ? `<h6 class="orgh"><span>${o ? esc(o) : '소속 없음'}</span><small>${ms.length + ns.length}</small></h6>` : ''}<div class="npcgrid">${ms.map(c => mineCard(c, w.id)).join('')}${ns.map(([m, i]) => npcCard(m, i)).join('')}</div></div>`; }).join('');
   };
   const group = (role, title) => { const list = cast.filter(([m]) => (m.role || 'main') === role); return list.length || (role === 'npc' && mine.length) ? `<div class="castgroup"><h5><span class="lbl-box">${role === 'npc' && mine.length ? 'NPC · 조직' : title}</span></h5>${role === 'npc' ? npcBlock(list) : `<div class="castgrid">${list.map(([m, i]) => castCard(w, m, i)).join('')}</div>`}</div>` : ''; };
   return subWin('CAST · 이 세계의 등장인물', 'yellow', `${cast.length || mine.length ? group('main', 'MAIN · 메인 캐릭터') + group('npc', 'NPC') : '<p style="color:var(--muted);margin:0">이 세계관에만 나오는 메인 캐릭터나 NPC를 넣어 보세요. 내 캐릭터와 어떤 관계인지도 적을 수 있어요.</p>'}
@@ -2277,7 +2284,8 @@ function fieldHtml(f, d) {
         <div><button type="button" class="btn sm" data-addrel="1">＋ 관계 추가</button></div></div>`;
     }
     case 'worlds': return `<div class="fld"><span class="lbl">${f.l}</span>${S.worlds.length ? `<div class="picks">${S.worlds.map(w => `<button type="button" class="chip" data-wpick="${w.id}" aria-pressed="${(v || []).includes(w.id)}">${esc(w.name)}</button>`).join('')}</div>
-        ${(v || []).map(id => byId('worlds', id)).filter(Boolean).map(w => `<div class="orgrow"><span>${esc(w.name)} 소속</span><input type="text" id="org_${w.id}" data-orgw="${w.id}" value="${esc(d.orgs?.[w.id] || '')}" placeholder="예: 황금하렘 (비워두면 소속 없음)" list="org_${w.id}_l" autocomplete="off"><datalist id="org_${w.id}_l">${npcOrgs(w).map(o => `<option value="${esc(o)}">`).join('')}</datalist></div>`).join('')}` : '<span class="hint">세계관 서랍에 세계관을 먼저 만들면 연결할 수 있어요.</span>'}</div>`;
+        ${(v || []).length ? '<span class="hint">📷 세계관마다 그 세계관 페이지에서만 보일 사진을 따로 올릴 수 있어요. 안 올리면 프로필 사진이 나와요.</span>' : ''}
+        ${(v || []).map(id => byId('worlds', id)).filter(Boolean).map(w => `<div class="orgrow"><span class="wimg">${d.worldImgs?.[w.id] ? `<img src="${imgS(d.worldImgs[w.id])}" style="${posC(d.worldImgs[w.id])}" alt=""><button type="button" class="rx" data-unwimg="${w.id}" aria-label="이 세계관 사진 빼기">✕</button><button type="button" class="rp" data-wimgpos="${w.id}" aria-label="위치 조정">✥</button>` : assets ? `<label title="이 세계관에서만 쓸 사진">📷<input type="file" accept="image/*" data-wimg="${w.id}"></label>` : ''}</span><span>${esc(w.name)} 소속</span><input type="text" id="org_${w.id}" data-orgw="${w.id}" value="${esc(d.orgs?.[w.id] || '')}" placeholder="예: 황금하렘 (비워두면 소속 없음)" list="org_${w.id}_l" autocomplete="off"><datalist id="org_${w.id}_l">${npcOrgs(w).map(o => `<option value="${esc(o)}">`).join('')}</datalist></div>`).join('')}` : '<span class="hint">세계관 서랍에 세계관을 먼저 만들면 연결할 수 있어요.</span>'}</div>`;
     case 'tags': return `<div class="fld">${lab}<input type="text" id="${id}" data-tags="${f.k}" value="${esc((v || []).join(', '))}" placeholder="쉼표로 구분: 판타지, 다정공, 최애"></div>`;
     case 'kind': return `<div class="fld"><span class="lbl">${f.l}</span><div class="picks">${allKinds(sheet.newKinds).map(k => `<button type="button" class="chip" data-kindpick="${esc(k)}" aria-pressed="${kindOf(d) === k}">${esc(k)}</button>`).join('')}</div>
         <div style="display:flex;gap:6px;max-width:420px"><input type="text" id="f_newkind" placeholder="새 종류 만들기 (예: 오너캐, 드림주, NPC)"><button type="button" class="btn sm" data-act="addkind">＋ 추가</button></div></div>`;
@@ -2525,7 +2533,7 @@ async function save() {
   }
 }
 function assetIdsOf(x) {
-  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
+  return [x.avatar, x.cover, ...(x.gallery || []), ...(x.album || []).flatMap(postImgs), ...allWorldPhotos(x), x.albumHead?.avatar, ...Object.values(x.worldImgs || {}), ...(x.songs || []).map(s => s.file), ...(x.ranks || []).map(r => r.img), ...(x.shots || []).map(g => g.img), ...Object.values(x.worldHeads || {}).map(h => h?.avatar), ...(x.cast || []).flatMap(c => [c.avatar, c.albumHead?.avatar, ...(c.album || []).flatMap(postImgs)])].filter(Boolean).map(a => a.id);
 }
 async function remove() {
   const { type, id } = sheet, x = byId(type, id);
@@ -2817,6 +2825,8 @@ document.addEventListener('click', async e => {
     if (t.dataset.rankpos) { const i = +t.dataset.rankpos; openPosTool(d.ranks[i].img, 'award', p => { d.ranks[i].img = { ...d.ranks[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.unshot) { const [g] = d.shots.splice(+t.dataset.unshot, 1); if (g?.img?.id) sheet.removed.push(g.img.id); rerenderEdit(); return; }
     if (t.dataset.shotpos) { const i = +t.dataset.shotpos; openPosTool(d.shots[i].img, 'shot', p => { d.shots[i].img = { ...d.shots[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
+    if (t.dataset.unwimg) { const k = t.dataset.unwimg, r = d.worldImgs?.[k]; if (r?.id) sheet.removed.push(r.id); d.worldImgs = { ...(d.worldImgs || {}) }; delete d.worldImgs[k]; rerenderEdit(); return; }
+    if (t.dataset.wimgpos) { const k = t.dataset.wimgpos; openPosTool(d.worldImgs[k], 'cast', p => { d.worldImgs = { ...d.worldImgs, [k]: { ...d.worldImgs[k], ...p } }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.addip) { (d.iprompts = d.iprompts || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('ip_t_' + (d.iprompts.length - 1))?.focus(); return; }
     if (t.dataset.unip) { d.iprompts.splice(+t.dataset.unip, 1); rerenderEdit(); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
@@ -2944,6 +2954,13 @@ document.addEventListener('change', async e => {
       const [r] = await uploadFiles(files);
       if (sheet.draft[k]) sheet.removed.push(sheet.draft[k].id);
       sheet.draft[k] = r;
+    });
+  } else if (el.dataset.wimg) {
+    const k = el.dataset.wimg;
+    await withBusy('사진 올리는 중…', async () => {
+      const [r] = await uploadFiles(files.slice(0, 1)), d = sheet.draft, old = d.worldImgs?.[k];
+      if (old?.id) sheet.removed.push(old.id);
+      d.worldImgs = { ...(d.worldImgs || {}), [k]: r };
     });
   } else if (el.dataset.shotup) {
     await withBusy(`사진 ${files.length}장 올리는 중…`, async () => {
