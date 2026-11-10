@@ -806,7 +806,6 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .nblk p { margin: 0; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; }
 .npcnone { margin: 0; color: var(--muted); font-size: 13.5px; }
 @media (max-width: 560px) { .npchead { grid-template-columns: 110px minmax(0, 1fr); } }
-.npccard.mine .nph { box-shadow: 0 0 0 2px var(--pink-d); }
 .minetag { position: absolute; left: 5px; top: 5px; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--pink-d); border-radius: 999px; padding: 1px 7px; }
 .corg { font-size: 11.5px; color: var(--muted); margin-left: 2px; }
 .orgrow { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
@@ -1550,7 +1549,7 @@ function castText(w, m) {
     m.backstory && `\n배경:\n${m.backstory}`, m.desc && `\n기타:\n${m.desc}`].filter(Boolean).join('\n');
 }
 function mineCard(c) {
-  return `<div class="npccard mine"><button class="nph" data-open="characters:${c.id}" aria-label="${esc(c.name)} 프로필">${c.avatar ? `<img src="${imgS(c.avatar)}" style="${posC(c.avatar)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(c.name))}</span>`}<span class="minetag">내 캐릭터</span></button><b>${esc(c.name)}</b>${c.tagline ? `<small title="${esc(c.tagline)}">${esc(c.tagline)}</small>` : ''}</div>`;
+  return `<div class="npccard mine"><button class="nph" data-open="characters:${c.id}" aria-label="${esc(c.name)} 프로필">${c.avatar ? `<img src="${imgS(c.avatar)}" style="${posC(c.avatar)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(c.name))}</span>`}</button><b>${esc(c.name)}</b>${c.tagline ? `<small title="${esc(c.tagline)}">${esc(c.tagline)}</small>` : ''}</div>`;
 }
 function castWin(w) {
   const cast = (w.cast || []).map((m, i) => [m, i]);
