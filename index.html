@@ -781,6 +781,9 @@ body { margin: 0; } img { max-width: 100%; } [hidden] { display: none !important
 .orgh { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-family: "Orbit", var(--f-body); font-weight: 400; font-size: 13.5px; }
 .orgh::after { content: ""; flex: 1; height: 1px; background: var(--line, #E6D3DA); }
 .orgh small { font-size: 11px; color: var(--muted); }
+.orgh .orgmv { order: 3; display: flex; gap: 4px; }
+.orgh .orgmv button { width: 24px; height: 24px; padding: 0; border: 1.2px solid var(--line, #E6D3DA); border-radius: 6px; background: var(--win); font-size: 12px; color: var(--fg); }
+.orgh .orgmv button:disabled { opacity: .3; }
 .npcgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 .npccard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
 .npccard .nph { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 1.3px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--checker); }
@@ -1554,6 +1557,10 @@ function castText(w, m) {
     m.appearance && `\n외모:\n${m.appearance}`, m.personality && `\n성격:\n${m.personality}`, m.speech && `\n말투:\n${m.speech}`,
     m.backstory && `\n배경:\n${m.backstory}`, m.desc && `\n기타:\n${m.desc}`].filter(Boolean).join('\n');
 }
+function orgList(w, names) {
+  const all = [...new Set(names)], ord = (w.orgOrder || []).filter(o => all.includes(o));
+  return [...ord, ...all.filter(o => o && !ord.includes(o)), ...(all.includes('') ? [''] : [])];
+}
 function mineCard(c, wid) {
   const ph = c.worldImgs?.[wid] || c.avatar;
   return `<div class="npccard mine"><button class="nph" data-open="characters:${c.id}" aria-label="${esc(c.name)} 프로필">${ph ? `<img src="${imgS(ph)}" style="${posC(ph)}" alt="" loading="lazy">` : `<span class="ini">${esc(initial(c.name))}</span>`}</button><b>${esc(c.name)}</b>${c.tagline ? `<small title="${esc(c.tagline)}">${esc(c.tagline)}</small>` : ''}</div>`;
@@ -1565,9 +1572,10 @@ function castWin(w) {
   if (!cast.length && !mine.length && !canWrite) return '';
   const npcBlock = list => {
     const orgOf = ([m]) => String(m.org || '').trim();
-    const orgs = [...new Set([...mine.map(c => charOrg(c, w.id)), ...list.map(orgOf)])].sort((a, b) => (a === '') - (b === ''));
-    return orgs.map(o => { const ms = mine.filter(c => charOrg(c, w.id) === o), ns = list.filter(e => orgOf(e) === o);
-      return `<div class="orgblk">${orgs.length > 1 || o ? `<h6 class="orgh"><span>${o ? esc(o) : '소속 없음'}</span><small>${ms.length + ns.length}</small></h6>` : ''}<div class="npcgrid">${ms.map(c => mineCard(c, w.id)).join('')}${ns.map(([m, i]) => npcCard(m, i)).join('')}</div></div>`; }).join('');
+    const orgs = orgList(w, [...mine.map(c => charOrg(c, w.id)), ...list.map(orgOf)]), named = orgs.filter(Boolean);
+    return orgs.map(o => { const ms = mine.filter(c => charOrg(c, w.id) === o), ns = list.filter(e => orgOf(e) === o), j = named.indexOf(o);
+      const mv = canWrite && o && named.length > 1 ? `<span class="orgmv"><button data-orgmv="${esc(o)}|-1" ${j === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button data-orgmv="${esc(o)}|1" ${j === named.length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button></span>` : '';
+      return `<div class="orgblk">${orgs.length > 1 || o ? `<h6 class="orgh"><span>${o ? esc(o) : '소속 없음'}</span><small>${ms.length + ns.length}</small>${mv}</h6>` : ''}<div class="npcgrid">${ms.map(c => mineCard(c, w.id)).join('')}${ns.map(([m, i]) => npcCard(m, i)).join('')}</div></div>`; }).join('');
   };
   const group = (role, title) => { const list = cast.filter(([m]) => (m.role || 'main') === role); return list.length || (role === 'npc' && mine.length) ? `<div class="castgroup"><h5><span class="lbl-box">${role === 'npc' && mine.length ? 'NPC · 조직' : title}</span></h5>${role === 'npc' ? npcBlock(list) : `<div class="castgrid">${list.map(([m, i]) => castCard(w, m, i)).join('')}</div>`}</div>` : ''; };
   return subWin('CAST · 이 세계의 등장인물', 'yellow', `${cast.length || mine.length ? group('main', 'MAIN · 메인 캐릭터') + group('npc', 'NPC') : '<p style="color:var(--muted);margin:0">이 세계관에만 나오는 메인 캐릭터나 NPC를 넣어 보세요. 내 캐릭터와 어떤 관계인지도 적을 수 있어요.</p>'}
@@ -2775,6 +2783,14 @@ document.addEventListener('click', async e => {
     return;
   }
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
+  if (t.dataset.orgmv && sheet?.type === 'worlds') {
+    const w = byId('worlds', sheet.id), [o, d] = t.dataset.orgmv.split('|');
+    const names = orgList(w, npcOrgs(w)).filter(Boolean), i = names.indexOf(o), j = i + +d;
+    if (i < 0 || j < 0 || j >= names.length) return;
+    [names[i], names[j]] = [names[j], names[i]];
+    try { await db.collection('worlds').doc(w.id).update({ orgOrder: names, updatedAt: Date.now() }); } catch (er) { toast(errMsg(er)); }
+    renderSheet(); return;
+  }
   if (t.dataset.castopen) { const [wid, cid] = t.dataset.castopen.split(':'); sheet = { mode: 'view', type: 'worlds', id: wid, page: 1, castView: cid }; renderSheet(); return; }
   if (t.dataset.npc && sheet) { openNpc(sheet.id, t.dataset.npc); return; }
   if (t.dataset.castview && sheet && isNpc(castOf(byId('worlds', sheet.id) || {}, t.dataset.castview))) return;
