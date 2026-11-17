@@ -2785,7 +2785,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.castadd && sheet) { openCastEdit(sheet.id, null); return; }
   if (t.dataset.orgmv && sheet?.type === 'worlds') {
     const w = byId('worlds', sheet.id), [o, d] = t.dataset.orgmv.split('|');
-    const names = orgList(w, npcOrgs(w)).filter(Boolean), i = names.indexOf(o), j = i + +d;
+    const names = [...new Set([...document.querySelectorAll('#layer [data-orgmv]')].map(b => b.dataset.orgmv.split('|')[0]))], i = names.indexOf(o), j = i + +d;
     if (i < 0 || j < 0 || j >= names.length) return;
     [names[i], names[j]] = [names[j], names[i]];
     const prev = w.orgOrder; w.orgOrder = names; renderSheet();
