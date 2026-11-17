@@ -2314,7 +2314,7 @@ function fieldHtml(f, d) {
     case 'iprompts': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">외모 고정용, 의상별, 표정별처럼 여러 개 넣을 수 있어요. 프로필에서 바로 복사돼요.</span>
         <div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="ip_t_${i}" data-ipk="${i}:title" value="${esc(s.title || '')}" placeholder="이름 (예: 기본 외모, 교복, 드레스)" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unip="${i}">삭제</button></div><textarea id="ip_b_${i}" data-ipk="${i}:body" class="mono" placeholder="1girl, long black hair, green eyes, ...">${esc(s.body || '')}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addip="1">＋ 프롬프트 추가</button></div></div>`;
-    case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
+    case 'sections': return `<div class="fld"><span class="lbl">${f.l}</span><span class="hint">지역, 세력, 마법 체계, 연표처럼 원하는 항목을 자유롭게 만드세요.</span><div class="secs">${(v || []).map((s, i) => `<div class="s"><div class="hd"><input type="text" id="sec_t_${i}" data-sect="${i}" value="${esc(s.title)}" placeholder="항목 이름" style="padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg)"><button type="button" class="btn sm ghost" data-secmv="${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑</button><button type="button" class="btn sm ghost" data-secmv="${i}:1" ${i === (v || []).length - 1 ? 'disabled' : ''} aria-label="아래로">↓</button><button type="button" class="btn sm ghost" data-unsec="${i}">삭제</button></div><textarea id="sec_b_${i}" data-secb="${i}" placeholder="내용">${esc(s.body)}</textarea></div>`).join('')}</div>
         <div><button type="button" class="btn sm" data-addsec="1">＋ 항목 추가</button></div></div>`;
   }
 }
@@ -2788,8 +2788,10 @@ document.addEventListener('click', async e => {
     const names = orgList(w, npcOrgs(w)).filter(Boolean), i = names.indexOf(o), j = i + +d;
     if (i < 0 || j < 0 || j >= names.length) return;
     [names[i], names[j]] = [names[j], names[i]];
-    try { await db.collection('worlds').doc(w.id).update({ orgOrder: names, updatedAt: Date.now() }); } catch (er) { toast(errMsg(er)); }
-    renderSheet(); return;
+    const prev = w.orgOrder; w.orgOrder = names; renderSheet();
+    try { await db.collection('worlds').doc(w.id).update({ orgOrder: names, updatedAt: Date.now() }); toast('순서를 바꿨어요'); }
+    catch (er) { w.orgOrder = prev; renderSheet(); toast(errMsg(er)); }
+    return;
   }
   if (t.dataset.castopen) { const [wid, cid] = t.dataset.castopen.split(':'); sheet = { mode: 'view', type: 'worlds', id: wid, page: 1, castView: cid }; renderSheet(); return; }
   if (t.dataset.npc && sheet) { openNpc(sheet.id, t.dataset.npc); return; }
@@ -2843,6 +2845,7 @@ document.addEventListener('click', async e => {
     if (t.dataset.shotpos) { const i = +t.dataset.shotpos; openPosTool(d.shots[i].img, 'shot', p => { d.shots[i].img = { ...d.shots[i].img, ...p }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
     if (t.dataset.unwimg) { const k = t.dataset.unwimg, r = d.worldImgs?.[k]; if (r?.id) sheet.removed.push(r.id); d.worldImgs = { ...(d.worldImgs || {}) }; delete d.worldImgs[k]; rerenderEdit(); return; }
     if (t.dataset.wimgpos) { const k = t.dataset.wimgpos; openPosTool(d.worldImgs[k], 'cast', p => { d.worldImgs = { ...d.worldImgs, [k]: { ...d.worldImgs[k], ...p } }; rerenderEdit(); toast('맨 위 저장을 누르면 적용돼요'); }); return; }
+    if (t.dataset.secmv) { const [i, dd] = t.dataset.secmv.split(':').map(Number), j = i + dd; if (j >= 0 && j < d.sections.length) { [d.sections[i], d.sections[j]] = [d.sections[j], d.sections[i]]; rerenderEdit(); } return; }
     if (t.dataset.addip) { (d.iprompts = d.iprompts || []).push({ title: '', body: '' }); rerenderEdit(); document.getElementById('ip_t_' + (d.iprompts.length - 1))?.focus(); return; }
     if (t.dataset.unip) { d.iprompts.splice(+t.dataset.unip, 1); rerenderEdit(); return; }
     if (t.dataset.addsong) { (d.songs = d.songs || []).push({ id: newId(8), title: '', artist: '', link: '' }); rerenderEdit(); document.getElementById('song_t_' + (d.songs.length - 1))?.focus(); return; }
