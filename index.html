@@ -236,7 +236,9 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .mag .cl b { font-family: "Cormorant Garamond", "Diphylleia", serif; font-style: italic; font-weight: 500; font-size: 9cqw; line-height: 1.05; word-break: keep-all; }
 .mag .cl small { font-family: "Cormorant Garamond", "IBM Plex Sans KR", serif; font-style: italic; font-size: 5.2cqw; letter-spacing: .03em; line-height: 1.25; word-break: keep-all; }
 .magwrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.bookv { position: fixed; inset: 0; z-index: 58; background: rgba(40, 30, 36, .84); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px; touch-action: pan-y; }
+.bookv::before { content: ""; position: absolute; inset: -40px; z-index: -1; background: var(--bkbg, none) center / cover; filter: blur(28px) saturate(1.1); opacity: .55; }
+.bookv { isolation: isolate; overflow: hidden; }
+.bookv { position: fixed; inset: 0; z-index: 58; background: rgba(40, 30, 36, .78); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 12px; touch-action: pan-y; }
 .bkbar { display: flex; align-items: center; gap: 14px; color: #fff; width: min(1100px, 100%); }
 .bkbar b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 18px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bkn { font-family: "Orbit", var(--f-body); font-size: 12px; letter-spacing: .12em; opacity: .8; }
@@ -263,6 +265,35 @@ main { position: relative; margin-top: -40px; margin-left: var(--dock-w); min-wi
 .bpg .pcap b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: clamp(16px, 2.2vw, 24px); }
 .bpg .pcap small { font-size: 13px; opacity: .9; }
 .bpg .pno { position: absolute; top: 12px; right: 14px; z-index: 1; font-family: "Orbit", var(--f-body); font-size: 11px; letter-spacing: .12em; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.bpg.paper { background: #FFFDFB; color: #4D3F47; display: flex; flex-direction: column; container-type: size; }
+.bpg .run { position: absolute; top: 3.2cqh; left: 0; right: 0; text-align: center; font-family: "Orbit", var(--f-body); font-size: clamp(9px, 1.8cqh, 12px); letter-spacing: .3em; color: #B49AA2; z-index: 1; }
+.bpg .run.lt { color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .45); }
+.bpg.toc { padding: 12cqh 9cqw 7cqh; }
+.bpg.toc h3 { margin: 0 0 5cqh; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500; font-size: 11cqh; line-height: 1; color: #C2789A; }
+.bpg.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.6cqh; overflow: hidden; }
+.bpg.toc li { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; border-bottom: 1px dotted #E7D6DC; padding-bottom: 1.2cqh; }
+.bpg.toc .tn { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 4.4cqh; color: #C2789A; grid-row: span 2; }
+.bpg.toc li b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 3.4cqh; }
+.bpg.toc li small { font-size: 2.2cqh; color: #A0909A; }
+.bpg.toc .tt { margin: auto 0 0; font-family: "Diphylleia", var(--f-display); font-size: 2.4cqh; color: #A0909A; text-align: right; }
+.bpg.framed { padding: 9cqh 7cqw 6cqh; gap: 2.4cqh; }
+.bpg.framed .fimg { flex: 1; min-height: 0; overflow: hidden; box-shadow: 0 0 0 1px #EEE3E8, 0 6px 18px rgba(90, 60, 75, .14); }
+.bpg.framed .fimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bpg.framed .ftx { display: flex; flex-direction: column; gap: .6cqh; }
+.bpg.framed .fno { font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500; font-size: 3.2cqh; color: #C2789A; }
+.bpg.framed .ftx b { font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 6cqh; line-height: 1.1; }
+.bpg.framed .ftx small { font-size: 2.3cqh; color: #A0909A; }
+.bpg.bigname { container-type: size; }
+.bpg.bigname::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(rgba(0, 0, 0, .05), transparent 40%, rgba(0, 0, 0, .4)); }
+.bpg.bigname .bn { position: absolute; z-index: 2; left: 6cqw; right: 6cqw; bottom: 9cqh; font-family: "Diphylleia", var(--f-display); font-size: 11cqh; line-height: 1; color: #fff; text-shadow: 0 2px 14px rgba(0, 0, 0, .35); word-break: keep-all; }
+.bpg.bigname .pno { z-index: 3; }
+.bpg.bigname .bc { position: absolute; z-index: 2; left: 6cqw; right: 6cqw; bottom: 4cqh; font-family: "Cormorant Garamond", "IBM Plex Sans KR", serif; font-style: italic; font-size: 2.6cqh; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+.bpg.backc { justify-content: center; align-items: center; text-align: center; background: linear-gradient(#FFF6F9, #FFFDFB); }
+.bpg.backc .bm { display: flex; flex-direction: column; align-items: center; gap: 2.4cqh; padding: 0 10cqw; }
+.bpg.backc .mastx { font-family: "Cormorant Garamond", serif; font-weight: 700; font-size: 7cqh; letter-spacing: .06em; color: #C2789A; }
+.bpg.backc h3 { margin: 0; font-family: "Diphylleia", var(--f-display); font-weight: 400; font-size: 3.6cqh; }
+.bpg.backc p { margin: 0; font-size: 2cqh; color: #A0909A; line-height: 1.6; white-space: pre-wrap; }
+.bpg.backc .fin { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 2.6cqh; color: #B49AA2; }
 .bpg.cov .mag { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; }
 .leaf { position: absolute; top: 0; height: 100%; width: 50%; z-index: 5; transform-style: preserve-3d; }
 .bk.single .leaf { width: 100%; left: 0; }
@@ -1486,8 +1517,12 @@ function magCover(x, small) {
 let shotWho = '';
 function openBook(id) {
   const x = byId('shoots', id); if (!x) return;
-  const P = [{ cover: true }, ...(x.shots || []).filter(g => g.img)], n = P.length;
+  // cover, contents, the photos, back cover; photo pages rotate through three magazine layouts
+  const shots = (x.shots || []).filter(g => g.img);
+  const P = [{ cover: true }, { toc: true }, ...shots, { back: true }], n = P.length;
+  const head = esc([x.mag || 'SEORAP', x.issue].filter(Boolean).join(' · '));
   const o = document.createElement('div'); o.className = 'bookv';
+  const bg = magImg(x); if (bg) o.style.setProperty('--bkbg', `url("${img(bg)}")`);
   o.innerHTML = `<div class="bkbar"><b>${esc(x.title || '화보')}</b><span class="bkn"></span><button class="bkx" data-bk="x" aria-label="닫기">✕</button></div>
     <div class="bkstage"><button class="bknav" data-bk="-1" aria-label="이전 장">‹</button><div class="bk"></div><button class="bknav" data-bk="1" aria-label="다음 장">›</button></div>`;
   const bk = o.querySelector('.bk'), lab = o.querySelector('.bkn');
@@ -1498,8 +1533,15 @@ function openBook(id) {
   const page = j => {
     const g = P[j]; if (!g) return '<div class="bpg blank"></div>';
     if (g.cover) return `<div class="bpg cov">${magCover(x)}</div>`;
-    const a = accountOf(g.ref);
-    return `<div class="bpg ph"><img src="${img(g.img)}" style="${pos(g.img)}" alt=""><div class="pcap"><b>${esc(a?.name || '')}</b>${g.caption ? `<small>${esc(g.caption)}</small>` : ''}</div><span class="pno">${String(j).padStart(2, '0')}</span></div>`;
+    if (g.toc) return `<div class="bpg paper toc"><span class="run">${head}</span><h3>Contents</h3>
+      <ol>${shots.map((sg, i) => `<li><span class="tn">${String(i + 2).padStart(2, '0')}</span><b>${esc(accountOf(sg.ref)?.name || '')}</b>${sg.caption ? `<small>${esc(sg.caption)}</small>` : ''}</li>`).join('')}</ol>
+      <p class="tt">${esc(x.title || '')}</p></div>`;
+    if (g.back) return `<div class="bpg paper backc"><span class="run">${head}</span><div class="bm"><span class="mastx">${esc(x.mag || 'SEORAP')}</span><h3>${esc(x.title || '')}</h3>${x.desc ? `<p>${esc(x.desc)}</p>` : ''}<span class="fin">— fin. —</span></div></div>`;
+    const a = accountOf(g.ref), nm = esc(a?.name || ''), no = String(j).padStart(2, '0'), cap = g.caption ? esc(g.caption) : '';
+    const lay = (j - 2) % 3;
+    if (lay === 1) return `<div class="bpg paper framed"><span class="run">${head}</span><div class="fimg"><img src="${img(g.img)}" style="${pos(g.img)}" alt=""></div><div class="ftx"><span class="fno">No. ${no}</span><b>${nm}</b>${cap ? `<small>${cap}</small>` : ''}</div></div>`;
+    if (lay === 2) return `<div class="bpg ph bigname"><img src="${img(g.img)}" style="${pos(g.img)}" alt=""><span class="bn">${nm}</span>${cap ? `<span class="bc">${cap}</span>` : ''}<span class="pno">${no}</span></div>`;
+    return `<div class="bpg ph"><img src="${img(g.img)}" style="${pos(g.img)}" alt=""><span class="run lt">${head}</span><div class="pcap"><b>${nm}</b>${cap ? `<small>${cap}</small>` : ''}</div><span class="pno">${no}</span></div>`;
   };
   const sides = () => spread ? [`<div class="side l">${k > 0 ? page(2 * k - 1) : ''}</div>`, `<div class="side r">${2 * k < n ? page(2 * k) : ''}</div>`] : [`<div class="side r">${page(k)}</div>`];
   const draw = () => {
